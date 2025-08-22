@@ -19,7 +19,7 @@ public:
             const std::string& format);
 
     /** Set the objective. */
-    void set_objective(Objective objective) { instance_.objective_ = objective; }
+    void set_objective(Objective objective) { this->instance_.objective_ = objective; }
 
     /**
      * Set the number of machines.
@@ -30,6 +30,9 @@ public:
 
     /** Add a job. */
     JobId add_job();
+
+    /** Add multiple jobs. */
+    void add_jobs(JobId number_of_jobs);
 
     /** Set the processing-time of a job for a given machine. */
     OperationId add_operation(
@@ -84,6 +87,8 @@ private:
     /*
      * Private methods
      */
+
+    void read_flow_shop(std::ifstream& file);
 
     /*
      * Private attributes

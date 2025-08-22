@@ -4,8 +4,7 @@ target_sources(ShopSchedulingSolver_shopschedulingsolver PRIVATE
     instance_builder.cpp
     solution.cpp
     solution_builder.cpp
-    algorithm_formatter.cpp
-    optimize.cpp)
+    algorithm_formatter.cpp)
 target_include_directories(ShopSchedulingSolver_shopschedulingsolver PUBLIC
     ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(ShopSchedulingSolver_shopschedulingsolver PRIVATE
@@ -22,6 +21,6 @@ if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
       ShopSchedulingSolver_shopschedulingsolver
       Boost::program_options
       Boost::filesystem)
-  set_target_properties(ShopSchedulingSolver_main PROPERTIES OUTPUT_NAME "packingsolver_box")
+  set_target_properties(ShopSchedulingSolver_main PROPERTIES OUTPUT_NAME "shopschedulingsolver")
   install(TARGETS ShopSchedulingSolver_main)
 endif()

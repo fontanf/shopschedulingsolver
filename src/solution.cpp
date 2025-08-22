@@ -8,6 +8,10 @@ bool Solution::feasible() const
         && this->number_of_job_overlaps() == 0
         && this->number_of_machine_overlaps() == 0
         && this->number_of_precedence_violations() == 0
+        && (!this->instance().no_wait() || this->no_wait())
+        && (!this->instance().no_idle() || this->no_idle())
+        && (!this->instance().blocking() || this->blocking())
+        && (!this->instance().permutation() || this->permutation())
         && this->number_of_operations() == instance().number_of_jobs());
 }
 
@@ -57,5 +61,63 @@ void Solution::format(
         std::ostream& os,
         int verbosity_level) const
 {
-    // TODO
+    if (verbosity_level >= 1) {
+        os
+            << "Number of operations:        " << this->number_of_operations() << std::endl
+            << "# job overlaps:              " << this->number_of_job_overlaps() << std::endl
+            << "# machine overlaps:          " << this->number_of_machine_overlaps() << std::endl
+            << "# precedence violations:     " << this->number_of_precedence_violations() << std::endl
+            << "# release dates violations:  " << this->number_of_release_date_violations() << std::endl
+            << "Feasible:                    " << this->feasible() << std::endl
+            << "Makespan:                    " << this->makespan() << std::endl
+            << "Total flow time:             " << this->total_flow_time() << std::endl
+            << "Throughput:                  " << this->throughput() << std::endl
+            << "Total tardiness:             " << this->total_tardiness() << std::endl
+            ;
+    }
+
+    const Instance& instance = this->instance();
+    if (verbosity_level >= 2) {
+        os << std::right << std::endl
+            << std::setw(12) << "Machine"
+            << std::setw(12) << "Mac. pos."
+            << std::setw(12) << "Job"
+            << std::setw(12) << "Operation"
+            << std::setw(12) << "Op. mach."
+            << std::setw(12) << "Job pos."
+            << std::setw(12) << "Start"
+            << std::setw(12) << "End"
+            << std::endl
+            << std::setw(12) << "-------"
+            << std::setw(12) << "---------"
+            << std::setw(12) << "---"
+            << std::setw(12) << "---------"
+            << std::setw(12) << "---------"
+            << std::setw(12) << "--------"
+            << std::setw(12) << "-----"
+            << std::setw(12) << "---"
+            << std::endl;
+        for (MachineId machine_id = 0;
+                machine_id < instance.number_of_machines();
+                ++machine_id) {
+            const Solution::Machine& solution_machine = this->machine(machine_id);
+            for (SolutionOperationId solution_operation_id: solution_machine.solution_operations) {
+                const Solution::Operation& solution_operation = this->operation(solution_operation_id);
+                const auto& job = instance.job(solution_operation.job_id);
+                const auto& operation = job.operations[solution_operation.operation_id];
+                const auto& operation_machine = operation.machines[solution_operation.operation_machine_id];
+                Time end = solution_operation.start + operation_machine.processing_time;
+                os
+                    << std::setw(12) << machine_id
+                    << std::setw(12) << solution_operation.machine_position
+                    << std::setw(12) << solution_operation.job_id
+                    << std::setw(12) << solution_operation.operation_id
+                    << std::setw(12) << solution_operation.operation_machine_id
+                    << std::setw(12) << solution_operation.job_position
+                    << std::setw(12) << solution_operation.start
+                    << std::setw(12) << end
+                    << std::endl;
+            }
+        }
+    }
 }

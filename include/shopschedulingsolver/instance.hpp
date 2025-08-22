@@ -109,6 +109,9 @@ public:
     OperationId number_of_operations() const { return number_of_operations_; }
 
     /** Get the shop type. */
+    bool flow_shop() const { return flow_shop_; }
+
+    /** Get the shop type. */
     bool operations_arbitrary_order() const { return operations_arbitrary_order_; }
 
     /** Return 'true' if the instance has the no-wait property. */
@@ -161,6 +164,9 @@ private:
 
     /** Number of operations. */
     OperationId number_of_operations_ = 0;
+
+    /** Flow shop. */
+    bool flow_shop_ = false;
 
     /** Flow shop / job shop, or open shop. */
     bool operations_arbitrary_order_ = false;

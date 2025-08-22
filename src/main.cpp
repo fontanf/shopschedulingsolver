@@ -1,4 +1,4 @@
-#include "shopschedulingsolver/optimize.hpp"
+#include "shopschedulingsolver/algorithm_formatter.hpp"
 #include "shopschedulingsolver/instance_builder.hpp"
 
 #include <boost/program_options.hpp>
@@ -10,7 +10,7 @@ using namespace shopschedulingsolver;
 namespace po = boost::program_options;
 
 void read_args(
-        shopschedulingsolver::Parameters& parameters,
+        Parameters& parameters,
         const po::variables_map& vm)
 {
     parameters.timer.set_sigint_handler();
@@ -19,40 +19,61 @@ void read_args(
         parameters.timer.set_time_limit(vm["time-limit"].as<double>());
     if (vm.count("verbosity-level"))
         parameters.verbosity_level = vm["verbosity-level"].as<int>();
-    if (vm.count("log2stderr"))
-        parameters.log_to_stderr = vm["log-to-stderr"].as<bool>();
     if (vm.count("log"))
         parameters.log_path = vm["log"].as<std::string>();
     parameters.log_to_stderr = vm.count("log-to-stderr");
     bool only_write_at_the_end = vm.count("only-write-at-the-end");
     if (!only_write_at_the_end) {
 
-        std::string certificate_path = "";
+        std::string certificate_path;
         if (vm.count("certificate"))
             certificate_path = vm["certificate"].as<std::string>();
 
-        std::string json_output_path = "";
-        if (vm.count("output"))
-            json_output_path = vm["output"].as<std::string>();
         std::string certificate_format;
         if (vm.count("certificate-format"))
             certificate_format = vm["certificate-format"].as<std::string>();
+
+        std::string json_output_path;
+        if (vm.count("output"))
+            json_output_path = vm["output"].as<std::string>();
 
         parameters.new_solution_callback = [
             json_output_path,
             certificate_path,
             certificate_format](
-                    const shopschedulingsolver::Output& output)
+                    const Output& output)
         {
             if (!json_output_path.empty())
                 output.write_json_output(json_output_path);
-            if (!certificate_path.empty()) {
-                output.solution.write(
-                        certificate_path,
-                        certificate_format);
-            }
+            if (!certificate_path.empty())
+                output.solution.write(certificate_path, certificate_format);
         };
     }
+}
+
+Output run(
+        const Instance& instance,
+        const po::variables_map& vm)
+{
+    Seed seed = 0;
+    if (vm.count("seed"))
+        seed = vm["seed"].as<Seed>();
+    std::mt19937_64 generator(seed);
+    //Solution solution = (vm.count("initial-solution"))?
+    //    Solution(instance, vm["initial-solution"].as<std::string>()):
+    //    Solution(instance);
+
+    // Run algorithm.
+    std::string algorithm = vm["algorithm"].as<std::string>();
+    //if (algorithm == "tree-search") {
+    //    Parameters parameters;
+    //    read_args(parameters, vm);
+    //    return greedy(instance, parameters);
+
+    //} else {
+    //    throw std::invalid_argument(
+    //            "Unknown algorithm \"" + algorithm + "\".");
+    //}
 }
 
 int main(int argc, char *argv[])
@@ -63,17 +84,20 @@ int main(int argc, char *argv[])
     desc.add_options()
         (",h", "Produce help message")
 
-        ("input,i", po::value<std::string>()->required(), "Input path")
-        ("format,f", po::value<std::string>(), "Input format")
+        ("input,i", po::value<std::string>()->required(), "set input path")
+        ("format,f", po::value<std::string>()->required(), "set input format")
+        ("objective,", po::value<Objective>(), "set objective")
 
-        ("output,o", po::value<std::string>(), "Output path")
-        ("certificate,c", po::value<std::string>(), "Certificate path")
-        ("log,l", po::value<std::string>(), "Log path")
-        ("time-limit,t", po::value<double>(), "Time limit in seconds")
-        ("seed,s", po::value<Seed>(), "Seed (not used)")
-        ("only-write-at-the-end,e", "Only write output and certificate files at the end")
-        ("verbosity-level,v", po::value<int>(), "Verbosity level")
-        ("log-to-stderr,w", "Write log in stderr")
+        ("algorithm,a", po::value<std::string>()->required(), "set algorithm")
+
+        ("output,o", po::value<std::string>(), "set output path")
+        ("certificate,c", po::value<std::string>(), "set certificate path")
+        ("log,l", po::value<std::string>(), "set log path")
+        ("time-limit,t", po::value<double>(), "set time limit in seconds")
+        ("seed,s", po::value<Seed>(), "set seed (not used)")
+        ("only-write-at-the-end,e", "only write output and certificate files at the end")
+        ("verbosity-level,v", po::value<int>(), "set verbosity level")
+        ("log-to-stderr,w", "write log in stderr")
         ;
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -90,24 +114,23 @@ int main(int argc, char *argv[])
 
     // Build instance.
     InstanceBuilder instance_builder;
-    std::string input_format = "";
-    if (vm.count("format"))
-        input_format = vm["format"].as<std::string>(),
     instance_builder.read(
             vm["input"].as<std::string>(),
-            input_format);
+            vm["format"].as<std::string>());
+    if (vm.count("objective"))
+        instance_builder.set_objective(vm["objective"].as<Objective>());
     Instance instance = instance_builder.build();
 
     // Read optimize parameters.
-    OptimizeParameters parameters;
+    Parameters parameters;
     read_args(parameters, vm);
 
-    // Solve.
-    const Output output = optimize(instance, parameters);
+    // Run.
+    Output output = run(instance, vm);
 
-    // Write output.
+    // Write outputs.
     if (vm.count("certificate")) {
-        std::string certificate_format;
+        std::string certificate_format = "";
         if (vm.count("certificate-format"))
             certificate_format = vm["certificate-format"].as<std::string>();
         output.solution.write(

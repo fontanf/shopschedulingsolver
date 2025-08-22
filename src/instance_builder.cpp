@@ -22,6 +22,11 @@ JobId InstanceBuilder::add_job()
     return job_id;
 }
 
+void InstanceBuilder::add_jobs(JobId number_of_jobs)
+{
+    instance_.jobs_.insert(instance_.jobs_.end(), number_of_jobs, Job());
+}
+
 OperationId InstanceBuilder::add_operation(
         JobId job_id)
 {
@@ -149,14 +154,82 @@ void InstanceBuilder::read(
         const std::string& instance_path,
         const std::string& format)
 {
-    // TODO
+    std::ifstream file(instance_path);
+    if (!file.good()) {
+        throw std::runtime_error(
+                "Unable to open file \"" + instance_path + "\".");
+    }
+
+    if (format == "flow-shop") {
+        read_flow_shop(file);
+    } else {
+        throw std::invalid_argument(
+                "Unknown instance format \"" + format + "\".");
+    }
+    file.close();
+}
+
+void InstanceBuilder::read_flow_shop(std::ifstream& file)
+{
+    JobId number_of_jobs;
+    MachineId number_of_machines;
+    file >> number_of_jobs;
+    file >> number_of_machines;
+    this->set_number_of_machines(number_of_machines);
+    this->add_jobs(number_of_jobs);
+
+    Time processing_time;
+    for (MachineId machine_id = 0;
+            machine_id < number_of_machines;
+            machine_id++) {
+        for (JobId job_id = 0; job_id < number_of_jobs; job_id++) {
+            file >> processing_time;
+            OperationId operation_id = this->add_operation(job_id);
+            this->add_operation_machine(
+                    job_id,
+                    operation_id,
+                    machine_id,
+                    processing_time);
+        }
+    }
+
+    this->set_objective(Objective::Makespan);
 }
 
 Instance InstanceBuilder::build()
 {
+    instance_.flow_shop_ = true;
     for (JobId job_id = 0; job_id < instance_.number_of_jobs(); ++job_id) {
         const Job& job = instance_.jobs_[job_id];
         instance_.number_of_operations_ += job.operations.size();
+    }
+
+    // Is flow shop?
+    this->instance_.flow_shop_ = true;
+    for (JobId job_id = 0; job_id < this->instance_.number_of_jobs(); ++job_id) {
+        const Job& job = this->instance_.jobs_[job_id];
+        if (job.operations.size() != instance_.number_of_machines()) {
+            this->instance_.flow_shop_ = false;
+            break;
+        }
+        for (OperationId operation_id = 0;
+                operation_id < (OperationId)job.operations.size();
+                ++operation_id) {
+            const Operation& operation = job.operations[operation_id];
+            for (OperationMachineId operation_machine_id = 0;
+                    operation_machine_id < (OperationMachineId)operation.machines.size();
+                    ++operation_machine_id) {
+                const OperationMachine& operation_machine = operation.machines[operation_machine_id];
+                if (operation_machine.machine_id != operation_id) {
+                    this->instance_.flow_shop_ = false;
+                    break;
+                }
+            }
+            if (!this->instance_.flow_shop_)
+                break;
+        }
+        if (!this->instance_.flow_shop_)
+            break;
     }
     return std::move(instance_);
 }
