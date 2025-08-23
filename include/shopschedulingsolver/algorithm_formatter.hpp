@@ -22,7 +22,7 @@ struct Output: optimizationtools::Output
         solution(SolutionBuilder().set_instance(instance).build()) { }
 
 
-    Time time;
+    double time;
 
     Solution solution;
 
