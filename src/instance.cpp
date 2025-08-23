@@ -68,6 +68,8 @@ std::ostream& Instance::format(
             << "No-idle:                     " << this->no_idle() << std::endl
             << "Blocking:                    " << this->blocking() << std::endl
             << "Permutation:                 " << this->permutation() << std::endl
+            << "Flow shop:                   " << this->flow_shop() << std::endl
+            << "Flexible:                    " << this->flexible() << std::endl
             ;
     }
 

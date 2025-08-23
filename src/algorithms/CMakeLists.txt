@@ -1,0 +1,19 @@
+add_library(ShopSchedulingSolver_tree_search_pfss_makespan)
+target_sources(ShopSchedulingSolver_tree_search_pfss_makespan PRIVATE
+    tree_search_pfss_makespan.cpp)
+target_include_directories(ShopSchedulingSolver_tree_search_pfss_makespan PUBLIC
+    ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(ShopSchedulingSolver_tree_search_pfss_makespan PUBLIC
+    ShopSchedulingSolver_shopschedulingsolver
+    TreeSearchSolver::treesearchsolver)
+add_library(ShopSchedulingSolver::tree_search_pfss_makespan ALIAS ShopSchedulingSolver_tree_search_pfss_makespan)
+
+add_library(ShopSchedulingSolver_tree_search_pfss_tct)
+target_sources(ShopSchedulingSolver_tree_search_pfss_tct PRIVATE
+    tree_search_pfss_tct.cpp)
+target_include_directories(ShopSchedulingSolver_tree_search_pfss_tct PUBLIC
+    ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(ShopSchedulingSolver_tree_search_pfss_tct PUBLIC
+    ShopSchedulingSolver_shopschedulingsolver
+    TreeSearchSolver::treesearchsolver)
+add_library(ShopSchedulingSolver::tree_search_pfss_tct ALIAS ShopSchedulingSolver_tree_search_pfss_tct)

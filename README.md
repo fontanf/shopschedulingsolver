@@ -1,6 +1,6 @@
 # Shop scheduling solver
 
-A solver for flow shop, job shop and open shop scheduling problems.
+Research code for flow shop, job shop and open shop scheduling problems.
 
 ## Compilation
 

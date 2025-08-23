@@ -206,30 +206,28 @@ Instance InstanceBuilder::build()
 
     // Is flow shop?
     this->instance_.flow_shop_ = true;
+    this->instance_.flexible_ = false;
     for (JobId job_id = 0; job_id < this->instance_.number_of_jobs(); ++job_id) {
         const Job& job = this->instance_.jobs_[job_id];
-        if (job.operations.size() != instance_.number_of_machines()) {
+        // Compute flow_shop_.
+        if (job.operations.size() != instance_.number_of_machines())
             this->instance_.flow_shop_ = false;
-            break;
-        }
         for (OperationId operation_id = 0;
                 operation_id < (OperationId)job.operations.size();
                 ++operation_id) {
             const Operation& operation = job.operations[operation_id];
+            // Compute flexible_.
+            if (operation.machines.size() != 1)
+                this->instance_.flexible_ = true;
             for (OperationMachineId operation_machine_id = 0;
                     operation_machine_id < (OperationMachineId)operation.machines.size();
                     ++operation_machine_id) {
                 const OperationMachine& operation_machine = operation.machines[operation_machine_id];
-                if (operation_machine.machine_id != operation_id) {
+                // Compute flow_shop_.
+                if (operation_machine.machine_id != operation_id)
                     this->instance_.flow_shop_ = false;
-                    break;
-                }
             }
-            if (!this->instance_.flow_shop_)
-                break;
         }
-        if (!this->instance_.flow_shop_)
-            break;
     }
     return std::move(instance_);
 }

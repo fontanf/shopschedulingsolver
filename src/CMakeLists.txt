@@ -11,7 +11,9 @@ target_include_directories(ShopSchedulingSolver_shopschedulingsolver PRIVATE
     ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(ShopSchedulingSolver_shopschedulingsolver PUBLIC
     OptimizationTools::utils)
-add_library(ShopSchedulingSolver::box ALIAS ShopSchedulingSolver_shopschedulingsolver)
+add_library(ShopSchedulingSolver::shopschedulingsolver ALIAS ShopSchedulingSolver_shopschedulingsolver)
+
+add_subdirectory(algorithms)
 
 if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
   add_executable(ShopSchedulingSolver_main)
@@ -19,6 +21,8 @@ if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
       main.cpp)
   target_link_libraries(ShopSchedulingSolver_main PUBLIC
       ShopSchedulingSolver_shopschedulingsolver
+      ShopSchedulingSolver_tree_search_pfss_makespan
+      ShopSchedulingSolver_tree_search_pfss_tct
       Boost::program_options
       Boost::filesystem)
   set_target_properties(ShopSchedulingSolver_main PROPERTIES OUTPUT_NAME "shopschedulingsolver")

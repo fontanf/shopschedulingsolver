@@ -115,7 +115,7 @@ Solution SolutionBuilder::build()
                 const Job& job_prev = instance.job(o_prev.job_id);
                 const Solution::Job& solution_job_prev = solution_.job(o_prev.job_id);
                 // If the job is not finished.
-                if (o_prev.job_position < solution_job_prev.solution_operations.size()) {
+                if (o_prev.job_position + 1 < solution_job_prev.solution_operations.size()) {
                     // Get the next scheduled operation of the previous job.
                     SolutionOperationId solution_operation_prev_next_id = solution_job_prev.solution_operations[o_prev.job_position + 1];
                     const Solution::Operation& solution_operation_prev_next = solution_.operations_[solution_operation_prev_next_id];

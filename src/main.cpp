@@ -1,5 +1,7 @@
 #include "shopschedulingsolver/algorithm_formatter.hpp"
 #include "shopschedulingsolver/instance_builder.hpp"
+#include "shopschedulingsolver/algorithms/tree_search_pfss_makespan.hpp"
+#include "shopschedulingsolver/algorithms/tree_search_pfss_tct.hpp"
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
@@ -65,15 +67,26 @@ Output run(
 
     // Run algorithm.
     std::string algorithm = vm["algorithm"].as<std::string>();
-    //if (algorithm == "tree-search") {
-    //    Parameters parameters;
-    //    read_args(parameters, vm);
-    //    return greedy(instance, parameters);
+    if (algorithm == "tree-search") {
+        if (instance.objective() == Objective::Makespan) {
+            Parameters parameters;
+            read_args(parameters, vm);
+            return tree_search_pfss_makespan(instance, parameters);
+        } else if (instance.objective() == Objective::TotalFlowTime) {
+            Parameters parameters;
+            read_args(parameters, vm);
+            return tree_search_pfss_tct(instance, parameters);
+        } else {
+            throw std::invalid_argument(
+                    "Unknown algorithm \"" + algorithm + "\".");
+        }
 
-    //} else {
-    //    throw std::invalid_argument(
-    //            "Unknown algorithm \"" + algorithm + "\".");
-    //}
+    } else {
+        throw std::invalid_argument(
+                "Unknown algorithm \"" + algorithm + "\".");
+    }
+
+    return Output(instance);
 }
 
 int main(int argc, char *argv[])

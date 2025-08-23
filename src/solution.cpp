@@ -12,7 +12,7 @@ bool Solution::feasible() const
         && (!this->instance().no_idle() || this->no_idle())
         && (!this->instance().blocking() || this->blocking())
         && (!this->instance().permutation() || this->permutation())
-        && this->number_of_operations() == instance().number_of_jobs());
+        && this->number_of_operations() == instance().number_of_operations());
 }
 
 bool Solution::strictly_better(const Solution& solution) const
@@ -68,6 +68,10 @@ void Solution::format(
             << "# machine overlaps:          " << this->number_of_machine_overlaps() << std::endl
             << "# precedence violations:     " << this->number_of_precedence_violations() << std::endl
             << "# release dates violations:  " << this->number_of_release_date_violations() << std::endl
+            << "No-wait:                     " << this->no_wait() << std::endl
+            << "No-idle:                     " << this->no_idle() << std::endl
+            << "Blocking:                    " << this->blocking() << std::endl
+            << "Permutation:                 " << this->permutation() << std::endl
             << "Feasible:                    " << this->feasible() << std::endl
             << "Makespan:                    " << this->makespan() << std::endl
             << "Total flow time:             " << this->total_flow_time() << std::endl

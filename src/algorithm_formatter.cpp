@@ -32,7 +32,7 @@ void AlgorithmFormatter::print_header()
 {
     if (parameters_.verbosity_level == 0)
         return;
-    *os_ << std::endl;
+    *os_ << std::endl << std::right;
     switch (instance_.objective()) {
     case Objective::Makespan: {
         *os_

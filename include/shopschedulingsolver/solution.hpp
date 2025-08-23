@@ -143,6 +143,13 @@ public:
 private:
 
     /*
+     * Private methods
+     */
+
+    /** Create an instance manually. */
+    Solution() { }
+
+    /*
      * Private attributes
      */
 
