@@ -23,6 +23,10 @@ void AlgorithmFormatter::start(
     output_.solution.instance().format(*os_, parameters_.verbosity_level);
     *os_
         << std::endl
+        << "Algorithm" << std::endl
+        << "---------" << std::endl
+        << algorithm_name << std::endl
+        << std::endl
         << "Parameters" << std::endl
         << "----------" << std::endl;
     parameters_.format(*os_);

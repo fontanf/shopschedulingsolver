@@ -17,3 +17,13 @@ target_link_libraries(ShopSchedulingSolver_tree_search_pfss_tct PUBLIC
     ShopSchedulingSolver_shopschedulingsolver
     TreeSearchSolver::treesearchsolver)
 add_library(ShopSchedulingSolver::tree_search_pfss_tct ALIAS ShopSchedulingSolver_tree_search_pfss_tct)
+
+add_library(ShopSchedulingSolver_milp_disjunctive)
+target_sources(ShopSchedulingSolver_milp_disjunctive PRIVATE
+    milp_disjunctive.cpp)
+target_include_directories(ShopSchedulingSolver_milp_disjunctive PUBLIC
+    ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(ShopSchedulingSolver_milp_disjunctive PUBLIC
+    ShopSchedulingSolver_shopschedulingsolver
+    MathOptSolversCMake::milp)
+add_library(ShopSchedulingSolver::milp_disjunctive ALIAS ShopSchedulingSolver_milp_disjunctive)

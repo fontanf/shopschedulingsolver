@@ -2,6 +2,7 @@
 #include "shopschedulingsolver/instance_builder.hpp"
 #include "shopschedulingsolver/algorithms/tree_search_pfss_makespan.hpp"
 #include "shopschedulingsolver/algorithms/tree_search_pfss_tct.hpp"
+#include "shopschedulingsolver/algorithms/milp_disjunctive.hpp"
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
@@ -81,6 +82,13 @@ Output run(
                     "Unknown algorithm \"" + algorithm + "\".");
         }
 
+    } else if (algorithm == "milp-disjunctive") {
+        MilpDisjunctiveParameters parameters;
+        read_args(parameters, vm);
+        if (vm.count("solver"))
+            parameters.solver = vm["solver"].as<mathoptsolverscmake::SolverName>();
+        return milp_disjunctive(instance, nullptr, parameters);
+
     } else {
         throw std::invalid_argument(
                 "Unknown algorithm \"" + algorithm + "\".");
@@ -111,6 +119,8 @@ int main(int argc, char *argv[])
         ("only-write-at-the-end,e", "only write output and certificate files at the end")
         ("verbosity-level,v", po::value<int>(), "set verbosity level")
         ("log-to-stderr,w", "write log in stderr")
+
+        ("solver,", po::value<mathoptsolverscmake::SolverName>(), "set solver")
         ;
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

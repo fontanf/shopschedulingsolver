@@ -44,6 +44,33 @@ void SolutionBuilder::append_operation(
     solution_job.operations[operation_id] = solution_operation_id;
 }
 
+void SolutionBuilder::sort_machines()
+{
+    const Instance& instance = this->solution_.instance();
+    for (MachineId machine_id = 0;
+            machine_id < instance.number_of_machines();
+            ++machine_id) {
+        Solution::Machine& solution_machine = solution_.machines_[machine_id];
+        sort(
+                solution_machine.solution_operations.begin(),
+                solution_machine.solution_operations.end(),
+                [this](
+                    SolutionOperationId solution_operation_1_id,
+                    SolutionOperationId solution_operation_2_id) -> bool
+                {
+                    const Solution::Operation& solution_operation_1 = this->solution_.operations_[solution_operation_1_id];
+                    const Solution::Operation& solution_operation_2 = this->solution_.operations_[solution_operation_2_id];
+                    return solution_operation_1.start < solution_operation_2.start;
+                });
+        for (JobId machine_position = 0;
+                machine_position < (JobId)solution_machine.solution_operations.size();
+                ++machine_position) {
+            Solution::Operation& solution_operation = solution_.operations_[solution_machine.solution_operations[machine_position]];
+            solution_operation.machine_position = machine_position;
+        }
+    }
+}
+
 Solution SolutionBuilder::build()
 {
     const Instance& instance = this->solution_.instance();

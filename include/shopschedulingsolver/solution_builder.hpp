@@ -26,6 +26,8 @@ public:
             OperationMachineId operation_machine_id,
             Time start);
 
+    void sort_machines();
+
     /*
      * Build
      */

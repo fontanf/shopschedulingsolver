@@ -6,6 +6,10 @@ project(ShopSchedulingSolver LANGUAGES CXX)
 option(SHOPSCHEDULINGSOLVER_BUILD_MAIN "Build main" ON)
 option(SHOPSCHEDULINGSOLVER_BUILD_TEST "Build the unit tests" ON)
 
+option(SHOPSCHEDULINGSOLVER_USE_CBC "Use Cbc" OFF)
+option(SHOPSCHEDULINGSOLVER_USE_HIGHS "Use HiGHS" ON)
+option(SHOPSCHEDULINGSOLVER_USE_XPRESS "Use FICO Xpress" OFF)
+
 # Avoid FetchContent warning.
 cmake_policy(SET CMP0135 NEW)
 

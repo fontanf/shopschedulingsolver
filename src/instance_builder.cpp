@@ -162,6 +162,8 @@ void InstanceBuilder::read(
 
     if (format == "flow-shop") {
         read_flow_shop(file);
+    } else if (format == "job-shop") {
+        read_job_shop(file);
     } else {
         throw std::invalid_argument(
                 "Unknown instance format \"" + format + "\".");
@@ -171,20 +173,48 @@ void InstanceBuilder::read(
 
 void InstanceBuilder::read_flow_shop(std::ifstream& file)
 {
-    JobId number_of_jobs;
-    MachineId number_of_machines;
+    JobId number_of_jobs = -1;
+    MachineId number_of_machines = -1;
     file >> number_of_jobs;
     file >> number_of_machines;
-    this->set_number_of_machines(number_of_machines);
     this->add_jobs(number_of_jobs);
+    this->set_number_of_machines(number_of_machines);
 
-    Time processing_time;
+    Time processing_time = -1;
     for (MachineId machine_id = 0;
             machine_id < number_of_machines;
-            machine_id++) {
-        for (JobId job_id = 0; job_id < number_of_jobs; job_id++) {
+            ++machine_id) {
+        for (JobId job_id = 0; job_id < number_of_jobs; ++job_id) {
             file >> processing_time;
             OperationId operation_id = this->add_operation(job_id);
+            this->add_operation_machine(
+                    job_id,
+                    operation_id,
+                    machine_id,
+                    processing_time);
+        }
+    }
+
+    this->set_objective(Objective::Makespan);
+}
+
+void InstanceBuilder::read_job_shop(std::ifstream& file)
+{
+    JobId number_of_jobs = -1;
+    MachineId number_of_machines = -1;
+    file >> number_of_jobs;
+    file >> number_of_machines;
+    this->add_jobs(number_of_jobs);
+    this->set_number_of_machines(number_of_machines);
+
+    MachineId machine_id = -1;
+    Time processing_time = -1;
+    for (JobId job_id = 0; job_id < number_of_jobs; job_id++) {
+        for (OperationId operation_id = 0;
+                operation_id < number_of_machines;
+                ++operation_id) {
+            file >> machine_id >> processing_time;
+            this->add_operation(job_id);
             this->add_operation_machine(
                     job_id,
                     operation_id,
@@ -223,6 +253,11 @@ Instance InstanceBuilder::build()
                     operation_machine_id < (OperationMachineId)operation.machines.size();
                     ++operation_machine_id) {
                 const OperationMachine& operation_machine = operation.machines[operation_machine_id];
+                // Update machines_.
+                MachineOperation machine_operation;
+                machine_operation.job_id = job_id;
+                machine_operation.operation_id = operation_id;
+                this->instance_.machines_[operation_machine.machine_id].operations.push_back(machine_operation);
                 // Compute flow_shop_.
                 if (operation_machine.machine_id != operation_id)
                     this->instance_.flow_shop_ = false;

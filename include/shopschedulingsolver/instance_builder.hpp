@@ -90,6 +90,8 @@ private:
 
     void read_flow_shop(std::ifstream& file);
 
+    void read_job_shop(std::ifstream& file);
+
     /*
      * Private attributes
      */

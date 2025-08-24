@@ -16,15 +16,16 @@ add_library(ShopSchedulingSolver::shopschedulingsolver ALIAS ShopSchedulingSolve
 add_subdirectory(algorithms)
 
 if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
-  add_executable(ShopSchedulingSolver_main)
-  target_sources(ShopSchedulingSolver_main PRIVATE
-      main.cpp)
-  target_link_libraries(ShopSchedulingSolver_main PUBLIC
-      ShopSchedulingSolver_shopschedulingsolver
-      ShopSchedulingSolver_tree_search_pfss_makespan
-      ShopSchedulingSolver_tree_search_pfss_tct
-      Boost::program_options
-      Boost::filesystem)
-  set_target_properties(ShopSchedulingSolver_main PROPERTIES OUTPUT_NAME "shopschedulingsolver")
-  install(TARGETS ShopSchedulingSolver_main)
+    add_executable(ShopSchedulingSolver_main)
+    target_sources(ShopSchedulingSolver_main PRIVATE
+        main.cpp)
+    target_link_libraries(ShopSchedulingSolver_main PUBLIC
+        ShopSchedulingSolver_shopschedulingsolver
+        ShopSchedulingSolver_tree_search_pfss_makespan
+        ShopSchedulingSolver_tree_search_pfss_tct
+        ShopSchedulingSolver_milp_disjunctive
+        Boost::program_options
+        Boost::filesystem)
+    set_target_properties(ShopSchedulingSolver_main PROPERTIES OUTPUT_NAME "shopschedulingsolver")
+    install(TARGETS ShopSchedulingSolver_main)
 endif()
