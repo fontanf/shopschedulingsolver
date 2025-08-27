@@ -15,7 +15,12 @@ cmake --build build --config Release --parallel && cmake --install build --confi
 
 Example:
 ```
-./install/bin/shopschedulingsolver  --verbosity-level 1  --input ./data/vallada2015/Small/VFR10_10_1_Gap.txt --format flow-shop --objective makespan  --algorithm tree-search
+./install/bin/shopschedulingsolver  --verbosity-level 1  --input ./data/vallada2015/Small/VFR10_10_1_Gap.txt --format flow-shop --objective makespan  --algorithm tree-search  --certificate certificate.json
+```
+
+Visualize solution:
+```
+python scripts/visualize.py certificate.json
 ```
 
 ## Implemented algorithms
