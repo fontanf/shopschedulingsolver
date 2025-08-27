@@ -2,6 +2,8 @@
 
 Research code for flow shop, job shop and open shop scheduling problems.
 
+![scheduleexample](img/schedule.png?raw=true "Schedule example")
+
 ## Compilation
 
 ```shell

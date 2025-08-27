@@ -39,7 +39,36 @@ void Solution::write(
         const std::string& certificate_path,
         const std::string& format) const
 {
-    // TODO
+    if (certificate_path.empty())
+        return;
+    std::ofstream file{certificate_path};
+    if (!file.good()) {
+        throw std::runtime_error(
+                "Unable to open file \"" + certificate_path + "\".");
+    }
+
+    nlohmann::json json;
+    json["number_of_machines"] = this->instance().number_of_machines();
+    json["number_of_jobs"] = this->instance().number_of_jobs();
+    json["number_of_operations"] = this->instance().number_of_operations();
+    for (SolutionOperationId solution_operation_id = 0;
+            solution_operation_id < this->number_of_operations();
+            ++solution_operation_id) {
+        const Solution::Operation& solution_operation = this->operation(solution_operation_id);
+        const auto& job = this->instance().job(solution_operation.job_id);
+        const auto& operation = job.operations[solution_operation.operation_id];
+        const auto& machine_operation = operation.machines[solution_operation.operation_machine_id];
+        json["operations"][solution_operation_id]["job_id"] = solution_operation.job_id;
+        json["operations"][solution_operation_id]["job_position"] = solution_operation.job_position;
+        json["operations"][solution_operation_id]["operation_id"] = solution_operation.operation_id;
+        json["operations"][solution_operation_id]["operation_machine_id"] = solution_operation.operation_machine_id;
+        json["operations"][solution_operation_id]["machine_id"] = solution_operation.machine_id;
+        json["operations"][solution_operation_id]["machine_position"] = solution_operation.machine_position;
+        json["operations"][solution_operation_id]["start"] = solution_operation.start;
+        json["operations"][solution_operation_id]["processing_time"] = machine_operation.processing_time;
+        json["operations"][solution_operation_id]["end"] = solution_operation.start + machine_operation.processing_time;
+    }
+    file << std::setw(4) << json << std::endl;
 }
 
 nlohmann::json Solution::to_json() const
