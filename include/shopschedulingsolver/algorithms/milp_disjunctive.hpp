@@ -33,9 +33,14 @@ struct MilpDisjunctiveParameters: Parameters
     }
 };
 
-const Output milp_disjunctive(
+Output milp_disjunctive(
         const Instance& instance,
         const Solution* initial_solution = NULL,
         const MilpDisjunctiveParameters& parameters = {});
+
+void write_mps(
+        const Instance& instance,
+        mathoptsolverscmake::SolverName solver,
+        const std::string& output_path);
 
 }

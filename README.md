@@ -1,4 +1,4 @@
-# Shop scheduling solver
+# ShopSchedulingSolver
 
 Research code for flow shop, job shop and open shop scheduling problems.
 

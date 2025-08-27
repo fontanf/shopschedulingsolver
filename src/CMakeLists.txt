@@ -28,4 +28,17 @@ if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
         Boost::filesystem)
     set_target_properties(ShopSchedulingSolver_main PROPERTIES OUTPUT_NAME "shopschedulingsolver")
     install(TARGETS ShopSchedulingSolver_main)
+
+    add_executable(ShopSchedulingSolver_mps_writer_main)
+    target_sources(ShopSchedulingSolver_mps_writer_main PRIVATE
+        mps_writer_main.cpp)
+    target_link_libraries(ShopSchedulingSolver_mps_writer_main PUBLIC
+        ShopSchedulingSolver_shopschedulingsolver
+        ShopSchedulingSolver_tree_search_pfss_makespan
+        ShopSchedulingSolver_tree_search_pfss_tct
+        ShopSchedulingSolver_milp_disjunctive
+        Boost::program_options
+        Boost::filesystem)
+    set_target_properties(ShopSchedulingSolver_mps_writer_main PROPERTIES OUTPUT_NAME "shopschedulingsolver_mps_writer")
+    install(TARGETS ShopSchedulingSolver_mps_writer_main)
 endif()

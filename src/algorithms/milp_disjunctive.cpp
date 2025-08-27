@@ -465,7 +465,7 @@ void xpress_callback(
 
 }
 
-const Output shopschedulingsolver::milp_disjunctive(
+Output shopschedulingsolver::milp_disjunctive(
         const Instance& instance,
         const Solution* initial_solution,
         const MilpDisjunctiveParameters& parameters)
@@ -577,4 +577,47 @@ const Output shopschedulingsolver::milp_disjunctive(
 
     algorithm_formatter.end();
     return output;
+}
+
+void shopschedulingsolver::write_mps(
+        const Instance& instance,
+        mathoptsolverscmake::SolverName solver,
+        const std::string& output_path)
+{
+    Model milp_model = create_milp_model(instance);
+
+    if (solver == mathoptsolverscmake::SolverName::Cbc) {
+#ifdef CBC_FOUND
+        OsiCbcSolverInterface osi_solver;
+        CbcModel cbc_model(osi_solver);
+        mathoptsolverscmake::load(cbc_model, milp_model.model);
+        cbc_model.solver()->writeMps(output_path.c_str());
+#else
+        throw std::invalid_argument("");
+#endif
+
+    } else if (solver == mathoptsolverscmake::SolverName::Highs) {
+#ifdef HIGHS_FOUND
+        Highs highs;
+        mathoptsolverscmake::load(highs, milp_model.model);
+        highs.writeModel(output_path);
+#else
+        throw std::invalid_argument("");
+#endif
+
+    } else if (solver == mathoptsolverscmake::SolverName::Xpress) {
+#ifdef XPRESS_FOUND
+        XPRSprob xpress_model;
+        XPRScreateprob(&xpress_model);
+        mathoptsolverscmake::load(xpress_model, milp_model);
+        mathoptsolverscmake::write_mps(xpress_model, "kpc.mps");
+        XPRSdestroyprob(xpress_model);
+#else
+        throw std::invalid_argument("");
+#endif
+
+    } else {
+        throw std::invalid_argument("");
+    }
+
 }

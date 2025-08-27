@@ -108,6 +108,7 @@ int main(int argc, char *argv[])
         ("input,i", po::value<std::string>()->required(), "set input path")
         ("format,f", po::value<std::string>()->required(), "set input format")
         ("objective,", po::value<Objective>(), "set objective")
+        ("operations-arbitrary-order,", po::value<bool>(), "set operations arbitrary order")
 
         ("algorithm,a", po::value<std::string>()->required(), "set algorithm")
 
@@ -142,11 +143,9 @@ int main(int argc, char *argv[])
             vm["format"].as<std::string>());
     if (vm.count("objective"))
         instance_builder.set_objective(vm["objective"].as<Objective>());
+    if (vm.count("operations-arbitrary-order"))
+        instance_builder.set_operations_arbitrary_order(vm["operations-arbitrary-order"].as<bool>());
     Instance instance = instance_builder.build();
-
-    // Read optimize parameters.
-    Parameters parameters;
-    read_args(parameters, vm);
 
     // Run.
     Output output = run(instance, vm);

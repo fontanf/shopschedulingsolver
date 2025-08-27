@@ -43,7 +43,7 @@ if __name__ == "__main__":
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         output_directory = os.path.join(
                 output_directory,
-                date + "_" + benchmark + "_" + args.algorithm)
+                date + "_" + args.algorithm)
 
 
     if benchmark == "pfss_makespan":
