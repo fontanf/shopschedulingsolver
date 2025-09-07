@@ -28,6 +28,8 @@ public:
 
     void sort_machines();
 
+    void sort_jobs();
+
     /*
      * Build
      */

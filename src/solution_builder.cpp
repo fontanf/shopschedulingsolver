@@ -71,6 +71,33 @@ void SolutionBuilder::sort_machines()
     }
 }
 
+void SolutionBuilder::sort_jobs()
+{
+    const Instance& instance = this->solution_.instance();
+    for (JobId job_id = 0;
+            job_id < instance.number_of_jobs();
+            ++job_id) {
+        Solution::Job& solution_job = solution_.jobs_[job_id];
+        sort(
+                solution_job.solution_operations.begin(),
+                solution_job.solution_operations.end(),
+                [this](
+                    SolutionOperationId solution_operation_1_id,
+                    SolutionOperationId solution_operation_2_id) -> bool
+                {
+                    const Solution::Operation& solution_operation_1 = this->solution_.operations_[solution_operation_1_id];
+                    const Solution::Operation& solution_operation_2 = this->solution_.operations_[solution_operation_2_id];
+                    return solution_operation_1.start < solution_operation_2.start;
+                });
+        for (JobId job_position = 0;
+                job_position < (JobId)solution_job.solution_operations.size();
+                ++job_position) {
+            Solution::Operation& solution_operation = solution_.operations_[solution_job.solution_operations[job_position]];
+            solution_operation.job_position = job_position;
+        }
+    }
+}
+
 Solution SolutionBuilder::build()
 {
     const Instance& instance = this->solution_.instance();

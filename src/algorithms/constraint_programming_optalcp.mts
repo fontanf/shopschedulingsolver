@@ -29,23 +29,22 @@ async function main()
     for (let machine_id = 0; machine_id < number_of_machines; ++machine_id)
         machines[machine_id] = [];
     // Stored by job.
-    let jobs: CP.IntervalVar[][][] = [];
+    let jobs: CP.IntervalVar[][] = [];
     for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
         jobs[job_id] = []
         for (let operation_id = 0;
                 operation_id < instance.jobs[job_id].operations.length;
                 ++operation_id) {
-            jobs[job_id][operation_id] = []
             // Create a new operation:
             const machine_id = instance.jobs[job_id].operations[operation_id].machines[0].machine;
             const duration = instance.jobs[job_id].operations[operation_id].machines[0].processing_time;
             let operation = model.intervalVar({
                 length: duration,
-                name: "J" + (job_id) + "O" + (operation_id) + "M" + ("0")
+                name: "J" + (job_id) + "O" + (operation_id)
             });
             // Operation requires some machine:
             machines[machine_id].push(operation);
-            jobs[job_id][operation_id].push(operation)
+            jobs[job_id].push(operation)
         }
     }
 
@@ -55,9 +54,20 @@ async function main()
 
     // Objective: minimize the makespan.
     let ends: CP.IntExpr[] = [];
-    for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
-        let operation = jobs[job_id][instance.jobs[job_id].operations.length - 1][0];
-        ends.push((operation as CP.IntervalVar).end());
+    if (!instance.operations_arbitrary_order) {
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            let operation = jobs[job_id][instance.jobs[job_id].operations.length - 1];
+            ends.push((operation as CP.IntervalVar).end());
+        }
+    } else {
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            for (let operation_id = 0;
+                    operation_id < instance.jobs[job_id].operations.length;
+                    ++operation_id) {
+                let operation = jobs[job_id][operation_id];
+                ends.push((operation as CP.IntervalVar).end());
+            }
+        }
     }
     let makespan = model.max(ends);
     makespan.minimize();
@@ -66,18 +76,24 @@ async function main()
     // Constraints //
     /////////////////
 
-    // Constraints: precedence constraints between operations of a job (job shop).
-    for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
-        for (let operation_id = 1;
-                operation_id < instance.jobs[job_id].operations.length;
-                ++operation_id) {
-            let operation = jobs[job_id][operation_id][0];
-            let operation_prev = jobs[job_id][operation_id - 1][0];
-            operation_prev.endBeforeStart(operation);
+    if (!instance.operations_arbitrary_order) {
+        // Constraints: precedence constraints between operations of a job (job shop).
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            for (let operation_id = 1;
+                    operation_id < instance.jobs[job_id].operations.length;
+                    ++operation_id) {
+                 let operation = jobs[job_id][operation_id];
+                 let operation_prev = jobs[job_id][operation_id - 1];
+                 operation_prev.endBeforeStart(operation);
+            }
         }
+    } else {
+        // Constraints: operations of each job must not overlap.
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id)
+            model.noOverlap(jobs[job_id]);
     }
 
-    // Constraints: tasks on each machine cannot overlap.
+    // Constraints: operations on each machine must not overlap.
     for (let machine_id = 0; machine_id < number_of_machines; ++machine_id)
         model.noOverlap(machines[machine_id]);
 
@@ -88,8 +104,30 @@ async function main()
     const parameters_raw = fs.readFileSync(parameters_path, "utf-8");
     const parameters = JSON.parse(parameters_raw);
 
+    const defaults = {
+        "FDS": {
+            searchType: "FDS",
+            noOverlapPropagationLevel: 4,
+            cumulPropagationLevel: 3,
+            reservoirPropagationLevel: 2,
+        },
+        "FDSLB": {
+            searchType: "FDS",
+            noOverlapPropagationLevel: 4,
+            cumulPropagationLevel: 3,
+            reservoirPropagationLevel: 2,
+            FDSLBStrategy: "Split"
+        },
+        "LNS": { searchType: "LNS" },
+    } as const;
+
+    type WorkerType = keyof typeof defaults;
+
     const cp_parameters: CP.Parameters = {
         timeLimit: parameters.TimeLimit,
+        workers: (["FDS", "FDSLB", "LNS", "LNS"] as WorkerType[]).map(v => defaults[v]),
+        usePrecedenceEnergy : 1,
+        packPropagationLevel : 2,
     };
 
     ///////////
@@ -123,7 +161,7 @@ async function main()
                     job_id,
                     operation_id,
                     operation_machine_id,
-                    start: solve_result.bestSolution!.getStart(jobs[job_id][operation_id][operation_machine_id])
+                    start: solve_result.bestSolution!.getStart(jobs[job_id][operation_id])
                 };
                 solution.operations.push(solution_operation)
             }

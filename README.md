@@ -44,6 +44,7 @@ $F_m \mid \text{prmu} \mid \sum C_j$
 
 $J_m \mid \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $J_m \mid \text{no-wait} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -53,6 +54,7 @@ $J_m \mid \text{no-idle} \mid C_{\max}$
 
 $O_m \mid \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{no-wait} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
