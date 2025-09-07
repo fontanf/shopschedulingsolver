@@ -26,6 +26,10 @@ if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
         ShopSchedulingSolver_milp_disjunctive
         Boost::program_options
         Boost::filesystem)
+    if(SHOPSCHEDULINGSOLVER_USE_OPTALCP)
+        target_link_libraries(ShopSchedulingSolver_main PUBLIC
+            ShopSchedulingSolver_constraint_programming_optalcp)
+    endif()
     set_target_properties(ShopSchedulingSolver_main PROPERTIES OUTPUT_NAME "shopschedulingsolver")
     install(TARGETS ShopSchedulingSolver_main)
 

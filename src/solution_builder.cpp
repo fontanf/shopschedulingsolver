@@ -164,3 +164,24 @@ Solution SolutionBuilder::build()
 
     return std::move(solution_);
 }
+
+void SolutionBuilder::read(
+        const std::string& certificate_path)
+{
+    std::ifstream file(certificate_path);
+    if (!file.good()) {
+        throw std::runtime_error(
+                "shopschedulingsolver::SolutionBuilder::read: "
+                "unable to open file \"" + certificate_path + "\".");
+    }
+
+    nlohmann ::json j;
+    file >> j;
+    for (const auto& json_operation: j["operations"]) {
+        this->append_operation(
+                json_operation["job_id"],
+                json_operation["operation_id"],
+                json_operation["operation_machine_id"],
+                json_operation["start"]);
+    }
+}

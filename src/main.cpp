@@ -3,6 +3,9 @@
 #include "shopschedulingsolver/algorithms/tree_search_pfss_makespan.hpp"
 #include "shopschedulingsolver/algorithms/tree_search_pfss_tct.hpp"
 #include "shopschedulingsolver/algorithms/milp_disjunctive.hpp"
+#ifdef OPTALCP_FOUND
+#include "shopschedulingsolver/algorithms/constraint_programming_optalcp.hpp"
+#endif
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
@@ -88,6 +91,13 @@ Output run(
         if (vm.count("solver"))
             parameters.solver = vm["solver"].as<mathoptsolverscmake::SolverName>();
         return milp_disjunctive(instance, nullptr, parameters);
+
+#ifdef OPTALCP_FOUND
+    } else if (algorithm == "constraint-programming") {
+        Parameters parameters;
+        read_args(parameters, vm);
+        return constraint_programming_optalcp(instance, parameters);
+#endif
 
     } else {
         throw std::invalid_argument(

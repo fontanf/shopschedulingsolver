@@ -70,7 +70,7 @@ if __name__ == "__main__":
     )
     fig.update_layout(
         xaxis_title="Time",
-        yaxis_title="Machines"
+        yaxis_title="Machines",
         legend_title="Jobs",
     )
 

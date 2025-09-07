@@ -27,3 +27,31 @@ target_link_libraries(ShopSchedulingSolver_milp_disjunctive PUBLIC
     ShopSchedulingSolver_shopschedulingsolver
     MathOptSolversCMake::milp)
 add_library(ShopSchedulingSolver::milp_disjunctive ALIAS ShopSchedulingSolver_milp_disjunctive)
+
+if(SHOPSCHEDULINGSOLVER_USE_OPTALCP)
+    add_custom_command(
+        OUTPUT constraint_programming_optalcp.mjs
+        COMMAND npx tsc
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS constraint_programming_optalcp.mts tsconfig.json
+        COMMENT "Compiling TypeScript solver")
+
+    add_custom_target(ShopSchedulingSolver_constraint_programming_optalcp_ts ALL
+        DEPENDS constraint_programming_optalcp.mjs)
+    set_target_properties(ShopSchedulingSolver_constraint_programming_optalcp_ts PROPERTIES OUTPUT_NAME "shopschedulingsolver_constraint_programming_optalcp.mjs")
+    install(FILES constraint_programming_optalcp.mjs
+        DESTINATION bin)
+
+    add_library(ShopSchedulingSolver_constraint_programming_optalcp)
+    target_sources(ShopSchedulingSolver_constraint_programming_optalcp PRIVATE
+        constraint_programming_optalcp.cpp)
+    target_compile_definitions(ShopSchedulingSolver_constraint_programming_optalcp PUBLIC
+        OPTALCP_FOUND=1)
+    target_include_directories(ShopSchedulingSolver_constraint_programming_optalcp PUBLIC
+        ${PROJECT_SOURCE_DIR}/include)
+    target_link_libraries(ShopSchedulingSolver_constraint_programming_optalcp PUBLIC
+        ShopSchedulingSolver_shopschedulingsolver)
+    add_dependencies(ShopSchedulingSolver_constraint_programming_optalcp
+        ShopSchedulingSolver_constraint_programming_optalcp_ts)
+    add_library(ShopSchedulingSolver::constraint_programming_optalcp ALIAS ShopSchedulingSolver_constraint_programming_optalcp)
+endif()

@@ -53,6 +53,49 @@ std::ostream& shopschedulingsolver::operator<<(
     return os;
 }
 
+void Instance::write(
+        const std::string& instance_path,
+        const std::string& format) const
+{
+    if (instance_path.empty())
+        return;
+    std::ofstream file{instance_path};
+    if (!file.good()) {
+        throw std::runtime_error(
+                "Unable to open file \"" + instance_path + "\".");
+    }
+
+    nlohmann::json json;
+
+    json["objective"] = this->objective();
+    json["operations_arbitrary_order"] = this->operations_arbitrary_order();
+    json["no_wait"] = this->no_wait();
+    json["no_idle"] = this->no_idle();
+    json["blocking"] = this->blocking();
+    json["permutation"] = this->permutation();
+    json["number_of_machines"] = this->number_of_machines();
+    for (JobId job_id = 0; job_id < this->number_of_jobs(); ++job_id) {
+        const Job& job = this->job(job_id);
+        json["jobs"][job_id]["release_date"] = job.release_date;
+        json["jobs"][job_id]["due_date"] = job.due_date;
+        json["jobs"][job_id]["weight"] = job.weight;
+        for (OperationId operation_id = 0;
+                operation_id < (OperationId)job.operations.size();
+                ++operation_id) {
+            const Operation& operation = job.operations[operation_id];
+            for (OperationMachineId operation_machine_id = 0;
+                    operation_machine_id < (OperationMachineId)operation.machines.size();
+                    ++operation_machine_id) {
+                const OperationMachine& operation_machine = operation.machines[operation_machine_id];
+                json["jobs"][job_id]["operations"][operation_id]["machines"][operation_machine_id]["machine"] = operation_machine.machine_id;
+                json["jobs"][job_id]["operations"][operation_id]["machines"][operation_machine_id]["processing_time"] = operation_machine.processing_time;
+            }
+        }
+    }
+
+    file << std::setw(4) << json << std::endl;
+}
+
 std::ostream& Instance::format(
         std::ostream& os,
         int verbosity_level) const

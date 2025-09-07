@@ -1,0 +1,142 @@
+import * as fs from "fs";
+import * as CP from '@scheduleopt/optalcp';
+
+let params = {
+  usage: "Usage: node jobshop.mjs INSTANCE_PATH PARAMETERS_PATH OUTPUT_PATH CERTIFICATE_PATH"
+};
+
+async function main()
+{
+    const instance_path = process.argv[2];
+    const parameters_path = process.argv[3];
+    const output_path = process.argv[4];
+    const certificate_path = process.argv[5];
+
+    const instance_raw = fs.readFileSync(instance_path, "utf-8");
+    const instance = JSON.parse(instance_raw);
+
+    let model = new CP.Model("shopscheduling");
+    const number_of_jobs = instance.jobs.length;
+    const number_of_machines = instance.number_of_machines;
+
+    ///////////////
+    // Variables //
+    ///////////////
+
+    // Variables: interval variables for each operation.
+    // Stored by machine.
+    let machines: CP.IntervalVar[][] = [];
+    for (let machine_id = 0; machine_id < number_of_machines; ++machine_id)
+        machines[machine_id] = [];
+    // Stored by job.
+    let jobs: CP.IntervalVar[][][] = [];
+    for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+        jobs[job_id] = []
+        for (let operation_id = 0;
+                operation_id < instance.jobs[job_id].operations.length;
+                ++operation_id) {
+            jobs[job_id][operation_id] = []
+            // Create a new operation:
+            const machine_id = instance.jobs[job_id].operations[operation_id].machines[0].machine;
+            const duration = instance.jobs[job_id].operations[operation_id].machines[0].processing_time;
+            let operation = model.intervalVar({
+                length: duration,
+                name: "J" + (job_id) + "O" + (operation_id) + "M" + ("0")
+            });
+            // Operation requires some machine:
+            machines[machine_id].push(operation);
+            jobs[job_id][operation_id].push(operation)
+        }
+    }
+
+    ///////////////
+    // Objective //
+    ///////////////
+
+    // Objective: minimize the makespan.
+    let ends: CP.IntExpr[] = [];
+    for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+        let operation = jobs[job_id][instance.jobs[job_id].operations.length - 1][0];
+        ends.push((operation as CP.IntervalVar).end());
+    }
+    let makespan = model.max(ends);
+    makespan.minimize();
+
+    /////////////////
+    // Constraints //
+    /////////////////
+
+    // Constraints: precedence constraints between operations of a job (job shop).
+    for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+        for (let operation_id = 1;
+                operation_id < instance.jobs[job_id].operations.length;
+                ++operation_id) {
+            let operation = jobs[job_id][operation_id][0];
+            let operation_prev = jobs[job_id][operation_id - 1][0];
+            operation_prev.endBeforeStart(operation);
+        }
+    }
+
+    // Constraints: tasks on each machine cannot overlap.
+    for (let machine_id = 0; machine_id < number_of_machines; ++machine_id)
+        model.noOverlap(machines[machine_id]);
+
+    ////////////////
+    // Parameters //
+    ////////////////
+
+    const parameters_raw = fs.readFileSync(parameters_path, "utf-8");
+    const parameters = JSON.parse(parameters_raw);
+
+    const cp_parameters: CP.Parameters = {
+        timeLimit: parameters.TimeLimit,
+    };
+
+    ///////////
+    // Solve //
+    ///////////
+
+    let solve_result = await CP.solve(model, cp_parameters);
+
+    //////////////////////
+    // Retrieve results //
+    //////////////////////
+
+    // Retrieve solution.
+    if (solve_result.bestSolution) {
+        interface OperationSolution {
+            job_id: number;
+            operation_id: number;
+            operation_machine_id: number;
+            start: number | null;
+        }
+
+        const solution: { operations: OperationSolution[] } = {
+            operations: [],
+        };
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            for (let operation_id = 0;
+                    operation_id < instance.jobs[job_id].operations.length;
+                    ++operation_id) {
+                let operation_machine_id = 0;
+                let solution_operation: OperationSolution = {
+                    job_id,
+                    operation_id,
+                    operation_machine_id,
+                    start: solve_result.bestSolution!.getStart(jobs[job_id][operation_id][operation_machine_id])
+                };
+                solution.operations.push(solution_operation)
+            }
+        }
+        const jsonString = JSON.stringify(solution, null, 2);
+        fs.writeFileSync(certificate_path, jsonString, "utf-8");
+    }
+
+    const output = {
+        bound: solve_result.lowerBoundHistory[solve_result.lowerBoundHistory.length - 1].value,
+    };
+    const jsonString = JSON.stringify(output, null, 2);
+    fs.writeFileSync(output_path, jsonString, "utf-8");
+}
+
+main();
