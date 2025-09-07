@@ -44,7 +44,7 @@ Output shopschedulingsolver::constraint_programming_optalcp(
     solution_builder.sort_machines();
     solution_builder.sort_jobs();
     Solution solution = solution_builder.build();
-    solution.format(std::cout, 3);
+    //solution.format(std::cout, 3);
     algorithm_formatter.update_solution(solution, "");
 
     std::ifstream output_file{output_path};

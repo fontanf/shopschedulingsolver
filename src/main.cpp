@@ -93,7 +93,7 @@ Output run(
         return milp_disjunctive(instance, nullptr, parameters);
 
 #ifdef OPTALCP_FOUND
-    } else if (algorithm == "constraint-programming") {
+    } else if (algorithm == "constraint-programming-optalcp") {
         Parameters parameters;
         read_args(parameters, vm);
         return constraint_programming_optalcp(instance, parameters);
