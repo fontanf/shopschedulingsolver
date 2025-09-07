@@ -4,16 +4,27 @@ Research code for flow shop, job shop and open shop scheduling problems.
 
 ![scheduleexample](img/schedule.png?raw=true "Schedule example")
 
-## Compilation
+## Usage
 
+Compile the code:
 ```shell
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release --parallel && cmake --install build --config Release --prefix install
 ```
 
-## Usage
+Setup Python environment to use the Python scripts:
+```shell
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-Example:
+Download data files:
+```shell
+python scripts/download_data.py
+```
+
+Run:
 ```
 ./install/bin/shopschedulingsolver  --verbosity-level 1  --input ./data/vallada2015/Small/VFR10_10_1_Gap.txt --format flow-shop --objective makespan  --algorithm tree-search  --certificate certificate.json
 ```
