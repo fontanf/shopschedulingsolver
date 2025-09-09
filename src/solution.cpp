@@ -114,6 +114,62 @@ void Solution::format(
     if (verbosity_level >= 2) {
         os << std::right << std::endl
             << std::setw(12) << "Machine"
+            << std::setw(12) << "# op."
+            << std::setw(12) << "Proc. time"
+            << std::setw(12) << "Start"
+            << std::setw(12) << "End"
+            << std::endl
+            << std::setw(12) << "-------"
+            << std::setw(12) << "-----"
+            << std::setw(12) << "----------"
+            << std::setw(12) << "-----"
+            << std::setw(12) << "---"
+            << std::endl;
+        for (MachineId machine_id = 0;
+                machine_id < instance.number_of_machines();
+                ++machine_id) {
+            const Solution::Machine& solution_machine = this->machine(machine_id);
+            os
+                << std::setw(12) << machine_id
+                << std::setw(12) << solution_machine.solution_operations.size()
+                << std::setw(12) << solution_machine.processing_time
+                << std::setw(12) << solution_machine.start
+                << std::setw(12) << solution_machine.end
+                << std::endl;
+        }
+    }
+
+    if (verbosity_level >= 2) {
+        os << std::right << std::endl
+            << std::setw(12) << "Job"
+            << std::setw(12) << "# op."
+            << std::setw(12) << "Proc. time"
+            << std::setw(12) << "Start"
+            << std::setw(12) << "End"
+            << std::endl
+            << std::setw(12) << "---"
+            << std::setw(12) << "-----"
+            << std::setw(12) << "----------"
+            << std::setw(12) << "-----"
+            << std::setw(12) << "---"
+            << std::endl;
+        for (JobId job_id = 0;
+                job_id < instance.number_of_jobs();
+                ++job_id) {
+            const Solution::Job& solution_job = this->job(job_id);
+            os
+                << std::setw(12) << job_id
+                << std::setw(12) << solution_job.solution_operations.size()
+                << std::setw(12) << solution_job.processing_time
+                << std::setw(12) << solution_job.start
+                << std::setw(12) << solution_job.end
+                << std::endl;
+        }
+    }
+
+    if (verbosity_level >= 3) {
+        os << std::right << std::endl
+            << std::setw(12) << "Machine"
             << std::setw(12) << "Mac. pos."
             << std::setw(12) << "Job"
             << std::setw(12) << "Operation"

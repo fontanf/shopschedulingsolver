@@ -15,6 +15,7 @@ using OperationId = int64_t;
 using OperationMachineId = int64_t;
 using Time = int64_t;
 using Seed = int64_t;
+using Counter = int64_t;
 
 enum class Objective
 {
@@ -76,6 +77,13 @@ struct Job
 
     /** Weight. */
     Time weight = 1;
+
+
+    /** Number of machine operations. */
+    OperationId number_of_machine_operations = 0;
+
+    /** Mean processing time. */
+    double mean_processing_time = 0;
 };
 
 /**

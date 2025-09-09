@@ -109,9 +109,13 @@ Solution SolutionBuilder::build()
         OperationId operation_prev_id = -1;
         for (SolutionOperationId solution_operation_id: solution_job.solution_operations) {
             const Solution::Operation& o = this->solution_.operations_[solution_operation_id];
+            const auto& machine_operation = job.operations[o.operation_id].machines[o.operation_machine_id];
+            Time end = o.start + machine_operation.processing_time;
+            // Update job.start.
             if (solution_job.start == -1)
                 solution_job.start = o.start;
-            Time end = o.start + instance.job(o.job_id).operations[o.operation_id].machines[o.operation_machine_id].processing_time;
+            // Update job.processing_time.
+            solution_job.processing_time += machine_operation.processing_time;
             // Check job overlap.
             if (end < current_time)
                 this->solution_.number_of_job_overlaps_++;
@@ -125,6 +129,7 @@ Solution SolutionBuilder::build()
             current_time = end;
             operation_prev_id = o.operation_id;
         }
+        // Update job.end.
         solution_job.end = current_time;
 
         // Check release date.
@@ -149,11 +154,14 @@ Solution SolutionBuilder::build()
             machine_id < instance.number_of_machines();
             ++machine_id) {
         const Machine& machine = instance.machine(machine_id);
-        const Solution::Machine& solution_machine = this->solution_.machines_[machine_id];
+        Solution::Machine& solution_machine = this->solution_.machines_[machine_id];
         Time current_time = 0;
         for (SolutionOperationId solution_operation_id: solution_machine.solution_operations) {
             const Solution::Operation& o = this->solution_.operations_[solution_operation_id];
             Time end = o.start + instance.job(o.job_id).operations[o.operation_id].machines[o.operation_machine_id].processing_time;
+            // Update solution_machine.start.
+            if (solution_machine.start == -1)
+                solution_machine.start = o.start;
             // Check machine overlap.
             if (end < current_time)
                 this->solution_.number_of_machine_overlaps_++;
@@ -187,6 +195,7 @@ Solution SolutionBuilder::build()
             }
             current_time = end;
         }
+        solution_machine.end = current_time;
     }
 
     return std::move(solution_);

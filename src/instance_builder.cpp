@@ -238,7 +238,7 @@ Instance InstanceBuilder::build()
     this->instance_.flow_shop_ = true;
     this->instance_.flexible_ = false;
     for (JobId job_id = 0; job_id < this->instance_.number_of_jobs(); ++job_id) {
-        const Job& job = this->instance_.jobs_[job_id];
+        Job& job = this->instance_.jobs_[job_id];
         // Compute flow_shop_.
         if (job.operations.size() != instance_.number_of_machines())
             this->instance_.flow_shop_ = false;
@@ -253,6 +253,8 @@ Instance InstanceBuilder::build()
                     operation_machine_id < (OperationMachineId)operation.machines.size();
                     ++operation_machine_id) {
                 const OperationMachine& operation_machine = operation.machines[operation_machine_id];
+                job.number_of_machine_operations++;
+                job.mean_processing_time += operation_machine.processing_time;
                 // Update machines_.
                 MachineOperation machine_operation;
                 machine_operation.job_id = job_id;
@@ -263,6 +265,8 @@ Instance InstanceBuilder::build()
                     this->instance_.flow_shop_ = false;
             }
         }
+
+        job.mean_processing_time /= job.number_of_machine_operations;
     }
     return std::move(instance_);
 }

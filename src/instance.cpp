@@ -120,12 +120,16 @@ std::ostream& Instance::format(
         os << std::right << std::endl
             << std::setw(12) << "Job"
             << std::setw(12) << "# op."
+            << std::setw(12) << "# mop."
+            << std::setw(12) << "Mean pt"
             << std::setw(12) << "Rel. date"
             << std::setw(12) << "Due date"
             << std::setw(12) << "Weight"
             << std::endl
             << std::setw(12) << "---"
             << std::setw(12) << "-----"
+            << std::setw(12) << "------"
+            << std::setw(12) << "-------"
             << std::setw(12) << "---------"
             << std::setw(12) << "--------"
             << std::setw(12) << "------"
@@ -135,6 +139,8 @@ std::ostream& Instance::format(
             os
                 << std::setw(12) << job_id
                 << std::setw(12) << job.operations.size()
+                << std::setw(12) << job.number_of_machine_operations
+                << std::setw(12) << job.mean_processing_time
                 << std::setw(12) << job.release_date
                 << std::setw(12) << job.due_date
                 << std::setw(12) << job.weight

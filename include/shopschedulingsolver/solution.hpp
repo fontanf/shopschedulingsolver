@@ -43,6 +43,8 @@ public:
         /** Operations scheduled on the machine. */
         std::vector<SolutionOperationId> solution_operations;
 
+        Time processing_time = 0;
+
         Time start = -1;
 
         Time end = -1;
@@ -53,6 +55,8 @@ public:
         std::vector<SolutionOperationId> operations;
 
         std::vector<SolutionOperationId> solution_operations;
+
+        Time processing_time = 0;
 
         Time start = -1;
 
