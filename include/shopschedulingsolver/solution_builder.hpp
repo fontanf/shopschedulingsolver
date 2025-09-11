@@ -16,9 +16,6 @@ public:
     /** Set the instance of the solution. */
     SolutionBuilder& set_instance(const Instance& instance);
 
-    /** Read a solution from a file. */
-    void read(const std::string& certificate_path);
-
     /** Add an operation at the end of a machine. */
     void append_operation(
             JobId job_id,
@@ -29,6 +26,14 @@ public:
     void sort_machines();
 
     void sort_jobs();
+
+    void from_permutation(
+            const std::vector<JobId>& job_ids);
+
+    /** Read a solution from a file. */
+    void read(
+            const std::string& certificate_path,
+            const std::string& format = "default");
 
     /*
      * Build

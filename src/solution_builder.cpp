@@ -201,8 +201,45 @@ Solution SolutionBuilder::build()
     return std::move(solution_);
 }
 
+void SolutionBuilder::from_permutation(
+        const std::vector<JobId>& job_ids)
+{
+    const Instance& instance = this->solution_.instance();
+    std::vector<Time> machines_current_times(instance.number_of_machines(), 0);
+    for (JobId job_id: job_ids) {
+        const Job& job = instance.job(job_id);
+        Time start0 = machines_current_times[0];
+        this->append_operation(
+                job_id,
+                0,  // operation_id
+                0,  // operation_machine_id
+                start0);
+        Time p0 = job.operations[0].machines[0].processing_time;
+        machines_current_times[0] = start0 + p0;
+        for (MachineId machine_id = 1;
+                machine_id < instance.number_of_machines();
+                ++machine_id) {
+            Time start = -1;
+            if (machines_current_times[machine_id - 1]
+                    > machines_current_times[machine_id]) {
+                start = machines_current_times[machine_id - 1];
+            } else {
+                start = machines_current_times[machine_id];
+            }
+            this->append_operation(
+                    job_id,
+                    machine_id,  // operation_id
+                    0,  // operation_machine_id
+                    start);
+            Time p = job.operations[machine_id].machines[0].processing_time;
+            machines_current_times[machine_id] = start + p;
+        }
+    }
+}
+
 void SolutionBuilder::read(
-        const std::string& certificate_path)
+        const std::string& certificate_path,
+        const std::string& format)
 {
     std::ifstream file(certificate_path);
     if (!file.good()) {
@@ -211,13 +248,24 @@ void SolutionBuilder::read(
                 "unable to open file \"" + certificate_path + "\".");
     }
 
-    nlohmann ::json j;
-    file >> j;
-    for (const auto& json_operation: j["operations"]) {
-        this->append_operation(
-                json_operation["job_id"],
-                json_operation["operation_id"],
-                json_operation["operation_machine_id"],
-                json_operation["start"]);
+    if (format == "" || format == "default") {
+        nlohmann ::json j;
+        file >> j;
+        for (const auto& json_operation: j["operations"]) {
+            this->append_operation(
+                    json_operation["job_id"],
+                    json_operation["operation_id"],
+                    json_operation["operation_machine_id"],
+                    json_operation["start"]);
+        }
+    } else if (format == "permutation") {
+        const Instance& instance = this->solution_.instance();
+        std::vector<JobId> job_ids;
+        JobId job_id = -1;
+        for (JobId pos = 0; pos < instance.number_of_jobs(); ++pos) {
+            file >> job_id;
+            job_ids.push_back(job_id);
+        }
+        from_permutation(job_ids);
     }
 }
