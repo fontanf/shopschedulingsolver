@@ -40,7 +40,8 @@ output_directories.sort()
 bksv_field = "Best known solution value"
 
 
-if benchmark == "pfss_makespan":
+if benchmark in ["pfss_makespan_vallada2015_small",
+                 "pfss_makespan_vallada2015_large"]:
 
     datacsv_path = os.path.join(
             "data",
@@ -70,13 +71,37 @@ if benchmark == "pfss_makespan":
         out_rows = []
 
         # Initialize extra rows.
-        extra_rows = [{"Path": "Total", bksv_field: 0}]
+        jobs = []
+        machines = []
+        if benchmark == "pfss_makespan_vallada2015_small":
+            jobs = [10, 20, 30, 40, 50, 60]
+            machines = [5, 10, 15, 20]
+        elif benchmark == "pfss_makespan_vallada2015_large":
+            jobs = [100, 200, 300, 400, 500, 600, 700, 800]
+            machines = [20, 40, 60]
+        extra_rows = [
+                {
+                    "Path": (str(n) + "_" + str(m)),
+                    bksv_field: 0,
+                }
+                for n in jobs
+                for m in machines
+                ] + [{
+                        "Path": "Total",
+                        bksv_field: 0}]
         for fieldname in [bksv_field] + result_columns:
             for row in extra_rows:
                 row[fieldname] = 0
                 row[fieldname.replace("Solution value", "Gap")] = 0
 
         for row in reader:
+
+            if benchmark == "pfss_makespan_vallada2015_small":
+                if row["Dataset"] != "vallada2015_small":
+                    continue
+            if benchmark == "pfss_makespan_vallada2015_large":
+                if row["Dataset"] != "vallada2015_large":
+                    continue
 
             row[bksv_field] = int(row[bksv_field])
 
@@ -96,21 +121,33 @@ if benchmark == "pfss_makespan":
 
             # Get extra rows to update.
             row_id = 0
+            # Get extra rows to update.
+            n = int(row["Number of jobs"])
+            m = int(row["Number of machines"])
+            extra_rows_to_update = [
+                    (jobs.index(n) * len(machines) + machines.index(m)),
+                    -1]
 
             # Update "Best known solution value" column of extra rows.
-            extra_rows[row_id][bksv_field] += row[bksv_field]
+            for row_id in extra_rows_to_update:
+                extra_rows[row_id][bksv_field] += row[bksv_field]
 
             # Update result columns of extra rows.
             for result_column in result_columns:
-                waste = int(row[result_column])
-                row[result_column] = waste
-                extra_rows[row_id][result_column] += waste
+                try:
+                    solution_value = int(row[result_column])
+                except:
+                    solution_value = 9999999
+                row[result_column] = solution_value
+                for row_id in extra_rows_to_update:
+                    extra_rows[row_id][result_column] += solution_value
 
                 # Compute gap.
-                gap = (waste - row[bksv_field]) / row[bksv_field] * 100
+                gap = (solution_value - row[bksv_field]) / row[bksv_field] * 100
                 gap_column = result_column.replace("Solution value", "Gap")
                 row[gap_column] = gap
-                extra_rows[row_id][gap_column] += gap
+                for row_id in extra_rows_to_update:
+                    extra_rows[row_id][gap_column] += gap
 
             # Add current row.
             out_rows.append(row)
@@ -196,12 +233,12 @@ if benchmark == "pfss_tct":
 
             # Update result columns of extra rows.
             for result_column in result_columns:
-                waste = int(row[result_column])
-                row[result_column] = waste
-                extra_rows[row_id][result_column] += waste
+                solution_value = int(row[result_column])
+                row[result_column] = solution_value
+                extra_rows[row_id][result_column] += solution_value
 
                 # Compute gap.
-                gap = (waste - row[bksv_field]) / row[bksv_field] * 100
+                gap = (solution_value - row[bksv_field]) / row[bksv_field] * 100
                 gap_column = result_column.replace("Solution value", "Gap")
                 row[gap_column] = gap
                 extra_rows[row_id][gap_column] += gap

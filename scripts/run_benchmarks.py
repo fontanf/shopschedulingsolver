@@ -46,7 +46,8 @@ if __name__ == "__main__":
                 date + "_" + args.algorithm)
 
 
-    if benchmark == "pfss_makespan":
+    if benchmark in ["pfss_makespan_vallada2015_small",
+                     "pfss_makespan_vallada2015_large"]:
 
         datacsv_path = os.path.join(
                 "data",
@@ -56,6 +57,13 @@ if __name__ == "__main__":
         with open(datacsv_path, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
+
+                if benchmark == "pfss_makespan_vallada2015_small":
+                    if row["Dataset"] != "vallada2015_small":
+                        continue
+                if benchmark == "pfss_makespan_vallada2015_large":
+                    if row["Dataset"] != "vallada2015_large":
+                        continue
 
                 instance_path = os.path.join(
                         data_dir,
@@ -82,6 +90,7 @@ if __name__ == "__main__":
                         f"{main}"
                         f"  --verbosity-level 1"
                         f"  --input \"{instance_path}\""
+                        f" --permutation 1"
                         f" --objective \"{objective}\""
                         f" --format \"{instance_format}\""
                         f"  --algorithm {args.algorithm}"
@@ -127,6 +136,7 @@ if __name__ == "__main__":
                         f"{main}"
                         f"  --verbosity-level 1"
                         f"  --input \"{instance_path}\""
+                        f" --permutation 1"
                         f" --objective \"{objective}\""
                         f" --format \"{instance_format}\""
                         f"  --algorithm {args.algorithm}"
