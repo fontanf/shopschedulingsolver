@@ -31,6 +31,12 @@ struct Model
 
     /** Makespan. */
     int cmax = -1;
+
+    /** c_j the completion time of job j. */
+    std::vector<int> c;
+
+    /** t_j the tardiness of job j. */
+    std::vector<int> t;
 };
 
 Model create_milp_model(
@@ -105,25 +111,83 @@ Model create_milp_model(
     }
 
     // cmax.
-    model.cmax = model.model.variables_lower_bounds.size();
-    model.model.variables_lower_bounds.push_back(0);
-    model.model.variables_upper_bounds.push_back(std::numeric_limits<double>::infinity());
-    model.model.variables_types.push_back(mathoptsolverscmake::VariableType::Integer);
-    model.model.objective_coefficients.push_back(1);
+    if (instance.objective() == Objective::Makespan) {
+        model.cmax = model.model.variables_lower_bounds.size();
+        model.model.variables_lower_bounds.push_back(0);
+        model.model.variables_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+        model.model.variables_types.push_back(mathoptsolverscmake::VariableType::Integer);
+        model.model.objective_coefficients.push_back(1);
+    }
 
-    // Constraints.
-
-    // Makespan definition.
-    if (instance.operations_arbitrary_order()) {
-        // Cmax >= s_{j, o} + p_{j, o}
-        // p_{j, o} <= Cmax - s_{j, o} <= inf
+    // Varibles c.
+    if (instance.objective() == Objective::TotalFlowTime
+                || instance.objective() == Objective::TotalTardiness) {
+        model.c = std::vector<int>(instance.number_of_jobs());
         for (JobId job_id = 0;
                 job_id < instance.number_of_jobs();
                 ++job_id) {
             const Job& job = instance.job(job_id);
-            for (OperationId operation_id = 0;
-                    operation_id < (OperationId)job.operations.size();
-                    ++operation_id) {
+            model.c[job_id] = model.model.variables_lower_bounds.size();
+            model.model.variables_lower_bounds.push_back(0);
+            model.model.variables_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+            model.model.variables_types.push_back(mathoptsolverscmake::VariableType::Integer);
+            if (instance.objective() == Objective::TotalFlowTime) {
+                model.model.objective_coefficients.push_back(job.weight);
+            } else {
+                model.model.objective_coefficients.push_back(0);
+            }
+        }
+    }
+
+    // Varibles t.
+    if (instance.objective() == Objective::TotalTardiness) {
+        model.t = std::vector<int>(instance.number_of_jobs());
+        for (JobId job_id = 0;
+                job_id < instance.number_of_jobs();
+                ++job_id) {
+            const Job& job = instance.job(job_id);
+            model.t[job_id] = model.model.variables_lower_bounds.size();
+            model.model.variables_lower_bounds.push_back(0);
+            model.model.variables_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+            model.model.variables_types.push_back(mathoptsolverscmake::VariableType::Integer);
+            model.model.objective_coefficients.push_back(job.weight);
+        }
+    }
+
+    // Constraints.
+
+    // Makespan definition.
+    if (instance.objective() == Objective::Makespan) {
+        if (instance.operations_arbitrary_order()) {
+            // Cmax >= s_{j, o} + p_{j, o}
+            // p_{j, o} <= Cmax - s_{j, o} <= inf
+            for (JobId job_id = 0;
+                    job_id < instance.number_of_jobs();
+                    ++job_id) {
+                const Job& job = instance.job(job_id);
+                for (OperationId operation_id = 0;
+                        operation_id < (OperationId)job.operations.size();
+                        ++operation_id) {
+                    const Operation& operation = job.operations[operation_id];
+                    model.model.constraints_starts.push_back(model.model.elements_variables.size());
+
+                    model.model.elements_variables.push_back(model.cmax);
+                    model.model.elements_coefficients.push_back(1.0);
+                    model.model.elements_variables.push_back(model.s[job_id][operation_id]);
+                    model.model.elements_coefficients.push_back(-1.0);
+
+                    model.model.constraints_lower_bounds.push_back(operation.machines[0].processing_time);
+                    model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                }
+            }
+        } else {
+            // Cmax >= s_{j, o_last} + p_{j, o_last}
+            // p_{j, o_last} <= Cmax - s_{j, o_last} <= inf
+            for (JobId job_id = 0;
+                    job_id < instance.number_of_jobs();
+                    ++job_id) {
+                const Job& job = instance.job(job_id);
+                OperationId operation_id = job.operations.size() - 1;
                 const Operation& operation = job.operations[operation_id];
                 model.model.constraints_starts.push_back(model.model.elements_variables.size());
 
@@ -136,23 +200,95 @@ Model create_milp_model(
                 model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
             }
         }
-    } else {
-        // Cmax >= s_{j, o_last} + p_{j, o_last}
-        for (JobId job_id = 0;
-                job_id < instance.number_of_jobs();
-                ++job_id) {
-            const Job& job = instance.job(job_id);
-            OperationId operation_id = job.operations.size() - 1;
-            const Operation& operation = job.operations[operation_id];
-            model.model.constraints_starts.push_back(model.model.elements_variables.size());
+    }
 
-            model.model.elements_variables.push_back(model.cmax);
-            model.model.elements_coefficients.push_back(1.0);
-            model.model.elements_variables.push_back(model.s[job_id][operation_id]);
-            model.model.elements_coefficients.push_back(-1.0);
+    // Definition of completion times.
+    if (instance.objective() == Objective::TotalFlowTime
+                || instance.objective() == Objective::TotalTardiness) {
+        if (instance.operations_arbitrary_order()) {
+            // Cj == s_{j, o_last} + p_{j, o_last}
+            // p_{j, o_last} <= Cj - s_{j, o} <= p_{j, o_lest}
+            for (JobId job_id = 0;
+                    job_id < instance.number_of_jobs();
+                    ++job_id) {
+                const Job& job = instance.job(job_id);
+                OperationId operation_id = job.operations.size() - 1;
+                const Operation& operation = job.operations[operation_id];
+                model.model.constraints_starts.push_back(model.model.elements_variables.size());
 
-            model.model.constraints_lower_bounds.push_back(operation.machines[0].processing_time);
-            model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                model.model.elements_variables.push_back(model.c[job_id]);
+                model.model.elements_coefficients.push_back(1.0);
+                model.model.elements_variables.push_back(model.s[job_id][operation_id]);
+                model.model.elements_coefficients.push_back(-1.0);
+
+                model.model.constraints_lower_bounds.push_back(operation.machines[0].processing_time);
+                model.model.constraints_upper_bounds.push_back(operation.machines[0].processing_time);
+            }
+        } else {
+            // Cj >= s_{j, o} + p_{j, o}
+            // p_{j, o} <= Cj - s_{j, o} <= inf
+            for (JobId job_id = 0;
+                    job_id < instance.number_of_jobs();
+                    ++job_id) {
+                const Job& job = instance.job(job_id);
+                for (OperationId operation_id = 0;
+                        operation_id < (OperationId)job.operations.size();
+                        ++operation_id) {
+                    const Operation& operation = job.operations[operation_id];
+                    model.model.constraints_starts.push_back(model.model.elements_variables.size());
+
+                    model.model.elements_variables.push_back(model.c[job_id]);
+                    model.model.elements_coefficients.push_back(1.0);
+                    model.model.elements_variables.push_back(model.s[job_id][operation_id]);
+                    model.model.elements_coefficients.push_back(-1.0);
+
+                    model.model.constraints_lower_bounds.push_back(operation.machines[0].processing_time);
+                    model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                }
+            }
+        }
+    }
+
+    // Definition of tardiness.
+    if (instance.objective() == Objective::TotalTardiness) {
+        if (instance.operations_arbitrary_order()) {
+            // T_j >= s_{j, o_last} + p_{j, o_last}
+            // p_{j, o_last} <= T_j - s_{j, o_last} <= inf
+            for (JobId job_id = 0;
+                    job_id < instance.number_of_jobs();
+                    ++job_id) {
+                const Job& job = instance.job(job_id);
+                OperationId operation_id = job.operations.size() - 1;
+                const Operation& operation = job.operations[operation_id];
+                model.model.constraints_starts.push_back(model.model.elements_variables.size());
+
+                model.model.elements_variables.push_back(model.t[job_id]);
+                model.model.elements_coefficients.push_back(1.0);
+                model.model.elements_variables.push_back(model.s[job_id][operation_id]);
+                model.model.elements_coefficients.push_back(-1.0);
+
+                model.model.constraints_lower_bounds.push_back(operation.machines[0].processing_time);
+                model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+            }
+        } else {
+            // T_j >= C_j
+            // 0 <= T_j - C_j <= inf
+            for (JobId job_id = 0;
+                    job_id < instance.number_of_jobs();
+                    ++job_id) {
+                const Job& job = instance.job(job_id);
+                OperationId operation_id = job.operations.size() - 1;
+                const Operation& operation = job.operations[operation_id];
+                model.model.constraints_starts.push_back(model.model.elements_variables.size());
+
+                model.model.elements_variables.push_back(model.t[job_id]);
+                model.model.elements_coefficients.push_back(1.0);
+                model.model.elements_variables.push_back(model.c[job_id]);
+                model.model.elements_coefficients.push_back(-1.0);
+
+                model.model.constraints_lower_bounds.push_back(0);
+                model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+            }
         }
     }
 
@@ -407,7 +543,9 @@ CbcEventHandler::CbcAction EventHandler::event(CbcEvent which_event)
     // Retrieve solution.
     double milp_objective_value = mathoptsolverscmake::get_solution_value(cbc_model);
     if (!output_.solution.feasible()
-            || output_.solution.makespan() > milp_objective_value) {
+            || ((instance_.objective() == Objective::Makespan && output_.solution.makespan() > milp_objective_value)
+                || (instance_.objective() == Objective::TotalFlowTime && output_.solution.total_flow_time() > milp_objective_value)
+                || (instance_.objective() == Objective::TotalTardiness && output_.solution.total_tardiness() > milp_objective_value))) {
         std::vector<double> milp_solution = mathoptsolverscmake::get_solution(cbc_model);
         Solution solution = retrieve_solution(instance_, milp_model_, milp_solution);
         algorithm_formatter_.update_solution(solution, "node " + std::to_string(number_of_nodes));
@@ -415,7 +553,8 @@ CbcEventHandler::CbcAction EventHandler::event(CbcEvent which_event)
 
     // Retrieve bound.
     Time bound = std::ceil(mathoptsolverscmake::get_bound(cbc_model) - 1e5);
-    algorithm_formatter_.update_makespan_bound(bound, "node " + std::to_string(number_of_nodes));
+    if (instance_.objective() == Objective::Makespan)
+        algorithm_formatter_.update_makespan_bound(bound, "node " + std::to_string(number_of_nodes));
 
     // Check end.
     if (parameters_.timer.needs_to_end())
@@ -446,7 +585,9 @@ void xpress_callback(
     // Retrieve solution.
     double milp_objective_value = mathoptsolverscmake::get_solution_value(xpress_model);
     if (!d.output.solution.feasible()
-            || d.output.solution.maekspan() > milp_objective_value) {
+            || ((d.instance.objective() == Objective::Makespan && d.output.solution.makespan() > milp_objective_value)
+                || (d.instance.objective() == Objective::TotalFlowTime && d.output.solution.total_flow_time() > milp_objective_value)
+                || (d.instance.objective() == Objective::TotalTardiness && d.output.solution.total_tardiness() > milp_objective_value))) {
         std::vector<double> milp_solution = mathoptsolverscmake::get_solution(xpress_model);
         Solution solution = retrieve_solution(d.instance, milp_solution);
         d.algorithm_formatter.update_solution(solution, "");
@@ -454,7 +595,8 @@ void xpress_callback(
 
     // Retrieve bound.
     Time bound = std::ceil(mathoptsolverscmake::get_bound(xpress_model) - 1e-5);
-    d.algorithm_formatter.update_makespan_bound(bound, "");
+    if (d.instance.objective() == Objective::Makespan)
+        d.algorithm_formatter.update_makespan_bound(bound, "");
 
     // Check end.
     if (d.parameters.timer.needs_to_end())
@@ -520,7 +662,9 @@ Output shopschedulingsolver::milp_disjunctive(
                         // Retrieve solution.
                         double milp_objective_value = highs_output->mip_primal_bound;
                         if (!output.solution.feasible()
-                                || output.solution.makespan() > milp_objective_value) {
+                                || ((instance.objective() == Objective::Makespan && output.solution.makespan() > milp_objective_value)
+                                    || (instance.objective() == Objective::TotalFlowTime && output.solution.total_flow_time() > milp_objective_value)
+                                    || (instance.objective() == Objective::TotalTardiness && output.solution.total_tardiness() > milp_objective_value))) {
                             Solution solution = retrieve_solution(instance, milp_model, highs_output->mip_solution);
                             algorithm_formatter.update_solution(solution, "node " + std::to_string(highs_output->mip_node_count));
                         }
@@ -528,7 +672,8 @@ Output shopschedulingsolver::milp_disjunctive(
                         // Retrieve bound.
                         Time bound = std::ceil(highs_output->mip_dual_bound - 1e-5);
                         if (bound != std::numeric_limits<double>::infinity())
-                            algorithm_formatter.update_makespan_bound(bound, "node " + std::to_string(highs_output->mip_node_count));
+                            if (instance.objective() == Objective::Makespan)
+                                algorithm_formatter.update_makespan_bound(bound, "node " + std::to_string(highs_output->mip_node_count));
                     }
 
                     // Check end.
@@ -573,7 +718,8 @@ Output shopschedulingsolver::milp_disjunctive(
     algorithm_formatter.update_solution(solution, "");
 
     // Retrieve bound.
-    algorithm_formatter.update_makespan_bound(milp_bound, "");
+    if (instance.objective() == Objective::Makespan)
+        algorithm_formatter.update_makespan_bound(milp_bound, "");
 
     algorithm_formatter.end();
     return output;
