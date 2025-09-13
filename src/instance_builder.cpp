@@ -162,6 +162,8 @@ void InstanceBuilder::read(
 
     if (format == "flow-shop") {
         read_flow_shop(file);
+    } else if (format == "flow-shop-vallada2008" || format == "vallada2008") {
+        read_flow_shop_vallada2008(file);
     } else if (format == "job-shop") {
         read_job_shop(file);
     } else {
@@ -196,6 +198,41 @@ void InstanceBuilder::read_flow_shop(std::ifstream& file)
     }
 
     this->set_objective(Objective::Makespan);
+}
+
+void InstanceBuilder::read_flow_shop_vallada2008(std::ifstream& file)
+{
+    JobId number_of_jobs;
+    MachineId number_of_machines;
+    file >> number_of_jobs >> number_of_machines;
+    this->set_number_of_machines(number_of_machines);
+    this->add_jobs(number_of_jobs);
+
+    for (JobId job_id = 0; job_id < number_of_jobs; ++job_id) {
+        Time processing_time = -1;
+        MachineId machine_id_tmp = -1;
+        for (MachineId machine_id = 0;
+                machine_id < number_of_machines;
+                ++machine_id) {
+            file >> machine_id_tmp >> processing_time;
+            OperationId operation_id = this->add_operation(job_id);
+            this->add_operation_machine(
+                    job_id,
+                    operation_id,
+                    machine_id,
+                    processing_time);
+        }
+    }
+
+    std::string tmp;
+    file >> tmp;
+    for (JobId job_id = 0; job_id < number_of_jobs; ++job_id) {
+        Time due_date = -1;
+        file >> tmp >> due_date >> tmp >> tmp;
+        set_job_due_date(job_id, due_date);
+    }
+
+    this->set_objective(Objective::TotalTardiness);
 }
 
 void InstanceBuilder::read_job_shop(std::ifstream& file)
