@@ -69,8 +69,12 @@ async function main()
             }
         }
     }
-    let makespan = model.max(ends);
-    makespan.minimize();
+    if (instance.objective == "Makespan") {
+        let makespan = model.max(ends);
+        makespan.minimize();
+    } else if (instance.objective == "Total flow time") {
+    } else if (instance.objective == "Total tardiness") {
+    }
 
     /////////////////
     // Constraints //
@@ -84,7 +88,11 @@ async function main()
                     ++operation_id) {
                  let operation = jobs[job_id][operation_id];
                  let operation_prev = jobs[job_id][operation_id - 1];
-                 operation_prev.endBeforeStart(operation);
+                 if (!instance.no_wait) {
+                     operation_prev.endBeforeStart(operation);
+                 } else {
+                     operation_prev.endAtStart(operation);
+                 }
             }
         }
     } else {

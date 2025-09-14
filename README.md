@@ -52,6 +52,7 @@ $J_m \mid \mid C_{\max}$
 
 $J_m \mid \text{no-wait} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $J_m \mid \text{no-idle} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
