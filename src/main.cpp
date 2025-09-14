@@ -119,6 +119,10 @@ int main(int argc, char *argv[])
         ("format,f", po::value<std::string>()->required(), "set input format")
         ("objective,", po::value<Objective>(), "set objective")
         ("operations-arbitrary-order,", po::value<bool>(), "set operations arbitrary order")
+        ("no-wait,", po::value<bool>(), "set no-wait property")
+        ("no-idle,", po::value<bool>(), "set no-idle property")
+        ("blocking,", po::value<bool>(), "set blocking property")
+        ("permutation,", po::value<bool>(), "set permutation property")
 
         ("algorithm,a", po::value<std::string>()->required(), "set algorithm")
 
@@ -155,6 +159,14 @@ int main(int argc, char *argv[])
         instance_builder.set_objective(vm["objective"].as<Objective>());
     if (vm.count("operations-arbitrary-order"))
         instance_builder.set_operations_arbitrary_order(vm["operations-arbitrary-order"].as<bool>());
+    if (vm.count("no-wait"))
+        instance_builder.set_no_wait(vm["no-wait"].as<bool>());
+    if (vm.count("no-idle"))
+        instance_builder.set_no_idle(vm["no-idle"].as<bool>());
+    if (vm.count("blocking"))
+        instance_builder.set_blocking(vm["blocking"].as<bool>());
+    if (vm.count("permutation"))
+        instance_builder.set_permutation(vm["permutation"].as<bool>());
     Instance instance = instance_builder.build();
 
     // Run.

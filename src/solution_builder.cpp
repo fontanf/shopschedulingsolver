@@ -117,11 +117,13 @@ Solution SolutionBuilder::build()
             // Update job.processing_time.
             solution_job.processing_time += machine_operation.processing_time;
             // Check job overlap.
-            if (end < current_time)
+            if (o.start < current_time)
                 this->solution_.number_of_job_overlaps_++;
             // Check no-wait.
-            if (end != current_time)
+            if (o.start != solution_job.start
+                    && o.start != current_time) {
                 this->solution_.no_wait_ = false;
+            }
             // Check precedences.
             if (!instance.operations_arbitrary_order())
                 if (o.operation_id < operation_prev_id)
@@ -163,11 +165,13 @@ Solution SolutionBuilder::build()
             if (solution_machine.start == -1)
                 solution_machine.start = o.start;
             // Check machine overlap.
-            if (end < current_time)
+            if (o.start < current_time)
                 this->solution_.number_of_machine_overlaps_++;
             // Check no-idle.
-            if (end != current_time)
+            if (o.start != solution_machine.start
+                    && o.start != current_time) {
                 this->solution_.no_idle_ = false;
+            }
             // Check blocking.
             if (o.machine_position != 0) {
                 // Get the previous operation on the machine.

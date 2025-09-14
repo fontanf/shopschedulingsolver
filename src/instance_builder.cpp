@@ -296,6 +296,7 @@ Instance InstanceBuilder::build()
                 MachineOperation machine_operation;
                 machine_operation.job_id = job_id;
                 machine_operation.operation_id = operation_id;
+                machine_operation.operation_machine_id = operation_machine_id;
                 this->instance_.machines_[operation_machine.machine_id].operations.push_back(machine_operation);
                 // Compute flow_shop_.
                 if (operation_machine.machine_id != operation_id)

@@ -38,6 +38,8 @@ struct MachineOperation
     JobId job_id = -1;
 
     OperationId operation_id = -1;
+
+    OperationMachineId operation_machine_id = -1;
 };
 
 struct Machine

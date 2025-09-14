@@ -210,4 +210,48 @@ void Solution::format(
             }
         }
     }
+
+    if (verbosity_level >= 3) {
+        os << std::right << std::endl
+            << std::setw(12) << "Job"
+            << std::setw(12) << "Operation"
+            << std::setw(12) << "Op. mach."
+            << std::setw(12) << "Job pos."
+            << std::setw(12) << "Machine"
+            << std::setw(12) << "Mac. pos."
+            << std::setw(12) << "Start"
+            << std::setw(12) << "End"
+            << std::endl
+            << std::setw(12) << "---"
+            << std::setw(12) << "---------"
+            << std::setw(12) << "---------"
+            << std::setw(12) << "--------"
+            << std::setw(12) << "-------"
+            << std::setw(12) << "---------"
+            << std::setw(12) << "-----"
+            << std::setw(12) << "---"
+            << std::endl;
+        for (JobId job_id = 0;
+                job_id < instance.number_of_jobs();
+                ++job_id) {
+            const Solution::Job& solution_job = this->job(job_id);
+            const auto& job = instance.job(job_id);
+            for (SolutionOperationId solution_operation_id: solution_job.solution_operations) {
+                const Solution::Operation& solution_operation = this->operation(solution_operation_id);
+                const auto& operation = job.operations[solution_operation.operation_id];
+                const auto& operation_machine = operation.machines[solution_operation.operation_machine_id];
+                Time end = solution_operation.start + operation_machine.processing_time;
+                os
+                    << std::setw(12) << job_id
+                    << std::setw(12) << solution_operation.operation_id
+                    << std::setw(12) << solution_operation.operation_machine_id
+                    << std::setw(12) << solution_operation.job_position
+                    << std::setw(12) << solution_operation.machine_id
+                    << std::setw(12) << solution_operation.machine_position
+                    << std::setw(12) << solution_operation.start
+                    << std::setw(12) << end
+                    << std::endl;
+            }
+        }
+    }
 }
