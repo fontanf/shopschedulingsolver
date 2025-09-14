@@ -98,6 +98,14 @@ $J_m \mid \text{no-wait} \mid \sum w_j T_j$
 $J_m \mid \text{no-idle} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
+### Flexible job shop
+
+$FJ_m \mid \mid C_{\max}$
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+
+$FJ_m \mid \text{no-wait} \mid C_{\max}$
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+
 ### Open shop
 
 $O_m \mid \mid C_{\max}$

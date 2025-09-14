@@ -30,21 +30,47 @@ async function main()
         machines[machine_id] = [];
     // Stored by job.
     let jobs: CP.IntervalVar[][] = [];
+    let jobs_2: CP.IntervalVar[][][] = [];
     for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
-        jobs[job_id] = []
+        jobs[job_id] = [];
+        jobs_2[job_id] = [];
         for (let operation_id = 0;
                 operation_id < instance.jobs[job_id].operations.length;
                 ++operation_id) {
-            // Create a new operation:
-            const machine_id = instance.jobs[job_id].operations[operation_id].machines[0].machine;
-            const duration = instance.jobs[job_id].operations[operation_id].machines[0].processing_time;
-            let operation = model.intervalVar({
-                length: duration,
-                name: "J" + (job_id) + "O" + (operation_id)
-            });
-            // Operation requires some machine:
-            machines[machine_id].push(operation);
-            jobs[job_id].push(operation)
+            jobs_2[job_id][operation_id] = [];
+            if (instance.jobs[job_id].operations[operation_id].machines.length == 1) {
+                // Create a new operation:
+                const machine_id = instance.jobs[job_id].operations[operation_id].machines[0].machine;
+                const duration = instance.jobs[job_id].operations[operation_id].machines[0].processing_time;
+                let operation = model.intervalVar({
+                    length: duration,
+                    name: "J" + (job_id) + "O" + (operation_id)
+                });
+                // Operation requires some machine:
+                machines[machine_id].push(operation);
+                jobs[job_id].push(operation)
+                jobs_2[job_id][operation_id].push(operation)
+            } else {
+                const operation = model.intervalVar()
+                jobs[job_id].push(operation)
+                jobs_2[job_id][operation_id] = []
+                const operation_machines = []
+                for (let operation_machine_id = 0;
+                        operation_machine_id < instance.jobs[job_id].operations[operation_id].machines.length;
+                        ++operation_machine_id) {
+                    const machine_id = instance.jobs[job_id].operations[operation_id].machines[operation_machine_id].machine;
+                    const duration = instance.jobs[job_id].operations[operation_id].machines[operation_machine_id].processing_time;
+                    const operation_machine = model.intervalVar({
+                        name: "J" + (job_id) + "O" + (operation_id) + "M" + (operation_machine_id),
+                        length : duration,
+                        optional : true,
+                    });
+                    operation_machines.push(operation_machine);
+                    machines[machine_id].push(operation_machine);
+                    jobs_2[job_id][operation_id].push(operation_machine)
+                }
+                model.alternative(operation, operation_machines)
+            }
         }
     }
 
@@ -164,14 +190,19 @@ async function main()
             for (let operation_id = 0;
                     operation_id < instance.jobs[job_id].operations.length;
                     ++operation_id) {
-                let operation_machine_id = 0;
-                let solution_operation: OperationSolution = {
-                    job_id,
-                    operation_id,
-                    operation_machine_id,
-                    start: solve_result.bestSolution!.getStart(jobs[job_id][operation_id])
-                };
-                solution.operations.push(solution_operation)
+                for (let operation_machine_id = 0;
+                        operation_machine_id < instance.jobs[job_id].operations[operation_id].machines.length;
+                        ++operation_machine_id) {
+                    if (solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][operation_machine_id]) == null)
+                        continue;
+                    let solution_operation: OperationSolution = {
+                        job_id,
+                        operation_id,
+                        operation_machine_id,
+                        start: solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][operation_machine_id])
+                    };
+                    solution.operations.push(solution_operation)
+                }
             }
         }
         const jsonString = JSON.stringify(solution, null, 2);

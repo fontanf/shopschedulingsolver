@@ -94,6 +94,8 @@ private:
 
     void read_job_shop(std::ifstream& file);
 
+    void read_flexible_job_shop(std::ifstream& file);
+
     /*
      * Private attributes
      */

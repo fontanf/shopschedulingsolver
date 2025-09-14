@@ -67,7 +67,9 @@ void Instance::write(
 
     nlohmann::json json;
 
-    json["objective"] = this->objective();
+    std::stringstream objective_ss;
+    objective_ss << this->objective();
+    json["objective"] = objective_ss.str();
     json["operations_arbitrary_order"] = this->operations_arbitrary_order();
     json["no_wait"] = this->no_wait();
     json["no_idle"] = this->no_idle();

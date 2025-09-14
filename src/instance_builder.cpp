@@ -166,6 +166,8 @@ void InstanceBuilder::read(
         read_flow_shop_vallada2008(file);
     } else if (format == "job-shop") {
         read_job_shop(file);
+    } else if (format == "flexible-job-shop") {
+        read_flexible_job_shop(file);
     } else {
         throw std::invalid_argument(
                 "Unknown instance format \"" + format + "\".");
@@ -246,7 +248,7 @@ void InstanceBuilder::read_job_shop(std::ifstream& file)
 
     MachineId machine_id = -1;
     Time processing_time = -1;
-    for (JobId job_id = 0; job_id < number_of_jobs; job_id++) {
+    for (JobId job_id = 0; job_id < number_of_jobs; ++job_id) {
         for (OperationId operation_id = 0;
                 operation_id < number_of_machines;
                 ++operation_id) {
@@ -257,6 +259,44 @@ void InstanceBuilder::read_job_shop(std::ifstream& file)
                     operation_id,
                     machine_id,
                     processing_time);
+        }
+    }
+
+    this->set_objective(Objective::Makespan);
+}
+
+void InstanceBuilder::read_flexible_job_shop(std::ifstream& file)
+{
+    JobId number_of_jobs = -1;
+    MachineId number_of_machines = -1;
+    std::string tmp;
+    file >> number_of_jobs;
+    file >> number_of_machines;
+    file >> tmp;
+    this->add_jobs(number_of_jobs);
+    this->set_number_of_machines(number_of_machines);
+
+    OperationId number_of_operations = -1;
+    OperationId number_of_operation_machines = -1;
+    MachineId machine_id = -1;
+    Time processing_time = -1;
+    for (JobId job_id = 0; job_id < number_of_jobs; ++job_id) {
+        file >> number_of_operations;
+        for (OperationId operation_id = 0;
+                operation_id < number_of_operations;
+                ++operation_id) {
+            this->add_operation(job_id);
+            file >> number_of_operation_machines;
+            for (OperationMachineId operation_machine_id = 0;
+                    operation_machine_id < number_of_operation_machines;
+                    ++operation_machine_id) {
+                file >> machine_id >> processing_time;
+                this->add_operation_machine(
+                        job_id,
+                        operation_id,
+                        machine_id - 1,
+                        processing_time);
+            }
         }
     }
 
