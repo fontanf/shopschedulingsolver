@@ -144,3 +144,46 @@ if __name__ == "__main__":
                         f"  --output \"{json_output_path}\""
                         f" --certificate \"{certificate_path}\"")
                 run_command(command)
+
+
+    if benchmark == "pfss_tt":
+
+        datacsv_path = os.path.join(
+                "data",
+                "data_pfss_tt.csv")
+
+        data_dir = os.path.dirname(os.path.realpath(datacsv_path))
+        with open(datacsv_path, newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+
+                instance_path = os.path.join(
+                        data_dir,
+                        row["Path"])
+
+                time_limit = float(row["Time limit"])
+
+                json_output_path = os.path.join(
+                        output_directory,
+                        row["Path"] + "_output.json")
+                if not os.path.exists(os.path.dirname(json_output_path)):
+                    os.makedirs(os.path.dirname(json_output_path))
+
+                certificate_path = os.path.join(
+                        output_directory,
+                        row["Path"] + "_solution.csv")
+                if not os.path.exists(os.path.dirname(certificate_path)):
+                    os.makedirs(os.path.dirname(certificate_path))
+
+                instance_format = row["Format"]
+                command = (
+                        f"{main}"
+                        f"  --verbosity-level 1"
+                        f"  --input \"{instance_path}\""
+                        f" --permutation 1"
+                        f" --format \"{instance_format}\""
+                        f"  --algorithm {args.algorithm}"
+                        f" --time-limit {time_limit}"
+                        f"  --output \"{json_output_path}\""
+                        f" --certificate \"{certificate_path}\"")
+                run_command(command)
