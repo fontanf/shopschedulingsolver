@@ -2,6 +2,7 @@
 #include "shopschedulingsolver/instance_builder.hpp"
 #include "shopschedulingsolver/algorithms/tree_search_pfss_makespan.hpp"
 #include "shopschedulingsolver/algorithms/tree_search_pfss_tct.hpp"
+#include "shopschedulingsolver/algorithms/milp_positional.hpp"
 #include "shopschedulingsolver/algorithms/milp_disjunctive.hpp"
 #ifdef OPTALCP_FOUND
 #include "shopschedulingsolver/algorithms/constraint_programming_optalcp.hpp"
@@ -84,6 +85,13 @@ Output run(
             throw std::invalid_argument(
                     "Unknown algorithm \"" + algorithm + "\".");
         }
+
+    } else if (algorithm == "milp-positional") {
+        MilpPositionalParameters parameters;
+        read_args(parameters, vm);
+        if (vm.count("solver"))
+            parameters.solver = vm["solver"].as<mathoptsolverscmake::SolverName>();
+        return milp_positional(instance, nullptr, parameters);
 
     } else if (algorithm == "milp-disjunctive") {
         MilpDisjunctiveParameters parameters;

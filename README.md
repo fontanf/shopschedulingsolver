@@ -39,10 +39,33 @@ python scripts/visualize.py certificate.json
 ### Flow shop
 
 $F_m \mid \text{prmu} \mid C_{\max}$
+* Positional MILP `--algorithm milp-positional`
 * Tree search `--algorithm tree-search`
 
+$F_m \mid \text{prmu}, \text{no-idle} \mid C_{\max}$
+* Positional MILP `--algorithm milp-positional`
+
+$F_m \mid \text{prmu}, \text{blocking} \mid C_{\max}$
+* Positional MILP `--algorithm milp-positional`
+
 $F_m \mid \text{prmu} \mid \sum C_j$
+* Positional MILP `--algorithm milp-positional`
 * Tree search `--algorithm tree-search`
+
+$F_m \mid \text{prmu}, \text{no-idle} \mid \sum C_j$
+* Positional MILP `--algorithm milp-positional`
+
+$F_m \mid \text{prmu}, \text{blocking} \mid \sum C_j$
+* Positional MILP `--algorithm milp-positional`
+
+$F_m \mid \text{prmu} \mid \sum T_j$
+* Positional MILP `--algorithm milp-positional`
+
+$F_m \mid \text{prmu}, \text{no-idle} \mid \sum T_j$
+* Positional MILP `--algorithm milp-positional`
+
+$F_m \mid \text{prmu}, \text{blocking} \mid \sum T_j$
+* Positional MILP `--algorithm milp-positional`
 
 ### Job shop
 

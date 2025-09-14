@@ -1,16 +1,19 @@
 /**
- * Disjunctive MILP model
+ * Positional MILP model
  *
- * The model corresponds to model 3 in:
+ * This is the positional model for permutation flow shop problems.
  *
- *     "Modeling and scheduling no-wait open shop problems" (Naderi et Zandieh,
- *     2014)
- *     https://doi.org/10.1016/j.ijpe.2014.06.011
+ * The model is described in:
  *
- * The model described in this paper is for the no-wait open shop.
- * It is adapted here for job shop, and to no-idle and blocking constraints.
+ *     "Matheuristic algorithms for minimizing total tardiness in the m-machine
+ *     flow-shop scheduling problem" (Ta et al, 2018)
+ *     https://doi.org/10.1007/s10845-015-1046-4
  *
- * The permutation flow shop is not handled.
+ * The model described in this paper is for the unweighted total tardiness
+ * objective.
+ *
+ * It is adapted here to handle makespan and unweighted total flow time
+ * objective as well, and to no-idle, no-wait and blocking constraints.
  */
 
 #pragma once
@@ -22,7 +25,7 @@
 namespace shopschedulingsolver
 {
 
-struct MilpDisjunctiveParameters: Parameters
+struct MilpPositionalParameters: Parameters
 {
     mathoptsolverscmake::SolverName solver = mathoptsolverscmake::SolverName::Highs;
 
@@ -48,14 +51,9 @@ struct MilpDisjunctiveParameters: Parameters
     }
 };
 
-Output milp_disjunctive(
+Output milp_positional(
         const Instance& instance,
         const Solution* initial_solution = NULL,
-        const MilpDisjunctiveParameters& parameters = {});
-
-void write_mps(
-        const Instance& instance,
-        mathoptsolverscmake::SolverName solver,
-        const std::string& output_path);
+        const MilpPositionalParameters& parameters = {});
 
 }

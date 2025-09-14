@@ -184,9 +184,9 @@ Solution SolutionBuilder::build()
                 if (o_prev.job_position + 1 < solution_job_prev.solution_operations.size()) {
                     // Get the next scheduled operation of the previous job.
                     SolutionOperationId solution_operation_prev_next_id = solution_job_prev.solution_operations[o_prev.job_position + 1];
-                    const Solution::Operation& solution_operation_prev_next = solution_.operations_[solution_operation_prev_next_id];
+                    const Solution::Operation& o_prev_next = solution_.operations_[solution_operation_prev_next_id];
                     // This operation must start before the start of the current operation.
-                    if (solution_operation_prev_next.start > o.start)
+                    if (o_prev_next.start > o.start)
                         this->solution_.blocking_ = false;
                 }
             }

@@ -23,6 +23,7 @@ if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
         ShopSchedulingSolver_shopschedulingsolver
         ShopSchedulingSolver_tree_search_pfss_makespan
         ShopSchedulingSolver_tree_search_pfss_tct
+        ShopSchedulingSolver_milp_positional
         ShopSchedulingSolver_milp_disjunctive
         Boost::program_options
         Boost::filesystem)
@@ -38,8 +39,6 @@ if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
         mps_writer_main.cpp)
     target_link_libraries(ShopSchedulingSolver_mps_writer_main PUBLIC
         ShopSchedulingSolver_shopschedulingsolver
-        ShopSchedulingSolver_tree_search_pfss_makespan
-        ShopSchedulingSolver_tree_search_pfss_tct
         ShopSchedulingSolver_milp_disjunctive
         Boost::program_options
         Boost::filesystem)

@@ -32,7 +32,17 @@ struct Model
     /** Makespan. */
     int cmax = -1;
 
-    /** s_j the starting time of job j. */
+    /**
+     * t_j the tardiness of job j.
+     * These variables are only required with total weighted tardiness
+     * objective.
+     */
+    std::vector<int> t;
+
+    /**
+     * s_j the starting time of job j.
+     * These variables are only required in the wait case.
+     */
     std::vector<int> s;
 
     /**
@@ -40,13 +50,6 @@ struct Model
      * These variables are only required in the no-idle case.
      */
     std::vector<int> sm;
-
-    /**
-     * t_j the tardiness of job j.
-     * These variables are only required with total weighted tardiness
-     * objective.
-     */
-    std::vector<int> t;
 };
 
 Model create_milp_model(
@@ -54,7 +57,10 @@ Model create_milp_model(
 {
     Model model;
 
-    // Variable and objective.
+    /////////////////////////////
+    // Variables and objective //
+    /////////////////////////////
+
     model.model.objective_direction = mathoptsolverscmake::ObjectiveDirection::Minimize;
 
     // Variables y.
@@ -102,7 +108,7 @@ Model create_milp_model(
         }
     }
 
-    // Varibles s.
+    // Varibles c.
     model.c = std::vector<std::vector<int>>(instance.number_of_jobs());
     for (JobId job_id = 0;
             job_id < instance.number_of_jobs();
@@ -179,7 +185,9 @@ Model create_milp_model(
         }
     }
 
-    // Constraints.
+    /////////////////
+    // Constraints //
+    /////////////////
 
     // Makespan definition.
     if (instance.objective() == Objective::Makespan) {
@@ -529,7 +537,7 @@ Solution retrieve_solution(
                 ++operation_id) {
             const Operation& operation = job.operations[operation_id];
             Time processing_time = operation.machines[0].processing_time;
-            Time completion_time = milp_solution[model.c[job_id][operation_id]];
+            Time completion_time = std::round(milp_solution[model.c[job_id][operation_id]]);
             Time start = completion_time - processing_time;
             solution_builder.append_operation(
                     job_id,
