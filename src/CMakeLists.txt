@@ -25,6 +25,7 @@ if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
         ShopSchedulingSolver_tree_search_pfss_tct
         ShopSchedulingSolver_milp_positional
         ShopSchedulingSolver_milp_disjunctive
+        ShopSchedulingSolver_local_search_pfss_makespan
         Boost::program_options
         Boost::filesystem)
     if(SHOPSCHEDULINGSOLVER_USE_OPTALCP)

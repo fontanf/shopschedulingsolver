@@ -7,6 +7,7 @@
 #ifdef OPTALCP_FOUND
 #include "shopschedulingsolver/algorithms/constraint_programming_optalcp.hpp"
 #endif
+#include "shopschedulingsolver/algorithms/local_search_pfss_makespan.hpp"
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
@@ -106,6 +107,13 @@ Output run(
         read_args(parameters, vm);
         return constraint_programming_optalcp(instance, parameters);
 #endif
+
+    } else if (algorithm == "local-search") {
+        if (instance.objective() == Objective::Makespan) {
+            LocalSearchParameters parameters;
+            read_args(parameters, vm);
+            return local_search_pfss_makespan(instance, generator, nullptr, parameters);
+        }
 
     } else {
         throw std::invalid_argument(
