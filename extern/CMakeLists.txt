@@ -28,7 +28,7 @@ set(OPTIMIZATIONTOOLS_BUILD_TEST OFF)
 FetchContent_Declare(
     optimizationtools
     GIT_REPOSITORY https://github.com/fontanf/optimizationtools.git
-    GIT_TAG e086ec4cfcc9a885cd63f579a99ea5e8f4737005)
+    GIT_TAG e8c379203792fcad764cce239986b325619475fd)
     #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../optimizationtools/")
 FetchContent_MakeAvailable(optimizationtools)
 
@@ -58,3 +58,13 @@ FetchContent_Declare(
     GIT_TAG 8cf4a179d103efb9d4e0a94bc2f6f669105cd45a)
     #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../treesearchsolver/")
 FetchContent_MakeAvailable(treesearchsolver)
+
+# Fetch fontanf/localsearchsolver.
+set(LOCALSEARCHSOLVER_BUILD_TEST OFF)
+set(LOCALSEARCHSOLVER_BUILD_EXAMPLES OFF)
+FetchContent_Declare(
+    localsearchsolver
+    GIT_REPOSITORY https://github.com/fontanf/localsearchsolver.git
+    GIT_TAG 32de042d5481a7c87934e868adbe44137abda2b7)
+    #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../localsearchsolver/")
+FetchContent_MakeAvailable(localsearchsolver)
