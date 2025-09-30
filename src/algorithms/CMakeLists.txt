@@ -65,3 +65,13 @@ if(SHOPSCHEDULINGSOLVER_USE_OPTALCP)
         ShopSchedulingSolver_constraint_programming_optalcp_ts)
     add_library(ShopSchedulingSolver::constraint_programming_optalcp ALIAS ShopSchedulingSolver_constraint_programming_optalcp)
 endif()
+
+add_library(ShopSchedulingSolver_local_search_pfss_makespan)
+target_sources(ShopSchedulingSolver_local_search_pfss_makespan PRIVATE
+    local_search_pfss_makespan.cpp)
+target_include_directories(ShopSchedulingSolver_local_search_pfss_makespan PUBLIC
+    ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(ShopSchedulingSolver_local_search_pfss_makespan PUBLIC
+    ShopSchedulingSolver_shopschedulingsolver
+    LocalSearchSolver_localsearchsolver)
+add_library(ShopSchedulingSolver::local_search_pfss_makespan ALIAS ShopSchedulingSolver_local_search_pfss_makespan)
