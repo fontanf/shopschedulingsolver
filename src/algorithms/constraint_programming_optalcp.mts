@@ -74,32 +74,71 @@ async function main()
         }
     }
 
+    // Define jobs ends variables.
+    let jobs_ends: CP.IntExpr[] = [];
+    if (instance.objective == "Total flow time"
+            || instance.objective == "Total tardiness") {
+        if (!instance.operations_arbitrary_order) {
+            for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+                let ends: CP.IntExpr[] = [];
+                for (let operation_id = 0;
+                        operation_id < instance.jobs[job_id].operations.length;
+                        ++operation_id) {
+                    let operation = jobs[job_id][operation_id];
+                    ends.push((operation as CP.IntervalVar).end());
+                }
+                let job_end = model.max(ends);
+                jobs_ends.push(job_end);
+            }
+        }
+    }
+
     ///////////////
     // Objective //
     ///////////////
 
-    // Objective: minimize the makespan.
-    let ends: CP.IntExpr[] = [];
-    if (!instance.operations_arbitrary_order) {
-        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
-            let operation = jobs[job_id][instance.jobs[job_id].operations.length - 1];
-            ends.push((operation as CP.IntervalVar).end());
-        }
-    } else {
-        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
-            for (let operation_id = 0;
-                    operation_id < instance.jobs[job_id].operations.length;
-                    ++operation_id) {
-                let operation = jobs[job_id][operation_id];
+    if (instance.objective == "Makespan") {
+        // Objective: minimize the makespan.
+        let ends: CP.IntExpr[] = [];
+        if (!instance.operations_arbitrary_order) {
+            for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+                let operation = jobs[job_id][instance.jobs[job_id].operations.length - 1];
                 ends.push((operation as CP.IntervalVar).end());
             }
+        } else {
+            for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+                for (let operation_id = 0;
+                        operation_id < instance.jobs[job_id].operations.length;
+                        ++operation_id) {
+                    let operation = jobs[job_id][operation_id];
+                    ends.push((operation as CP.IntervalVar).end());
+                }
+            }
         }
-    }
-    if (instance.objective == "Makespan") {
         let makespan = model.max(ends);
         makespan.minimize();
     } else if (instance.objective == "Total flow time") {
+        // Objective: minimize the total weighted flow time.
+        let weighted_flow_times: CP.IntExpr[] = [];
+        if (!instance.operations_arbitrary_order) {
+            for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+                let operation = jobs[job_id][instance.jobs[job_id].operations.length - 1];
+                weighted_flow_times.push(model.times(
+                    (operation as CP.IntervalVar).end(),
+                    instance.jobs[job_id].weight));
+            }
+        } else {
+            for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+                weighted_flow_times.push(model.times(
+                    jobs_ends[job_id],
+                    instance.jobs[job_id].weight));
+            }
+        }
+        let total_weighted_flow_time = model.sum(weighted_flow_times);
+        total_weighted_flow_time.minimize();
     } else if (instance.objective == "Total tardiness") {
+        // Objective: minimize the total weighted tardiness.
+        // TODO
     }
 
     /////////////////
