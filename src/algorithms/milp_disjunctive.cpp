@@ -21,6 +21,7 @@ struct Model
 
     /**
      * z_{j, o1, o2} = 1 iff o1 is scheduled before o2
+     *
      * These variables are only required for open shop; otherwise, the order
      * is already known.
      */
@@ -29,11 +30,27 @@ struct Model
     /** C_{j, o} the start time of operation (j, o). */
     std::vector<std::vector<int>> c;
 
+    /**
+     * p_{j, o} the duration that operation o stays on its machine.
+     *
+     * These variables are only required in the blocking case.
+     */
+    std::vector<std::vector<int>> p;
+
+    /**
+     * psum_{j} the sum of the durations that each operation of job j stays on
+     * its machine.
+     *
+     * These variables are only required in the blocking case for open shop.
+     */
+    std::vector<int> psum;
+
     /** Makespan. */
     int cmax = -1;
 
     /**
      * t_j the tardiness of job j.
+     *
      * These variables are only required with total weighted tardiness
      * objective.
      */
@@ -41,12 +58,14 @@ struct Model
 
     /**
      * s_j the starting time of job j.
-     * These variables are only required in the wait case.
+     *
+     * These variables are only required in the no-wait case.
      */
     std::vector<int> s;
 
     /**
      * sm_i the starting time of machine i.
+     *
      * These variables are only required in the no-idle case.
      */
     std::vector<int> sm;
@@ -129,6 +148,42 @@ Model create_milp_model(
             } else {
                 model.model.objective_coefficients.push_back(0);
             }
+        }
+    }
+
+    // Variables p.
+    if (instance.blocking()) {
+        model.p = std::vector<std::vector<int>>(instance.number_of_jobs());
+        for (JobId job_id = 0;
+                job_id < instance.number_of_jobs();
+                ++job_id) {
+            const Job& job = instance.job(job_id);
+            model.p[job_id] = std::vector<int>(job.operations.size());
+            for (OperationId operation_id = 0;
+                    operation_id < job.operations.size();
+                    ++operation_id) {
+                const Operation& operation = job.operations[operation_id];
+                model.p[job_id][operation_id] = model.model.variables_lower_bounds.size();
+                model.model.variables_lower_bounds.push_back(operation.machines[0].processing_time);
+                model.model.variables_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                model.model.variables_types.push_back(mathoptsolverscmake::VariableType::Integer);
+                model.model.objective_coefficients.push_back(0);
+            }
+        }
+    }
+
+    // Variables psum.
+    if (instance.blocking() && instance.operations_arbitrary_order()) {
+        model.psum = std::vector<int>(instance.number_of_jobs());
+        for (JobId job_id = 0;
+                job_id < instance.number_of_jobs();
+                ++job_id) {
+            const Job& job = instance.job(job_id);
+            model.psum[job_id] = model.model.variables_lower_bounds.size();
+            model.model.variables_lower_bounds.push_back(0);
+            model.model.variables_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+            model.model.variables_types.push_back(mathoptsolverscmake::VariableType::Integer);
+            model.model.objective_coefficients.push_back(0);
         }
     }
 
@@ -324,9 +379,18 @@ Model create_milp_model(
                     model.model.elements_coefficients.push_back(-1.0);
                     model.model.elements_variables.push_back(model.y[machine_id][pos][pos_2]);
                     model.model.elements_coefficients.push_back(m);
+                    if (instance.blocking()) {
+                        model.model.elements_variables.push_back(model.p[machine_operation.job_id][machine_operation.operation_id]);
+                        model.model.elements_coefficients.push_back(-1);
+                    }
 
-                    model.model.constraints_lower_bounds.push_back(operation.machines[0].processing_time);
-                    model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                    if (instance.blocking()) {
+                        model.model.constraints_lower_bounds.push_back(0);
+                        model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                    } else {
+                        model.model.constraints_lower_bounds.push_back(operation.machines[0].processing_time);
+                        model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                    }
                 }
 
                 {
@@ -338,9 +402,18 @@ Model create_milp_model(
                     model.model.elements_coefficients.push_back(-1.0);
                     model.model.elements_variables.push_back(model.y[machine_id][pos][pos_2]);
                     model.model.elements_coefficients.push_back(-m);
+                    if (instance.blocking()) {
+                        model.model.elements_variables.push_back(model.p[machine_operation_2.job_id][machine_operation_2.operation_id]);
+                        model.model.elements_coefficients.push_back(-1);
+                    }
 
-                    model.model.constraints_lower_bounds.push_back(operation_2.machines[0].processing_time - m);
-                    model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                    if (instance.blocking()) {
+                        model.model.constraints_lower_bounds.push_back(-m);
+                        model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                    } else {
+                        model.model.constraints_lower_bounds.push_back(operation_2.machines[0].processing_time - m);
+                        model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                    }
                 }
             }
         }
@@ -375,9 +448,18 @@ Model create_milp_model(
                         model.model.elements_coefficients.push_back(-1.0);
                         model.model.elements_variables.push_back(model.z[job_id][operation_id][operation_2_id]);
                         model.model.elements_coefficients.push_back(m);
+                        if (instance.blocking()) {
+                            model.model.elements_variables.push_back(model.p[job_id][operation_id]);
+                            model.model.elements_coefficients.push_back(-1);
+                        }
 
-                        model.model.constraints_lower_bounds.push_back(operation.machines[0].processing_time);
-                        model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                        if (instance.blocking()) {
+                            model.model.constraints_lower_bounds.push_back(0);
+                            model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                        } else {
+                            model.model.constraints_lower_bounds.push_back(operation.machines[0].processing_time);
+                            model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                        }
                     }
 
                     {
@@ -389,9 +471,18 @@ Model create_milp_model(
                         model.model.elements_coefficients.push_back(-1.0);
                         model.model.elements_variables.push_back(model.z[job_id][operation_id][operation_2_id]);
                         model.model.elements_coefficients.push_back(-m);
+                        if (instance.blocking()) {
+                            model.model.elements_variables.push_back(model.p[job_id][operation_2_id]);
+                            model.model.elements_coefficients.push_back(-1);
+                        }
 
-                        model.model.constraints_lower_bounds.push_back(operation_2.machines[0].processing_time - m);
-                        model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                        if (instance.blocking()) {
+                            model.model.constraints_lower_bounds.push_back(-m);
+                            model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                        } else {
+                            model.model.constraints_lower_bounds.push_back(operation_2.machines[0].processing_time - m);
+                            model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
+                        }
                     }
                 }
             }
@@ -416,11 +507,19 @@ Model create_milp_model(
                 model.model.elements_coefficients.push_back(1.0);
                 model.model.elements_variables.push_back(model.c[job_id][operation_id]);
                 model.model.elements_coefficients.push_back(-1.0);
+                if (instance.blocking()) {
+                    model.model.elements_variables.push_back(model.p[job_id][operation_id + 1]);
+                    model.model.elements_coefficients.push_back(-1.0);
+                }
 
-                model.model.constraints_lower_bounds.push_back(operation_2.machines[0].processing_time);
-                if (instance.no_wait()) {
+                if (instance.blocking()) {
+                    model.model.constraints_lower_bounds.push_back(0);
+                    model.model.constraints_upper_bounds.push_back(0);
+                } else if (instance.no_wait()) {
+                    model.model.constraints_lower_bounds.push_back(operation_2.machines[0].processing_time);
                     model.model.constraints_upper_bounds.push_back(operation_2.machines[0].processing_time);
                 } else {
+                    model.model.constraints_lower_bounds.push_back(operation_2.machines[0].processing_time);
                     model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
                 }
             }
@@ -473,8 +572,35 @@ Model create_milp_model(
         }
     }
 
-    // No-wait constraints.
-    if (instance.no_wait() && instance.operations_arbitrary_order()) {
+    // Definition of psum.
+    if (instance.blocking() && instance.operations_arbitrary_order()) {
+        // psum_j == \sum_{o} p_{j, o}
+        // <=>
+        // psum_j - \sum_{o} p_{j, o} == 0
+        for (JobId job_id = 0;
+                job_id < instance.number_of_jobs();
+                ++job_id) {
+            const Job& job = instance.job(job_id);
+            model.model.constraints_starts.push_back(model.model.elements_variables.size());
+
+            model.model.elements_variables.push_back(model.psum[job_id]);
+            model.model.elements_coefficients.push_back(1.0);
+            for (OperationId operation_id = 0;
+                    operation_id < (OperationId)job.operations.size();
+                    ++operation_id) {
+                const Operation& operation = job.operations[operation_id];
+                model.model.elements_variables.push_back(model.p[job_id][operation_id]);
+                model.model.elements_coefficients.push_back(-1.0);
+            }
+
+            model.model.constraints_lower_bounds.push_back(0);
+            model.model.constraints_upper_bounds.push_back(0);
+        }
+    }
+
+    // No-wait constraints / blocking constraints.
+    if ((instance.no_wait() || instance.blocking())
+            && instance.operations_arbitrary_order()) {
         // S_j >= C_{j, o} - \sum_{o'} p_{j, o'}
         // <=>
         // C_{j, o} - S_j <= \sum_{o'} p_{j, o'}
@@ -501,22 +627,21 @@ Model create_milp_model(
                 model.model.elements_coefficients.push_back(1.0);
                 model.model.elements_variables.push_back(model.s[job_id]);
                 model.model.elements_coefficients.push_back(-1.0);
+                if (instance.blocking()) {
+                    model.model.elements_variables.push_back(model.psum[job_id]);
+                    model.model.elements_coefficients.push_back(-1.0);
+                }
 
-                model.model.constraints_lower_bounds.push_back(0);
-                model.model.constraints_upper_bounds.push_back(processing_time_sum);
+                if (instance.no_wait()) {
+                    model.model.constraints_lower_bounds.push_back(0);
+                    model.model.constraints_upper_bounds.push_back(processing_time_sum);
+                } else if (instance.blocking()) {
+                    model.model.constraints_lower_bounds.push_back(0);
+                    model.model.constraints_upper_bounds.push_back(0);
+                }
             }
         }
     }
-
-    return model;
-}
-
-Model create_milp_model_blocking(
-        const Instance& instance)
-{
-    Model model;
-
-    // TODO
 
     return model;
 }
@@ -536,7 +661,9 @@ Solution retrieve_solution(
                 operation_id < job.operations.size();
                 ++operation_id) {
             const Operation& operation = job.operations[operation_id];
-            Time processing_time = operation.machines[0].processing_time;
+            Time processing_time = (instance.blocking())?
+                std::round(milp_solution[model.p[job_id][operation_id]]):
+                operation.machines[0].processing_time;
             Time completion_time = std::round(milp_solution[model.c[job_id][operation_id]]);
             Time start = completion_time - processing_time;
             solution_builder.append_operation(
