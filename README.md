@@ -36,13 +36,13 @@ python scripts/visualize.py certificate.json
 
 ## Implemented algorithms
 
-### Flow shop
+### Permutation flow shop
 
 $F_m \mid \text{prmu} \mid C_{\max}$
 * Positional MILP `--algorithm milp-positional`
 * Tree search `--algorithm tree-search`
 
-$F_m \mid \text{prmu}, \text{no-idle} \mid C_{\max}$
+$F_m \mid \text{prmu}, \text{mixed no-idle} \mid C_{\max}$
 * Positional MILP `--algorithm milp-positional`
 
 $F_m \mid \text{prmu}, \text{blocking} \mid C_{\max}$
@@ -52,7 +52,7 @@ $F_m \mid \text{prmu} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
 * Tree search `--algorithm tree-search`
 
-$F_m \mid \text{prmu}, \text{no-idle} \mid \sum C_j$
+$F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
 
 $F_m \mid \text{prmu}, \text{blocking} \mid \sum C_j$
@@ -61,7 +61,7 @@ $F_m \mid \text{prmu}, \text{blocking} \mid \sum C_j$
 $F_m \mid \text{prmu} \mid \sum T_j$
 * Positional MILP `--algorithm milp-positional`
 
-$F_m \mid \text{prmu}, \text{no-idle} \mid \sum T_j$
+$F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum T_j$
 * Positional MILP `--algorithm milp-positional`
 
 $F_m \mid \text{prmu}, \text{blocking} \mid \sum T_j$
@@ -77,7 +77,7 @@ $J_m \mid \text{no-wait} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
-$J_m \mid \text{no-idle} \mid C_{\max}$
+$J_m \mid \text{mixed no-idle} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $J_m \mid \text{blocking} \mid C_{\max}$
@@ -91,7 +91,7 @@ $J_m \mid \text{no-wait} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
-$J_m \mid \text{no-idle} \mid \sum w_j C_j$
+$J_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $J_m \mid \text{blocking} \mid \sum w_j C_j$
@@ -103,7 +103,7 @@ $J_m \mid \mid \sum w_j T_j$
 $J_m \mid \text{no-wait} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
-$J_m \mid \text{no-idle} \mid \sum w_j T_j$
+$J_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $J_m \mid \text{blocking} \mid \sum w_j T_j$
@@ -119,7 +119,7 @@ $FJ_m \mid \text{no-wait} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
-$FJ_m \mid \text{no-idle} \mid C_{\max}$
+$FJ_m \mid \text{mixed no-idle} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $FJ_m \mid \mid \sum w_j C_j$
@@ -136,7 +136,7 @@ $FJ_m \mid \text{no-wait} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
-$FJ_m \mid \text{no-idle} \mid \sum w_j C_j$
+$FJ_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $FJ_m \mid \text{blocking} \mid \sum w_j C_j$
@@ -148,7 +148,7 @@ $FJ_m \mid \mid \sum w_j T_j$
 $FJ_m \mid \text{no-wait} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
-$FJ_m \mid \text{no-idle} \mid \sum w_j T_j$
+$FJ_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $FJ_m \mid \text{blocking} \mid \sum w_j T_j$
@@ -163,7 +163,7 @@ $O_m \mid \mid C_{\max}$
 $O_m \mid \text{no-wait} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
-$O_m \mid \text{no-idle} \mid C_{\max}$
+$O_m \mid \text{mixed no-idle} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $O_m \mid \text{blocking} \mid C_{\max}$
@@ -176,7 +176,7 @@ $O_m \mid \mid \sum w_j C_j$
 $O_m \mid \text{no-wait} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
-$O_m \mid \text{no-idle} \mid \sum w_j C_j$
+$O_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $O_m \mid \text{blocking} \mid \sum w_j C_j$
@@ -188,7 +188,7 @@ $O_m \mid \mid \sum w_j T_j$
 $O_m \mid \text{no-wait} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
-$O_m \mid \text{no-idle} \mid \sum w_j T_j$
+$O_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $O_m \mid \text{blocking} \mid \sum w_j T_j$
@@ -202,7 +202,7 @@ $FO_m \mid \mid C_{\max}$
 $FO_m \mid \text{no-wait} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
-$FO_m \mid \text{no-idle} \mid C_{\max}$
+$FO_m \mid \text{mixed no-idle} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $FO_m \mid \text{blocking} \mid C_{\max}$
@@ -214,7 +214,7 @@ $FO_m \mid \mid \sum w_j C_j$
 $FO_m \mid \text{no-wait} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
-$FO_m \mid \text{no-idle} \mid \sum w_j C_j$
+$FO_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $FO_m \mid \text{blocking} \mid \sum w_j C_j$
@@ -226,7 +226,7 @@ $FO_m \mid \mid \sum w_j T_j$
 $FO_m \mid \text{no-wait} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
-$FO_m \mid \text{no-idle} \mid \sum w_j T_j$
+$FO_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
 $FO_m \mid \text{blocking} \mid \sum w_j T_j$
