@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
     if (vm.count("no-wait"))
         instance_builder.set_no_wait(vm["no-wait"].as<bool>());
     if (vm.count("no-idle"))
-        instance_builder.set_no_idle(vm["no-idle"].as<bool>());
+        instance_builder.set_all_machines_no_idle(vm["no-idle"].as<bool>());
     if (vm.count("blocking"))
         instance_builder.set_blocking(vm["blocking"].as<bool>());
     if (vm.count("permutation"))

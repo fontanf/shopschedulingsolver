@@ -28,6 +28,14 @@ public:
      */
     void set_number_of_machines(MachineId number_of_machines);
 
+    /** Set no-idle property for a given machine. */
+    void set_machine_no_idle(
+            MachineId machine_id,
+            bool no_idle = true);
+
+    /** Set no-idle property for all machines. */
+    void set_all_machines_no_idle(bool no_idle = true);
+
     /** Add a job. */
     JobId add_job();
 
@@ -39,7 +47,7 @@ public:
             JobId job_id);
 
     /** Add a machine for an operation. */
-    void add_operation_machine(
+    void add_operation_alternative(
             JobId job_id,
             OperationId operation_id,
             MachineId machine_id,
@@ -65,9 +73,6 @@ public:
 
     /** Set no-wait property. */
     void set_no_wait(bool no_wait = true) { instance_.no_wait_ = no_wait; }
-
-    /** Set no-idle property. */
-    void set_no_idle(bool no_idle = true) { instance_.no_idle_ = no_idle; }
 
     /** Set blocking property. */
     void set_blocking(bool no_wait = true) { instance_.blocking_ = no_wait; }

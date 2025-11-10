@@ -1,16 +1,19 @@
 /**
  * Disjunctive MILP model
  *
- * The model corresponds to model 3 in:
+ * This model handles all variants except the permutation flow shop.
+ *
+ * The model of no-wait property corresponds to model 3 in:
  *
  *     "Modeling and scheduling no-wait open shop problems" (Naderi et Zandieh,
  *     2014)
  *     https://doi.org/10.1016/j.ijpe.2014.06.011
  *
- * The model described in this paper is for the no-wait open shop.
- * It is adapted here for job shop, and to no-idle and blocking constraints.
+ * For model of flexible property corresponds to model 5 in:
  *
- * The permutation flow shop is not handled.
+ *     "Mathematical modelling and a meta-heuristic for flexible job shop
+ *     scheduling" * (Roshanaei et al., 2013)
+ *     https://doi.org/10.1080/00207543.2013.827806
  */
 
 #pragma once

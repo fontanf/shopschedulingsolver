@@ -14,6 +14,23 @@ void InstanceBuilder::set_number_of_machines(MachineId number_of_machines)
     instance_.machines_ = std::vector<Machine>(number_of_machines);
 }
 
+void InstanceBuilder::set_machine_no_idle(
+        MachineId machine_id,
+        bool no_idle)
+{
+    this->instance_.machines_[machine_id].no_idle = no_idle;
+}
+
+void InstanceBuilder::set_all_machines_no_idle(
+        bool no_idle)
+{
+    for (MachineId machine_id = 0;
+            machine_id < this->instance_.number_of_machines();
+            ++machine_id) {
+        instance_.machines_[machine_id].no_idle = no_idle;
+    }
+}
+
 JobId InstanceBuilder::add_job()
 {
     JobId job_id = instance_.jobs_.size();
@@ -45,7 +62,7 @@ OperationId InstanceBuilder::add_operation(
     return operation_id;
 }
 
-void InstanceBuilder::add_operation_machine(
+void InstanceBuilder::add_operation_alternative(
         JobId job_id,
         OperationId operation_id,
         MachineId machine_id,
@@ -81,10 +98,10 @@ void InstanceBuilder::add_operation_machine(
                 "processing_time: " + std::to_string(processing_time) + ".");
     }
 
-    OperationMachine operation_machine;
-    operation_machine.machine_id = machine_id;
-    operation_machine.processing_time = processing_time;
-    operation.machines.push_back(operation_machine);
+    OperationAlternative operation_alternative;
+    operation_alternative.machine_id = machine_id;
+    operation_alternative.processing_time = processing_time;
+    operation.machines.push_back(operation_alternative);
 }
 
 void InstanceBuilder::set_job_release_date(
@@ -191,7 +208,7 @@ void InstanceBuilder::read_flow_shop(std::ifstream& file)
         for (JobId job_id = 0; job_id < number_of_jobs; ++job_id) {
             file >> processing_time;
             OperationId operation_id = this->add_operation(job_id);
-            this->add_operation_machine(
+            this->add_operation_alternative(
                     job_id,
                     operation_id,
                     machine_id,
@@ -218,7 +235,7 @@ void InstanceBuilder::read_flow_shop_vallada2008(std::ifstream& file)
                 ++machine_id) {
             file >> machine_id_tmp >> processing_time;
             OperationId operation_id = this->add_operation(job_id);
-            this->add_operation_machine(
+            this->add_operation_alternative(
                     job_id,
                     operation_id,
                     machine_id,
@@ -254,7 +271,7 @@ void InstanceBuilder::read_job_shop(std::ifstream& file)
                 ++operation_id) {
             file >> machine_id >> processing_time;
             this->add_operation(job_id);
-            this->add_operation_machine(
+            this->add_operation_alternative(
                     job_id,
                     operation_id,
                     machine_id,
@@ -277,7 +294,7 @@ void InstanceBuilder::read_flexible_job_shop(std::ifstream& file)
     this->set_number_of_machines(number_of_machines);
 
     OperationId number_of_operations = -1;
-    OperationId number_of_operation_machines = -1;
+    OperationId number_of_operation_alternatives = -1;
     MachineId machine_id = -1;
     Time processing_time = -1;
     for (JobId job_id = 0; job_id < number_of_jobs; ++job_id) {
@@ -286,12 +303,12 @@ void InstanceBuilder::read_flexible_job_shop(std::ifstream& file)
                 operation_id < number_of_operations;
                 ++operation_id) {
             this->add_operation(job_id);
-            file >> number_of_operation_machines;
-            for (OperationMachineId operation_machine_id = 0;
-                    operation_machine_id < number_of_operation_machines;
-                    ++operation_machine_id) {
+            file >> number_of_operation_alternatives;
+            for (OperationAlternativeId operation_alternative_id = 0;
+                    operation_alternative_id < number_of_operation_alternatives;
+                    ++operation_alternative_id) {
                 file >> machine_id >> processing_time;
-                this->add_operation_machine(
+                this->add_operation_alternative(
                         job_id,
                         operation_id,
                         machine_id - 1,
@@ -326,25 +343,39 @@ Instance InstanceBuilder::build()
             // Compute flexible_.
             if (operation.machines.size() != 1)
                 this->instance_.flexible_ = true;
-            for (OperationMachineId operation_machine_id = 0;
-                    operation_machine_id < (OperationMachineId)operation.machines.size();
-                    ++operation_machine_id) {
-                const OperationMachine& operation_machine = operation.machines[operation_machine_id];
+            for (OperationAlternativeId operation_alternative_id = 0;
+                    operation_alternative_id < (OperationAlternativeId)operation.machines.size();
+                    ++operation_alternative_id) {
+                const OperationAlternative& operation_alternative = operation.machines[operation_alternative_id];
                 job.number_of_machine_operations++;
-                job.mean_processing_time += operation_machine.processing_time;
+                job.mean_processing_time += operation_alternative.processing_time;
                 // Update machines_.
                 MachineOperation machine_operation;
                 machine_operation.job_id = job_id;
                 machine_operation.operation_id = operation_id;
-                machine_operation.operation_machine_id = operation_machine_id;
-                this->instance_.machines_[operation_machine.machine_id].operations.push_back(machine_operation);
+                machine_operation.operation_alternative_id = operation_alternative_id;
+                this->instance_.machines_[operation_alternative.machine_id].operations.push_back(machine_operation);
                 // Compute flow_shop_.
-                if (operation_machine.machine_id != operation_id)
+                if (operation_alternative.machine_id != operation_id)
                     this->instance_.flow_shop_ = false;
             }
         }
 
         job.mean_processing_time /= job.number_of_machine_operations;
     }
+
+    instance_.no_idle_ = true;
+    instance_.mixed_no_idle_ = false;
+    for (MachineId machine_id = 0;
+            machine_id < this->instance_.number_of_machines();
+            ++machine_id) {
+        const Machine& machine = this->instance_.machine(machine_id);
+        if (machine.no_idle) {
+            this->instance_.mixed_no_idle_ = true;
+        } else {
+            this->instance_.no_idle_ = false;
+        }
+    }
+
     return std::move(instance_);
 }

@@ -317,6 +317,7 @@ Model create_milp_model(
     for (MachineId machine_id = 0;
             machine_id < instance.number_of_machines();
             ++machine_id) {
+        const Machine& machine = instance.machine(machine_id);
         for (JobId pos = 1; pos < instance.number_of_jobs(); ++pos) {
             model.model.constraints_starts.push_back(model.model.elements_variables.size());
 
@@ -328,7 +329,7 @@ Model create_milp_model(
             model.model.elements_coefficients.push_back(-1.0);
 
             model.model.constraints_lower_bounds.push_back(0);
-            if (!instance.no_idle()) {
+            if (!machine.no_idle) {
                 model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
             } else {
                 model.model.constraints_upper_bounds.push_back(0);

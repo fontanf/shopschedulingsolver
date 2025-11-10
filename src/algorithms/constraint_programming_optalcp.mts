@@ -54,22 +54,22 @@ async function main()
                 const operation = model.intervalVar()
                 jobs[job_id].push(operation)
                 jobs_2[job_id][operation_id] = []
-                const operation_machines = []
-                for (let operation_machine_id = 0;
-                        operation_machine_id < instance.jobs[job_id].operations[operation_id].machines.length;
-                        ++operation_machine_id) {
-                    const machine_id = instance.jobs[job_id].operations[operation_id].machines[operation_machine_id].machine;
-                    const duration = instance.jobs[job_id].operations[operation_id].machines[operation_machine_id].processing_time;
-                    const operation_machine = model.intervalVar({
-                        name: "J" + (job_id) + "O" + (operation_id) + "M" + (operation_machine_id),
+                const operation_alternatives = []
+                for (let operation_alternative_id = 0;
+                        operation_alternative_id < instance.jobs[job_id].operations[operation_id].machines.length;
+                        ++operation_alternative_id) {
+                    const machine_id = instance.jobs[job_id].operations[operation_id].machines[operation_alternative_id].machine;
+                    const duration = instance.jobs[job_id].operations[operation_id].machines[operation_alternative_id].processing_time;
+                    const operation_alternative = model.intervalVar({
+                        name: "J" + (job_id) + "O" + (operation_id) + "M" + (operation_alternative_id),
                         length : duration,
                         optional : true,
                     });
-                    operation_machines.push(operation_machine);
-                    machines[machine_id].push(operation_machine);
-                    jobs_2[job_id][operation_id].push(operation_machine)
+                    operation_alternatives.push(operation_alternative);
+                    machines[machine_id].push(operation_alternative);
+                    jobs_2[job_id][operation_id].push(operation_alternative)
                 }
-                model.alternative(operation, operation_machines)
+                model.alternative(operation, operation_alternatives)
             }
         }
     }
@@ -218,7 +218,7 @@ async function main()
         interface OperationSolution {
             job_id: number;
             operation_id: number;
-            operation_machine_id: number;
+            operation_alternative_id: number;
             start: number | null;
         }
 
@@ -229,16 +229,16 @@ async function main()
             for (let operation_id = 0;
                     operation_id < instance.jobs[job_id].operations.length;
                     ++operation_id) {
-                for (let operation_machine_id = 0;
-                        operation_machine_id < instance.jobs[job_id].operations[operation_id].machines.length;
-                        ++operation_machine_id) {
-                    if (solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][operation_machine_id]) == null)
+                for (let operation_alternative_id = 0;
+                        operation_alternative_id < instance.jobs[job_id].operations[operation_id].machines.length;
+                        ++operation_alternative_id) {
+                    if (solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][operation_alternative_id]) == null)
                         continue;
                     let solution_operation: OperationSolution = {
                         job_id,
                         operation_id,
-                        operation_machine_id,
-                        start: solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][operation_machine_id])
+                        operation_alternative_id,
+                        start: solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][operation_alternative_id])
                     };
                     solution.operations.push(solution_operation)
                 }

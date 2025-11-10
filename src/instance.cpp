@@ -72,6 +72,7 @@ void Instance::write(
     json["objective"] = objective_ss.str();
     json["operations_arbitrary_order"] = this->operations_arbitrary_order();
     json["no_wait"] = this->no_wait();
+    json["mixed_no_idle"] = this->mixed_no_idle();
     json["no_idle"] = this->no_idle();
     json["blocking"] = this->blocking();
     json["permutation"] = this->permutation();
@@ -85,12 +86,12 @@ void Instance::write(
                 operation_id < (OperationId)job.operations.size();
                 ++operation_id) {
             const Operation& operation = job.operations[operation_id];
-            for (OperationMachineId operation_machine_id = 0;
-                    operation_machine_id < (OperationMachineId)operation.machines.size();
-                    ++operation_machine_id) {
-                const OperationMachine& operation_machine = operation.machines[operation_machine_id];
-                json["jobs"][job_id]["operations"][operation_id]["machines"][operation_machine_id]["machine"] = operation_machine.machine_id;
-                json["jobs"][job_id]["operations"][operation_id]["machines"][operation_machine_id]["processing_time"] = operation_machine.processing_time;
+            for (OperationAlternativeId operation_alternative_id = 0;
+                    operation_alternative_id < (OperationAlternativeId)operation.machines.size();
+                    ++operation_alternative_id) {
+                const OperationAlternative& operation_alternative = operation.machines[operation_alternative_id];
+                json["jobs"][job_id]["operations"][operation_id]["machines"][operation_alternative_id]["machine"] = operation_alternative.machine_id;
+                json["jobs"][job_id]["operations"][operation_id]["machines"][operation_alternative_id]["processing_time"] = operation_alternative.processing_time;
             }
         }
     }
@@ -110,6 +111,7 @@ std::ostream& Instance::format(
             << "Objective:                   " << this->objective() << std::endl
             << "Operations arbitrary order:  " << this->operations_arbitrary_order() << std::endl
             << "No-wait:                     " << this->no_wait() << std::endl
+            << "Mixed no-idle:               " << this->mixed_no_idle() << std::endl
             << "No-idle:                     " << this->no_idle() << std::endl
             << "Blocking:                    " << this->blocking() << std::endl
             << "Permutation:                 " << this->permutation() << std::endl
@@ -154,9 +156,11 @@ std::ostream& Instance::format(
         os << std::right << std::endl
             << std::setw(12) << "Machine"
             << std::setw(12) << "# op."
+            << std::setw(12) << "No-idle"
             << std::endl
             << std::setw(12) << "-------"
             << std::setw(12) << "-----"
+            << std::setw(12) << "-------"
             << std::endl;
         for (MachineId machine_id = 0;
                 machine_id < this->number_of_machines();
@@ -165,6 +169,7 @@ std::ostream& Instance::format(
             os
                 << std::setw(12) << machine_id
                 << std::setw(12) << machine.operations.size()
+                << std::setw(12) << machine.no_idle
                 << std::endl;
         }
     }
@@ -214,16 +219,16 @@ std::ostream& Instance::format(
                     operation_id < (OperationId)job.operations.size();
                     ++operation_id) {
                 const Operation& operation = job.operations[operation_id];
-                for (OperationMachineId operation_machine_id = 0;
-                        operation_machine_id < (OperationMachineId)operation.machines.size();
-                        ++operation_machine_id) {
-                    const OperationMachine& operation_machine = operation.machines[operation_machine_id];
+                for (OperationAlternativeId operation_alternative_id = 0;
+                        operation_alternative_id < (OperationAlternativeId)operation.machines.size();
+                        ++operation_alternative_id) {
+                    const OperationAlternative& operation_alternative = operation.machines[operation_alternative_id];
                     os
                         << std::setw(12) << job_id
                         << std::setw(12) << operation_id
-                        << std::setw(12) << operation_machine_id
-                        << std::setw(12) << operation_machine.machine_id
-                        << std::setw(12) << operation_machine.processing_time
+                        << std::setw(12) << operation_alternative_id
+                        << std::setw(12) << operation_alternative.machine_id
+                        << std::setw(12) << operation_alternative.processing_time
                         << std::endl;
                 }
             }

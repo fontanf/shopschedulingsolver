@@ -13,7 +13,7 @@ namespace shopschedulingsolver
 using MachineId = int64_t;
 using JobId = int64_t;
 using OperationId = int64_t;
-using OperationMachineId = int64_t;
+using OperationAlternativeId = int64_t;
 using Time = int64_t;
 using Seed = int64_t;
 using Counter = int64_t;
@@ -40,15 +40,17 @@ struct MachineOperation
 
     OperationId operation_id = -1;
 
-    OperationMachineId operation_machine_id = -1;
+    OperationAlternativeId operation_alternative_id = -1;
 };
 
 struct Machine
 {
     std::vector<MachineOperation> operations;
+
+    bool no_idle = false;
 };
 
-struct OperationMachine
+struct OperationAlternative
 {
     MachineId machine_id = -1;
 
@@ -61,7 +63,7 @@ struct OperationMachine
 struct Operation
 {
     /** Machines that can perform the operation. */
-    std::vector<OperationMachine> machines;
+    std::vector<OperationAlternative> machines;
 };
 
 /**
@@ -125,6 +127,9 @@ public:
     /** Return 'true' if the instance has the no-wait property. */
     bool no_wait() const { return no_wait_; }
 
+    /** Return 'true' if the instance has the mixed no-idle property. */
+    bool mixed_no_idle() const { return mixed_no_idle_; }
+
     /** Return 'true' if the instance has the no-idle property. */
     bool no_idle() const { return no_idle_; }
 
@@ -184,6 +189,9 @@ private:
 
     /** No-wait property. */
     bool no_wait_ = false;
+
+    /** Mixed no-idle property. */
+    bool mixed_no_idle_ = false;
 
     /** No-idle property. */
     bool no_idle_ = false;

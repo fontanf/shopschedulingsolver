@@ -26,7 +26,7 @@ public:
 
         OperationId operation_id = -1;
 
-        OperationMachineId operation_machine_id = -1;
+        OperationAlternativeId operation_alternative_id = -1;
 
         Time start = -1;
 
@@ -48,6 +48,8 @@ public:
         Time start = -1;
 
         Time end = -1;
+
+        bool no_idle = true;
     };
 
     struct Job

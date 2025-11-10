@@ -20,7 +20,7 @@ public:
     void append_operation(
             JobId job_id,
             OperationId operation_id,
-            OperationMachineId operation_machine_id,
+            OperationAlternativeId operation_alternative_id,
             Time start);
 
     void sort_machines();
