@@ -1,7 +1,7 @@
 #include "shopschedulingsolver/algorithm_formatter.hpp"
 #include "shopschedulingsolver/instance_builder.hpp"
 #include "shopschedulingsolver/algorithms/tree_search_pfss_makespan.hpp"
-#include "shopschedulingsolver/algorithms/tree_search_pfss_tct.hpp"
+#include "shopschedulingsolver/algorithms/tree_search_pfss_tft.hpp"
 #include "shopschedulingsolver/algorithms/milp_positional.hpp"
 #include "shopschedulingsolver/algorithms/milp_disjunctive.hpp"
 #ifdef OPTALCP_FOUND
@@ -72,19 +72,16 @@ Output run(
 
     // Run algorithm.
     std::string algorithm = vm["algorithm"].as<std::string>();
-    if (algorithm == "tree-search") {
-        if (instance.objective() == Objective::Makespan) {
-            Parameters parameters;
-            read_args(parameters, vm);
-            return tree_search_pfss_makespan(instance, parameters);
-        } else if (instance.objective() == Objective::TotalFlowTime) {
-            Parameters parameters;
-            read_args(parameters, vm);
-            return tree_search_pfss_tct(instance, parameters);
-        } else {
-            throw std::invalid_argument(
-                    "Unknown algorithm \"" + algorithm + "\".");
-        }
+
+    if (algorithm == "tree-search-pfss-makespan") {
+        Parameters parameters;
+        read_args(parameters, vm);
+        return tree_search_pfss_makespan(instance, parameters);
+
+    } else if (algorithm == "tree-search-pfss-tft") {
+        Parameters parameters;
+        read_args(parameters, vm);
+        return tree_search_pfss_tft(instance, parameters);
 
     } else if (algorithm == "milp-positional") {
         MilpPositionalParameters parameters;

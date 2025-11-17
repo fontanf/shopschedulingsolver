@@ -164,6 +164,38 @@ void AlgorithmFormatter::update_makespan_bound(
     }
 }
 
+void AlgorithmFormatter::update_total_flow_time_bound(
+        Time bound,
+        const std::string& s)
+{
+    if (optimizationtools::is_bound_strictly_better(
+            objective_direction(this->output_.solution.instance().objective()),
+            output_.total_flow_time_bound,
+            bound)) {
+        output_.time = parameters_.timer.elapsed_time();
+        output_.total_flow_time_bound = bound;
+        print(s);
+        output_.json["IntermediaryOutputs"].push_back(output_.to_json());
+        parameters_.new_solution_callback(output_);
+    }
+}
+
+void AlgorithmFormatter::update_total_tardiness_bound(
+        Time bound,
+        const std::string& s)
+{
+    if (optimizationtools::is_bound_strictly_better(
+            objective_direction(this->output_.solution.instance().objective()),
+            output_.total_tardiness_bound,
+            bound)) {
+        output_.time = parameters_.timer.elapsed_time();
+        output_.total_tardiness_bound = bound;
+        print(s);
+        output_.json["IntermediaryOutputs"].push_back(output_.to_json());
+        parameters_.new_solution_callback(output_);
+    }
+}
+
 void AlgorithmFormatter::end()
 {
     output_.time = parameters_.timer.elapsed_time();

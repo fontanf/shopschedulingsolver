@@ -7,7 +7,7 @@ std::istream& shopschedulingsolver::operator>>(
         Objective& objective)
 {
     std::string token;
-    in >> token;
+    std::getline(in, token);
     if (token == "makespan" || token == "Makespan") {
         objective = Objective::Makespan;
     } else if (token == "total-flow-time"
@@ -26,6 +26,10 @@ std::istream& shopschedulingsolver::operator>>(
             || token == "Total tardiness") {
         objective = Objective::TotalTardiness;
     } else  {
+        throw std::invalid_argument(
+                FUNC_SIGNATURE + ": "
+                "invalid input; "
+                "in: " + token + ".");
         in.setstate(std::ios_base::failbit);
     }
     return in;
@@ -72,11 +76,14 @@ void Instance::write(
     json["objective"] = objective_ss.str();
     json["operations_arbitrary_order"] = this->operations_arbitrary_order();
     json["no_wait"] = this->no_wait();
-    json["mixed_no_idle"] = this->mixed_no_idle();
-    json["no_idle"] = this->no_idle();
     json["blocking"] = this->blocking();
     json["permutation"] = this->permutation();
-    json["number_of_machines"] = this->number_of_machines();
+    for (MachineId machine_id = 0;
+            machine_id < this->number_of_machines();
+            ++machine_id) {
+        const Machine& machine = this->machine(machine_id);
+        json["machines"][machine_id]["no_idle"] = machine.no_idle;
+    }
     for (JobId job_id = 0; job_id < this->number_of_jobs(); ++job_id) {
         const Job& job = this->job(job_id);
         json["jobs"][job_id]["release_date"] = job.release_date;
@@ -86,12 +93,12 @@ void Instance::write(
                 operation_id < (OperationId)job.operations.size();
                 ++operation_id) {
             const Operation& operation = job.operations[operation_id];
-            for (OperationAlternativeId operation_alternative_id = 0;
-                    operation_alternative_id < (OperationAlternativeId)operation.machines.size();
-                    ++operation_alternative_id) {
-                const OperationAlternative& operation_alternative = operation.machines[operation_alternative_id];
-                json["jobs"][job_id]["operations"][operation_id]["machines"][operation_alternative_id]["machine"] = operation_alternative.machine_id;
-                json["jobs"][job_id]["operations"][operation_id]["machines"][operation_alternative_id]["processing_time"] = operation_alternative.processing_time;
+            for (AlternativeId alternative_id = 0;
+                    alternative_id < (AlternativeId)operation.machines.size();
+                    ++alternative_id) {
+                const Alternative& alternative = operation.machines[alternative_id];
+                json["jobs"][job_id]["operations"][operation_id]["alternatives"][alternative_id]["machine"] = alternative.machine_id;
+                json["jobs"][job_id]["operations"][operation_id]["alternatives"][alternative_id]["processing_time"] = alternative.processing_time;
             }
         }
     }
@@ -219,16 +226,16 @@ std::ostream& Instance::format(
                     operation_id < (OperationId)job.operations.size();
                     ++operation_id) {
                 const Operation& operation = job.operations[operation_id];
-                for (OperationAlternativeId operation_alternative_id = 0;
-                        operation_alternative_id < (OperationAlternativeId)operation.machines.size();
-                        ++operation_alternative_id) {
-                    const OperationAlternative& operation_alternative = operation.machines[operation_alternative_id];
+                for (AlternativeId alternative_id = 0;
+                        alternative_id < (AlternativeId)operation.machines.size();
+                        ++alternative_id) {
+                    const Alternative& alternative = operation.machines[alternative_id];
                     os
                         << std::setw(12) << job_id
                         << std::setw(12) << operation_id
-                        << std::setw(12) << operation_alternative_id
-                        << std::setw(12) << operation_alternative.machine_id
-                        << std::setw(12) << operation_alternative.processing_time
+                        << std::setw(12) << alternative_id
+                        << std::setw(12) << alternative.machine_id
+                        << std::setw(12) << alternative.processing_time
                         << std::endl;
                 }
             }

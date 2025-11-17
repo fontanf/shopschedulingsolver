@@ -5,7 +5,7 @@
 namespace shopschedulingsolver
 {
 
-Output tree_search_pfss_tct(
+Output tree_search_pfss_tft(
         const Instance& instance,
         const Parameters& parameters = {});
 

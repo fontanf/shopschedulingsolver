@@ -22,7 +22,7 @@ if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
     target_link_libraries(ShopSchedulingSolver_main PUBLIC
         ShopSchedulingSolver_shopschedulingsolver
         ShopSchedulingSolver_tree_search_pfss_makespan
-        ShopSchedulingSolver_tree_search_pfss_tct
+        ShopSchedulingSolver_tree_search_pfss_tft
         ShopSchedulingSolver_milp_positional
         ShopSchedulingSolver_milp_disjunctive
         Boost::program_options
@@ -44,4 +44,22 @@ if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
         Boost::filesystem)
     set_target_properties(ShopSchedulingSolver_mps_writer_main PROPERTIES OUTPUT_NAME "shopschedulingsolver_mps_writer")
     install(TARGETS ShopSchedulingSolver_mps_writer_main)
+endif()
+
+add_library(ShopSchedulingSolver_generator)
+target_sources(ShopSchedulingSolver_generator PRIVATE
+    generator.cpp)
+target_link_libraries(ShopSchedulingSolver_generator PUBLIC
+    ShopSchedulingSolver_shopschedulingsolver)
+add_library(ShopSchedulingSolver::generator ALIAS ShopSchedulingSolver_generator)
+
+if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
+    add_executable(ShopSchedulingSolver_generator_main)
+    target_sources(ShopSchedulingSolver_generator_main PRIVATE
+        generator_main.cpp)
+    target_link_libraries(ShopSchedulingSolver_generator_main PUBLIC
+        ShopSchedulingSolver_generator
+        Boost::program_options)
+    set_target_properties(ShopSchedulingSolver_generator_main PROPERTIES OUTPUT_NAME "shopschedulingsolver_generator")
+    install(TARGETS ShopSchedulingSolver_generator_main)
 endif()

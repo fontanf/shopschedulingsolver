@@ -13,7 +13,7 @@ namespace shopschedulingsolver
 using MachineId = int64_t;
 using JobId = int64_t;
 using OperationId = int64_t;
-using OperationAlternativeId = int64_t;
+using AlternativeId = int64_t;
 using Time = int64_t;
 using Seed = int64_t;
 using Counter = int64_t;
@@ -40,7 +40,7 @@ struct MachineOperation
 
     OperationId operation_id = -1;
 
-    OperationAlternativeId operation_alternative_id = -1;
+    AlternativeId alternative_id = -1;
 };
 
 struct Machine
@@ -50,7 +50,7 @@ struct Machine
     bool no_idle = false;
 };
 
-struct OperationAlternative
+struct Alternative
 {
     MachineId machine_id = -1;
 
@@ -63,7 +63,7 @@ struct OperationAlternative
 struct Operation
 {
     /** Machines that can perform the operation. */
-    std::vector<OperationAlternative> machines;
+    std::vector<Alternative> machines;
 };
 
 /**
@@ -157,7 +157,7 @@ public:
     /** Write the instance to a file. */
     void write(
             const std::string& instance_path,
-            const std::string& format) const;
+            const std::string& format = "") const;
 
 private:
 

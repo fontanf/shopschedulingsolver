@@ -34,11 +34,34 @@ struct Output: optimizationtools::Output
 
     Time maximum_lateness_bound = -1;
 
+    Time throughput_bound = -1;
+
+
+    double bound() const
+    {
+        switch (solution.instance().objective()) {
+        case Objective::Makespan:
+            return this->makespan_bound;
+        case Objective::TotalFlowTime:
+            return this->total_flow_time_bound;
+        case Objective::TotalTardiness:
+            return this->total_tardiness_bound;
+        case Objective::Throughput:
+            return this->throughput_bound;
+        }
+        return -1;
+    }
 
     virtual nlohmann::json to_json() const
     {
         return nlohmann::json {
             {"Solution", this->solution.to_json()},
+            {"MakespanBound", this->makespan_bound},
+            {"TotalFlowTimeBound", this->total_flow_time_bound},
+            {"TotalTardinessBound", this->total_tardiness_bound},
+            {"ThroughputBound", this->throughput_bound},
+            {"Bound", this->bound()},
+            {"Value", this->solution.objective_value()},
             {"Time", this->time}
         };
     }

@@ -26,7 +26,7 @@ public:
 
         OperationId operation_id = -1;
 
-        OperationAlternativeId operation_alternative_id = -1;
+        AlternativeId alternative_id = -1;
 
         Time start = -1;
 
@@ -122,6 +122,9 @@ public:
 
     /** Get the total_tardiness of the solution. */
     Time total_tardiness() const { return total_tardiness_; }
+
+    /** Get the objective value of the solution. */
+    double objective_value() const;
 
     /** Check if the solution is feasible. */
     bool feasible() const;

@@ -232,3 +232,97 @@ $FO_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
 
 $FO_m \mid \text{blocking} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+
+
+Generate test instances list for each algorithm:
+```shell
+python scripts/solve_test_data.py  --algorithm milp-positional  --output data/test_milp_positional.txt  --instances \
+        data/test_pfss_makespan.txt \
+        data/test_pfss_tft.txt
+python scripts/solve_test_data.py  --algorithm milp-disjunctive  --output data/test_milp_disjunctive.txt  --instances \
+        data/test_jss_makespan.txt \
+        data/test_jss_makespan_no_wait.txt \
+        data/test_jss_tft.txt \
+        data/test_jss_tft_no_wait.txt \
+        data/test_jss_twft.txt \
+        data/test_jss_twft_no_wait.txt \
+        data/test_jss_tt.txt \
+        data/test_jss_tt_no_wait.txt \
+        data/test_jss_twt.txt \
+        data/test_jss_twt_no_wait.txt \
+        data/test_fjss_makespan.txt \
+        data/test_fjss_makespan_no_wait.txt \
+        data/test_fjss_tft.txt \
+        data/test_fjss_tft_no_wait.txt \
+        data/test_fjss_twft.txt \
+        data/test_fjss_twft_no_wait.txt \
+        data/test_fjss_tt.txt \
+        data/test_fjss_tt_no_wait.txt \
+        data/test_fjss_twt.txt \
+        data/test_fjss_twt_no_wait.txt \
+        data/test_oss_makespan.txt \
+        data/test_oss_makespan_no_wait.txt \
+        data/test_oss_tft.txt \
+        data/test_oss_tft_no_wait.txt \
+        data/test_oss_twft.txt \
+        data/test_oss_twft_no_wait.txt \
+        data/test_oss_tt.txt \
+        data/test_oss_tt_no_wait.txt \
+        data/test_oss_twt.txt \
+        data/test_oss_twt_no_wait.txt \
+        data/test_foss_makespan.txt \
+        data/test_foss_makespan_no_wait.txt \
+        data/test_foss_tft.txt \
+        data/test_foss_tft_no_wait.txt \
+        data/test_foss_twft.txt \
+        data/test_foss_twft_no_wait.txt \
+        data/test_foss_tt.txt \
+        data/test_foss_tt_no_wait.txt \
+        data/test_foss_twt.txt \
+        data/test_foss_twt_no_wait.txt
+python scripts/solve_test_data.py  --algorithm constraint-programming-optalcp  --output data/test_constraint_programming_optalcp.txt  --instances \
+        data/test_jss_makespan.txt \
+        data/test_jss_makespan_no_wait.txt \
+        data/test_jss_tft.txt \
+        data/test_jss_tft_no_wait.txt \
+        data/test_jss_twft.txt \
+        data/test_jss_twft_no_wait.txt \
+        data/test_jss_tt.txt \
+        data/test_jss_tt_no_wait.txt \
+        data/test_jss_twt.txt \
+        data/test_jss_twt_no_wait.txt \
+        data/test_fjss_makespan.txt \
+        data/test_fjss_makespan_no_wait.txt \
+        data/test_fjss_tft.txt \
+        data/test_fjss_tft_no_wait.txt \
+        data/test_fjss_twft.txt \
+        data/test_fjss_twft_no_wait.txt \
+        data/test_fjss_tt.txt \
+        data/test_fjss_tt_no_wait.txt \
+        data/test_fjss_twt.txt \
+        data/test_fjss_twt_no_wait.txt \
+        data/test_oss_makespan.txt \
+        data/test_oss_makespan_no_wait.txt \
+        data/test_oss_tft.txt \
+        data/test_oss_tft_no_wait.txt \
+        data/test_oss_twft.txt \
+        data/test_oss_twft_no_wait.txt \
+        data/test_oss_tt.txt \
+        data/test_oss_tt_no_wait.txt \
+        data/test_oss_twt.txt \
+        data/test_oss_twt_no_wait.txt \
+        data/test_foss_makespan.txt \
+        data/test_foss_makespan_no_wait.txt \
+        data/test_foss_tft.txt \
+        data/test_foss_tft_no_wait.txt \
+        data/test_foss_twft.txt \
+        data/test_foss_twft_no_wait.txt \
+        data/test_foss_tt.txt \
+        data/test_foss_tt_no_wait.txt \
+        data/test_foss_twt.txt \
+        data/test_foss_twt_no_wait.txt
+python scripts/solve_test_data.py --algorithm tree-search-pfss-makespan  --output data/test_tree_search_pfss_makespan.txt  --instances \
+        data/test_pfss_makespan.txt
+python scripts/solve_test_data.py --algorithm tree-search-pfss-tft  --output data/test_tree_search_pfss_tft.txt  --instances \
+        data/test_pfss_tft.txt
+```

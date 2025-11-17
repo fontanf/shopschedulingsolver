@@ -635,7 +635,12 @@ Output shopschedulingsolver::tree_search_pfss_makespan(
             ss << "queue " << ibs_output.maximum_size_of_the_queue;
             algorithm_formatter.update_solution(solution, ss.str());
         };
-    treesearchsolver::iterative_beam_search(branching_scheme, ibs_parameters);
+    auto ts_output = treesearchsolver::iterative_beam_search(branching_scheme, ibs_parameters);
+
+    if (ts_output.optimal) {
+        algorithm_formatter.update_makespan_bound(
+                output.solution.makespan(), "tree search completed");
+    }
 
     algorithm_formatter.end();
     return output;

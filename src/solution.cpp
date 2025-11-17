@@ -2,6 +2,21 @@
 
 using namespace shopschedulingsolver;
 
+double Solution::objective_value() const
+{
+    switch (this->instance().objective()) {
+    case Objective::Makespan:
+        return this->makespan();
+    case Objective::TotalFlowTime:
+        return this->total_flow_time();
+    case Objective::TotalTardiness:
+        return this->total_tardiness();
+    case Objective::Throughput:
+        return this->throughput();
+    }
+    return -1;
+}
+
 bool Solution::feasible() const
 {
     return (this->number_of_release_date_violations() == 0
@@ -58,11 +73,11 @@ void Solution::write(
         const Solution::Operation& solution_operation = this->operation(solution_operation_id);
         const auto& job = this->instance().job(solution_operation.job_id);
         const auto& operation = job.operations[solution_operation.operation_id];
-        const auto& machine_operation = operation.machines[solution_operation.operation_alternative_id];
+        const auto& machine_operation = operation.machines[solution_operation.alternative_id];
         json["operations"][solution_operation_id]["job_id"] = solution_operation.job_id;
         json["operations"][solution_operation_id]["job_position"] = solution_operation.job_position;
         json["operations"][solution_operation_id]["operation_id"] = solution_operation.operation_id;
-        json["operations"][solution_operation_id]["operation_alternative_id"] = solution_operation.operation_alternative_id;
+        json["operations"][solution_operation_id]["alternative_id"] = solution_operation.alternative_id;
         json["operations"][solution_operation_id]["machine_id"] = solution_operation.machine_id;
         json["operations"][solution_operation_id]["machine_position"] = solution_operation.machine_position;
         json["operations"][solution_operation_id]["start"] = solution_operation.start;
@@ -84,6 +99,7 @@ nlohmann::json Solution::to_json() const
         {"TotalFlowTime", this->total_flow_time()},
         {"Throughput", this->throughput()},
         {"TotalTardiness", this->total_tardiness()},
+        {"Value", this->objective_value()},
     };
 }
 
@@ -199,14 +215,14 @@ void Solution::format(
                 const Solution::Operation& solution_operation = this->operation(solution_operation_id);
                 const auto& job = instance.job(solution_operation.job_id);
                 const auto& operation = job.operations[solution_operation.operation_id];
-                const auto& operation_alternative = operation.machines[solution_operation.operation_alternative_id];
-                Time end = solution_operation.start + operation_alternative.processing_time;
+                const auto& alternative = operation.machines[solution_operation.alternative_id];
+                Time end = solution_operation.start + alternative.processing_time;
                 os
                     << std::setw(12) << machine_id
                     << std::setw(12) << solution_operation.machine_position
                     << std::setw(12) << solution_operation.job_id
                     << std::setw(12) << solution_operation.operation_id
-                    << std::setw(12) << solution_operation.operation_alternative_id
+                    << std::setw(12) << solution_operation.alternative_id
                     << std::setw(12) << solution_operation.job_position
                     << std::setw(12) << solution_operation.start
                     << std::setw(12) << end
@@ -243,12 +259,12 @@ void Solution::format(
             for (SolutionOperationId solution_operation_id: solution_job.solution_operations) {
                 const Solution::Operation& solution_operation = this->operation(solution_operation_id);
                 const auto& operation = job.operations[solution_operation.operation_id];
-                const auto& operation_alternative = operation.machines[solution_operation.operation_alternative_id];
-                Time end = solution_operation.start + operation_alternative.processing_time;
+                const auto& alternative = operation.machines[solution_operation.alternative_id];
+                Time end = solution_operation.start + alternative.processing_time;
                 os
                     << std::setw(12) << job_id
                     << std::setw(12) << solution_operation.operation_id
-                    << std::setw(12) << solution_operation.operation_alternative_id
+                    << std::setw(12) << solution_operation.alternative_id
                     << std::setw(12) << solution_operation.job_position
                     << std::setw(12) << solution_operation.machine_id
                     << std::setw(12) << solution_operation.machine_position

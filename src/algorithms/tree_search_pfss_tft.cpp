@@ -10,7 +10,7 @@
  *   - 3: total completion time and weighted idle time
  */
 
-#include "shopschedulingsolver/algorithms/tree_search_pfss_tct.hpp"
+#include "shopschedulingsolver/algorithms/tree_search_pfss_tft.hpp"
 
 #include "shopschedulingsolver/solution_builder.hpp"
 
@@ -131,7 +131,7 @@ public:
 
         //if (parent->next_child_pos == 0)
         //    std::cout << "parent"
-        //        << " j " << parent->j
+        //        << " j " << parent->job_id
         //        << " n " << parent->number_of_jobs
         //        << " ct " << parent->total_completion_time
         //        << " it " << parent->idle_time
@@ -160,8 +160,8 @@ public:
         child->idle_time = parent->idle_time;
         child->weighted_idle_time = parent->weighted_idle_time;
         Time p0 = job_next.operations[0].machines[0].processing_time;
-        Time t_prec = parent->times[0] + p0;
-        Time t = 0;
+        Time t = parent->times[0] + p0;
+        Time t_prec = t;
         for (MachineId machine_id = 1;
                 machine_id < instance_.number_of_machines();
                 ++machine_id) {
@@ -353,7 +353,7 @@ private:
 
 }
 
-Output shopschedulingsolver::tree_search_pfss_tct(
+Output shopschedulingsolver::tree_search_pfss_tft(
         const Instance& instance,
         const Parameters& parameters)
 {
@@ -420,7 +420,12 @@ Output shopschedulingsolver::tree_search_pfss_tct(
             ss << "queue " << ibs_output.maximum_size_of_the_queue;
             algorithm_formatter.update_solution(solution, ss.str());
         };
-    treesearchsolver::iterative_beam_search(branching_scheme, ibs_parameters);
+    auto ts_output = treesearchsolver::iterative_beam_search(branching_scheme, ibs_parameters);
+
+    if (ts_output.optimal) {
+        algorithm_formatter.update_total_flow_time_bound(
+                output.solution.total_flow_time(), "tree search completed");
+    }
 
     algorithm_formatter.end();
     return output;

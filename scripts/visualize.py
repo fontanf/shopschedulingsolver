@@ -23,12 +23,12 @@ if __name__ == "__main__":
         for operation_id, operation in enumerate(j["operations"]):
             label = ("(" + str(operation["job_id"])
                      + "," + str(operation["operation_id"])
-                     + "," + str(operation["operation_machine_id"]) + ")")
+                     + "," + str(operation["alternative_id"]) + ")")
             d.append(dict(
                 machine_id=operation["machine_id"],
                 job_id=operation["job_id"],
                 operation_id=operation["operation_id"],
-                operation_machine_id=operation["operation_machine_id"],
+                alternative_id=operation["alternative_id"],
                 start=operation["start"],
                 processing_time=operation["processing_time"],
                 end=operation["end"],
@@ -49,7 +49,7 @@ if __name__ == "__main__":
             hover_data=[
                 "job_id",
                 "operation_id",
-                "operation_machine_id",
+                "alternative_id",
                 "start",
                 "processing_time",
                 "end"])

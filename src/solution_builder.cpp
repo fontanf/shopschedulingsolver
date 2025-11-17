@@ -18,22 +18,22 @@ SolutionBuilder& SolutionBuilder::set_instance(
 void SolutionBuilder::append_operation(
         JobId job_id,
         OperationId operation_id,
-        OperationAlternativeId operation_alternative_id,
+        AlternativeId alternative_id,
         Time start)
 {
     const Instance& instance = solution_.instance();
     const Job& job = instance.job(job_id);
     const Operation& operation = job.operations[operation_id];
-    const OperationAlternative& operation_alternative = operation.machines[operation_alternative_id];
-    Solution::Machine& solution_machine = this->solution_.machines_[operation_alternative.machine_id];
+    const Alternative& alternative = operation.machines[alternative_id];
+    Solution::Machine& solution_machine = this->solution_.machines_[alternative.machine_id];
     Solution::Job& solution_job = this->solution_.jobs_[job_id];
 
     SolutionOperationId solution_operation_id = this->solution_.operations_.size();
     Solution::Operation solution_operation;
-    solution_operation.machine_id = operation_alternative.machine_id;
+    solution_operation.machine_id = alternative.machine_id;
     solution_operation.job_id = job_id;
     solution_operation.operation_id = operation_id;
-    solution_operation.operation_alternative_id = operation_alternative_id;
+    solution_operation.alternative_id = alternative_id;
     solution_operation.job_position = solution_job.solution_operations.size();
     solution_operation.machine_position = solution_machine.solution_operations.size();
     solution_operation.start = start;
@@ -109,7 +109,7 @@ Solution SolutionBuilder::build()
         OperationId operation_prev_id = -1;
         for (SolutionOperationId solution_operation_id: solution_job.solution_operations) {
             const Solution::Operation& o = this->solution_.operations_[solution_operation_id];
-            const auto& machine_operation = job.operations[o.operation_id].machines[o.operation_alternative_id];
+            const auto& machine_operation = job.operations[o.operation_id].machines[o.alternative_id];
             Time end = o.start + machine_operation.processing_time;
             // Update job.start.
             if (solution_job.start == -1)
@@ -160,7 +160,7 @@ Solution SolutionBuilder::build()
         Time current_time = 0;
         for (SolutionOperationId solution_operation_id: solution_machine.solution_operations) {
             const Solution::Operation& o = this->solution_.operations_[solution_operation_id];
-            Time end = o.start + instance.job(o.job_id).operations[o.operation_id].machines[o.operation_alternative_id].processing_time;
+            Time end = o.start + instance.job(o.job_id).operations[o.operation_id].machines[o.alternative_id].processing_time;
             // Update solution_machine.start.
             if (solution_machine.start == -1)
                 solution_machine.start = o.start;
@@ -177,7 +177,7 @@ Solution SolutionBuilder::build()
             // Check blocking.
             if (o.machine_position != 0) {
                 // Get the previous operation on the machine.
-                OperationAlternativeId solution_operation_prev_id = solution_machine.solution_operations[o.machine_position - 1];
+                AlternativeId solution_operation_prev_id = solution_machine.solution_operations[o.machine_position - 1];
                 const Solution::Operation& o_prev = this->solution_.operations_[solution_operation_prev_id];
                 // Get the job of the previous operation.
                 const Job& job_prev = instance.job(o_prev.job_id);
@@ -218,7 +218,7 @@ void SolutionBuilder::from_permutation(
         this->append_operation(
                 job_id,
                 0,  // operation_id
-                0,  // operation_alternative_id
+                0,  // alternative_id
                 start0);
         Time p0 = job.operations[0].machines[0].processing_time;
         machines_current_times[0] = start0 + p0;
@@ -235,7 +235,7 @@ void SolutionBuilder::from_permutation(
             this->append_operation(
                     job_id,
                     machine_id,  // operation_id
-                    0,  // operation_alternative_id
+                    0,  // alternative_id
                     start);
             Time p = job.operations[machine_id].machines[0].processing_time;
             machines_current_times[machine_id] = start + p;
@@ -261,7 +261,7 @@ void SolutionBuilder::read(
             this->append_operation(
                     json_operation["job_id"],
                     json_operation["operation_id"],
-                    json_operation["operation_alternative_id"],
+                    json_operation["alternative_id"],
                     json_operation["start"]);
         }
     } else if (format == "permutation") {

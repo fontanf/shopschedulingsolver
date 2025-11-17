@@ -44,9 +44,8 @@ endif()
 FetchContent_Declare(
     mathoptsolverscmake
     GIT_REPOSITORY https://github.com/fontanf/mathoptsolverscmake.git
-    GIT_TAG 59fd908038906df649e121f42652a0e8f99cbc67
-    #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../mathoptsolverscmake/"
-    EXCLUDE_FROM_ALL)
+    GIT_TAG 59fd908038906df649e121f42652a0e8f99cbc67)
+    #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../mathoptsolverscmake/")
 FetchContent_MakeAvailable(mathoptsolverscmake)
 
 # Fetch fontanf/treesearchsolver.
@@ -55,7 +54,7 @@ set(TREESEARCHSOLVER_BUILD_EXAMPLES OFF)
 FetchContent_Declare(
     treesearchsolver
     GIT_REPOSITORY https://github.com/fontanf/treesearchsolver.git
-    GIT_TAG 8cf4a179d103efb9d4e0a94bc2f6f669105cd45a)
+    GIT_TAG 4795f547e8725817b11472ced5b393c3a5d46577)
     #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../treesearchsolver/")
 FetchContent_MakeAvailable(treesearchsolver)
 

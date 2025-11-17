@@ -62,7 +62,7 @@ OperationId InstanceBuilder::add_operation(
     return operation_id;
 }
 
-void InstanceBuilder::add_operation_alternative(
+void InstanceBuilder::add_alternative(
         JobId job_id,
         OperationId operation_id,
         MachineId machine_id,
@@ -98,10 +98,10 @@ void InstanceBuilder::add_operation_alternative(
                 "processing_time: " + std::to_string(processing_time) + ".");
     }
 
-    OperationAlternative operation_alternative;
-    operation_alternative.machine_id = machine_id;
-    operation_alternative.processing_time = processing_time;
-    operation.machines.push_back(operation_alternative);
+    Alternative alternative;
+    alternative.machine_id = machine_id;
+    alternative.processing_time = processing_time;
+    operation.machines.push_back(alternative);
 }
 
 void InstanceBuilder::set_job_release_date(
@@ -177,7 +177,9 @@ void InstanceBuilder::read(
                 "Unable to open file \"" + instance_path + "\".");
     }
 
-    if (format == "flow-shop") {
+    if (format == "" || format == "json") {
+        read_json(file);
+    } else if (format == "flow-shop") {
         read_flow_shop(file);
     } else if (format == "flow-shop-vallada2008" || format == "vallada2008") {
         read_flow_shop_vallada2008(file);
@@ -190,6 +192,59 @@ void InstanceBuilder::read(
                 "Unknown instance format \"" + format + "\".");
     }
     file.close();
+}
+
+void InstanceBuilder::read_json(std::ifstream& file)
+{
+    nlohmann ::json j;
+    file >> j;
+
+    if (j.contains("objective")) {
+        std::stringstream objective_ss;
+        objective_ss << std::string(j["objective"]);
+        Objective objective;
+        objective_ss >> objective;
+        set_objective(objective);
+    }
+
+    if (j.contains("permutation"))
+        set_no_wait(j["permutation"]);
+    if (j.contains("operations_arbitrary_order"))
+        set_no_wait(j["operations_arbitrary_order"]);
+    if (j.contains("no_wait"))
+        set_no_wait(j["no_wait"]);
+    if (j.contains("blocking"))
+        set_no_wait(j["blocking"]);
+
+    // Read machines.
+    set_number_of_machines(j["machines"].size());
+    MachineId machine_id = 0;
+    for (const auto& json_machine: j["machines"]) {
+        if (json_machine.contains("no_idle"))
+            set_machine_no_idle(machine_id, json_machine["no_idle"]);
+        machine_id++;
+    }
+
+    // Read jobs.
+    for (const auto& json_job: j["jobs"]) {
+        JobId job_id = add_job();
+        if (json_job.contains("release_date"))
+            set_job_release_date(job_id, json_job["release_date"]);
+        if (json_job.contains("due_date"))
+            set_job_due_date(job_id, json_job["due_date"]);
+        if (json_job.contains("weight"))
+            set_job_weight(job_id, json_job["weight"]);
+        for (const auto& json_operation: json_job["operations"]) {
+            OperationId operation_id = add_operation(job_id);
+            for (const auto& json_alternative: json_operation["alternatives"]) {
+                add_alternative(
+                        job_id,
+                        operation_id,
+                        json_alternative["machine"],
+                        json_alternative["processing_time"]);
+            }
+        }
+    }
 }
 
 void InstanceBuilder::read_flow_shop(std::ifstream& file)
@@ -208,7 +263,7 @@ void InstanceBuilder::read_flow_shop(std::ifstream& file)
         for (JobId job_id = 0; job_id < number_of_jobs; ++job_id) {
             file >> processing_time;
             OperationId operation_id = this->add_operation(job_id);
-            this->add_operation_alternative(
+            this->add_alternative(
                     job_id,
                     operation_id,
                     machine_id,
@@ -235,7 +290,7 @@ void InstanceBuilder::read_flow_shop_vallada2008(std::ifstream& file)
                 ++machine_id) {
             file >> machine_id_tmp >> processing_time;
             OperationId operation_id = this->add_operation(job_id);
-            this->add_operation_alternative(
+            this->add_alternative(
                     job_id,
                     operation_id,
                     machine_id,
@@ -271,7 +326,7 @@ void InstanceBuilder::read_job_shop(std::ifstream& file)
                 ++operation_id) {
             file >> machine_id >> processing_time;
             this->add_operation(job_id);
-            this->add_operation_alternative(
+            this->add_alternative(
                     job_id,
                     operation_id,
                     machine_id,
@@ -294,7 +349,7 @@ void InstanceBuilder::read_flexible_job_shop(std::ifstream& file)
     this->set_number_of_machines(number_of_machines);
 
     OperationId number_of_operations = -1;
-    OperationId number_of_operation_alternatives = -1;
+    OperationId number_of_alternatives = -1;
     MachineId machine_id = -1;
     Time processing_time = -1;
     for (JobId job_id = 0; job_id < number_of_jobs; ++job_id) {
@@ -303,12 +358,12 @@ void InstanceBuilder::read_flexible_job_shop(std::ifstream& file)
                 operation_id < number_of_operations;
                 ++operation_id) {
             this->add_operation(job_id);
-            file >> number_of_operation_alternatives;
-            for (OperationAlternativeId operation_alternative_id = 0;
-                    operation_alternative_id < number_of_operation_alternatives;
-                    ++operation_alternative_id) {
+            file >> number_of_alternatives;
+            for (AlternativeId alternative_id = 0;
+                    alternative_id < number_of_alternatives;
+                    ++alternative_id) {
                 file >> machine_id >> processing_time;
-                this->add_operation_alternative(
+                this->add_alternative(
                         job_id,
                         operation_id,
                         machine_id - 1,
@@ -343,20 +398,20 @@ Instance InstanceBuilder::build()
             // Compute flexible_.
             if (operation.machines.size() != 1)
                 this->instance_.flexible_ = true;
-            for (OperationAlternativeId operation_alternative_id = 0;
-                    operation_alternative_id < (OperationAlternativeId)operation.machines.size();
-                    ++operation_alternative_id) {
-                const OperationAlternative& operation_alternative = operation.machines[operation_alternative_id];
+            for (AlternativeId alternative_id = 0;
+                    alternative_id < (AlternativeId)operation.machines.size();
+                    ++alternative_id) {
+                const Alternative& alternative = operation.machines[alternative_id];
                 job.number_of_machine_operations++;
-                job.mean_processing_time += operation_alternative.processing_time;
+                job.mean_processing_time += alternative.processing_time;
                 // Update machines_.
                 MachineOperation machine_operation;
                 machine_operation.job_id = job_id;
                 machine_operation.operation_id = operation_id;
-                machine_operation.operation_alternative_id = operation_alternative_id;
-                this->instance_.machines_[operation_alternative.machine_id].operations.push_back(machine_operation);
+                machine_operation.alternative_id = alternative_id;
+                this->instance_.machines_[alternative.machine_id].operations.push_back(machine_operation);
                 // Compute flow_shop_.
-                if (operation_alternative.machine_id != operation_id)
+                if (alternative.machine_id != operation_id)
                     this->instance_.flow_shop_ = false;
             }
         }

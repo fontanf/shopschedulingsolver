@@ -443,8 +443,11 @@ CbcEventHandler::CbcAction EventHandler::event(CbcEvent which_event)
 
     // Retrieve bound.
     Time bound = std::ceil(mathoptsolverscmake::get_bound(cbc_model) - 1e5);
-    if (instance_.objective() == Objective::Makespan)
+    if (instance_.objective() == Objective::Makespan) {
         algorithm_formatter_.update_makespan_bound(bound, "node " + std::to_string(number_of_nodes));
+    } else if (instance_.objective() == Objective::TotalFlowTime) {
+        algorithm_formatter_.update_total_flow_time_bound(bound, "node " + std::to_string(number_of_nodes));
+    }
 
     // Check end.
     if (parameters_.timer.needs_to_end())
@@ -485,8 +488,11 @@ void xpress_callback(
 
     // Retrieve bound.
     Time bound = std::ceil(mathoptsolverscmake::get_bound(xpress_model) - 1e-5);
-    if (d.instance.objective() == Objective::Makespan)
+    if (d.instance.objective() == Objective::Makespan) {
         d.algorithm_formatter.update_makespan_bound(bound, "");
+    } else if (d.instance.objective() == Objective::TotalFlowTime) {
+        d.algorithm_formatter.update_total_flow_time_bound(bound, "");
+    }
 
     // Check end.
     if (d.parameters.timer.needs_to_end())
@@ -561,9 +567,13 @@ Output shopschedulingsolver::milp_positional(
 
                         // Retrieve bound.
                         Time bound = std::ceil(highs_output->mip_dual_bound - 1e-5);
-                        if (bound != std::numeric_limits<double>::infinity())
-                            if (instance.objective() == Objective::Makespan)
+                        if (bound != std::numeric_limits<double>::infinity()) {
+                            if (instance.objective() == Objective::Makespan) {
                                 algorithm_formatter.update_makespan_bound(bound, "node " + std::to_string(highs_output->mip_node_count));
+                            } else if (instance.objective() == Objective::TotalFlowTime) {
+                                algorithm_formatter.update_total_flow_time_bound(bound, "node " + std::to_string(highs_output->mip_node_count));
+                            }
+                        }
                     }
 
                     // Check end.
@@ -608,8 +618,11 @@ Output shopschedulingsolver::milp_positional(
     algorithm_formatter.update_solution(solution, "");
 
     // Retrieve bound.
-    if (instance.objective() == Objective::Makespan)
+    if (instance.objective() == Objective::Makespan) {
         algorithm_formatter.update_makespan_bound(milp_bound, "");
+    } else if (instance.objective() == Objective::TotalFlowTime) {
+        algorithm_formatter.update_total_flow_time_bound(milp_bound, "");
+    }
 
     algorithm_formatter.end();
     return output;

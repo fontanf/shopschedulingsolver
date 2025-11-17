@@ -47,7 +47,7 @@ public:
             JobId job_id);
 
     /** Add a machine for an operation. */
-    void add_operation_alternative(
+    void add_alternative(
             JobId job_id,
             OperationId operation_id,
             MachineId machine_id,
@@ -92,6 +92,8 @@ private:
     /*
      * Private methods
      */
+
+    void read_json(std::ifstream& file);
 
     void read_flow_shop(std::ifstream& file);
 

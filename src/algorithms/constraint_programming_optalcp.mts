@@ -54,22 +54,22 @@ async function main()
                 const operation = model.intervalVar()
                 jobs[job_id].push(operation)
                 jobs_2[job_id][operation_id] = []
-                const operation_alternatives = []
-                for (let operation_alternative_id = 0;
-                        operation_alternative_id < instance.jobs[job_id].operations[operation_id].machines.length;
-                        ++operation_alternative_id) {
-                    const machine_id = instance.jobs[job_id].operations[operation_id].machines[operation_alternative_id].machine;
-                    const duration = instance.jobs[job_id].operations[operation_id].machines[operation_alternative_id].processing_time;
-                    const operation_alternative = model.intervalVar({
-                        name: "J" + (job_id) + "O" + (operation_id) + "M" + (operation_alternative_id),
+                const alternatives = []
+                for (let alternative_id = 0;
+                        alternative_id < instance.jobs[job_id].operations[operation_id].machines.length;
+                        ++alternative_id) {
+                    const machine_id = instance.jobs[job_id].operations[operation_id].machines[alternative_id].machine;
+                    const duration = instance.jobs[job_id].operations[operation_id].machines[alternative_id].processing_time;
+                    const alternative = model.intervalVar({
+                        name: "J" + (job_id) + "O" + (operation_id) + "M" + (alternative_id),
                         length : duration,
                         optional : true,
                     });
-                    operation_alternatives.push(operation_alternative);
-                    machines[machine_id].push(operation_alternative);
-                    jobs_2[job_id][operation_id].push(operation_alternative)
+                    alternatives.push(alternative);
+                    machines[machine_id].push(alternative);
+                    jobs_2[job_id][operation_id].push(alternative)
                 }
-                model.alternative(operation, operation_alternatives)
+                model.alternative(operation, alternatives)
             }
         }
     }
@@ -90,6 +90,15 @@ async function main()
                 let job_end = model.max(ends);
                 jobs_ends.push(job_end);
             }
+        }
+    }
+
+    let jobs_tardiness: CP.IntExpr[] = [];
+    if (instance.objective == "Total tardiness") {
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            const due_date = instance.jobs[job_id].due_date;
+            let job_tardiness = model.max([model.sum([jobs_ends[job_id], due_date]), 0]);
+            jobs_tardiness.push(job_tardiness);
         }
     }
 
@@ -138,7 +147,14 @@ async function main()
         total_weighted_flow_time.minimize();
     } else if (instance.objective == "Total tardiness") {
         // Objective: minimize the total weighted tardiness.
-        // TODO
+        let weighted_tardiness: CP.IntExpr[] = [];
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            weighted_tardiness.push(model.times(
+                jobs_tardiness[job_id],
+                instance.jobs[job_id].weight));
+        }
+        let total_weighted_tardiness = model.sum(weighted_tardiness);
+        total_weighted_tardiness.minimize();
     }
 
     /////////////////
@@ -218,7 +234,7 @@ async function main()
         interface OperationSolution {
             job_id: number;
             operation_id: number;
-            operation_alternative_id: number;
+            alternative_id: number;
             start: number | null;
         }
 
@@ -229,16 +245,16 @@ async function main()
             for (let operation_id = 0;
                     operation_id < instance.jobs[job_id].operations.length;
                     ++operation_id) {
-                for (let operation_alternative_id = 0;
-                        operation_alternative_id < instance.jobs[job_id].operations[operation_id].machines.length;
-                        ++operation_alternative_id) {
-                    if (solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][operation_alternative_id]) == null)
+                for (let alternative_id = 0;
+                        alternative_id < instance.jobs[job_id].operations[operation_id].machines.length;
+                        ++alternative_id) {
+                    if (solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][alternative_id]) == null)
                         continue;
                     let solution_operation: OperationSolution = {
                         job_id,
                         operation_id,
-                        operation_alternative_id,
-                        start: solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][operation_alternative_id])
+                        alternative_id,
+                        start: solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][alternative_id])
                     };
                     solution.operations.push(solution_operation)
                 }
