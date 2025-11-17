@@ -1,5 +1,7 @@
 #include "shopschedulingsolver/instance_builder.hpp"
 
+#include <sstream>
+
 using namespace shopschedulingsolver;
 
 void InstanceBuilder::set_number_of_machines(MachineId number_of_machines)
