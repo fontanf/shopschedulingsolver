@@ -29,16 +29,18 @@ gtest_discover_tests(ShopSchedulingSolver_milp_disjunctive_test
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     PROPERTIES TIMEOUT 3600)
 
-add_executable(ShopSchedulingSolver_constraint_programming_optalcp_test)
-target_sources(ShopSchedulingSolver_constraint_programming_optalcp_test PRIVATE
-    constraint_programming_optalcp_test.cpp)
-target_link_libraries(ShopSchedulingSolver_constraint_programming_optalcp_test
-    ShopSchedulingSolver_tests
-    ShopSchedulingSolver_constraint_programming_optalcp
-    GTest::gtest_main)
-gtest_discover_tests(ShopSchedulingSolver_constraint_programming_optalcp_test
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    PROPERTIES TIMEOUT 3600)
+if(SHOPSCHEDULINGSOLVER_USE_OPTALCP)
+    add_executable(ShopSchedulingSolver_constraint_programming_optalcp_test)
+    target_sources(ShopSchedulingSolver_constraint_programming_optalcp_test PRIVATE
+        constraint_programming_optalcp_test.cpp)
+    target_link_libraries(ShopSchedulingSolver_constraint_programming_optalcp_test
+        ShopSchedulingSolver_tests
+        ShopSchedulingSolver_constraint_programming_optalcp
+        GTest::gtest_main)
+    gtest_discover_tests(ShopSchedulingSolver_constraint_programming_optalcp_test
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        PROPERTIES TIMEOUT 3600)
+endif()
 
 add_executable(ShopSchedulingSolver_tree_search_pfss_makespan_test)
 target_sources(ShopSchedulingSolver_tree_search_pfss_makespan_test PRIVATE
