@@ -1,5 +1,7 @@
 #include "shopschedulingsolver/instance.hpp"
 
+#include <sstream>
+
 using namespace shopschedulingsolver;
 
 std::istream& shopschedulingsolver::operator>>(
