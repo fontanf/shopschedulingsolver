@@ -196,6 +196,22 @@ void AlgorithmFormatter::update_total_tardiness_bound(
     }
 }
 
+void AlgorithmFormatter::update_throughput_bound(
+        Time bound,
+        const std::string& s)
+{
+    if (optimizationtools::is_bound_strictly_better(
+            objective_direction(this->output_.solution.instance().objective()),
+            output_.throughput_bound,
+            bound)) {
+        output_.time = parameters_.timer.elapsed_time();
+        output_.throughput_bound = bound;
+        print(s);
+        output_.json["IntermediaryOutputs"].push_back(output_.to_json());
+        parameters_.new_solution_callback(output_);
+    }
+}
+
 void AlgorithmFormatter::end()
 {
     output_.time = parameters_.timer.elapsed_time();

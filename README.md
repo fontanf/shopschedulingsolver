@@ -38,36 +38,53 @@ python scripts/visualize.py certificate.json
 
 ### Permutation flow shop
 
+#### Objective makespan
+
 $F_m \mid \text{prmu} \mid C_{\max}$
 * Positional MILP `--algorithm milp-positional`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 * Tree search `--algorithm tree-search`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid C_{\max}$
 * Positional MILP `--algorithm milp-positional`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $F_m \mid \text{prmu}, \text{blocking} \mid C_{\max}$
 * Positional MILP `--algorithm milp-positional`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+
+#### Objective total flow time
 
 $F_m \mid \text{prmu} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 * Tree search `--algorithm tree-search`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $F_m \mid \text{prmu}, \text{blocking} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+
+#### Objective total tardiness
 
 $F_m \mid \text{prmu} \mid \sum T_j$
 * Positional MILP `--algorithm milp-positional`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum T_j$
 * Positional MILP `--algorithm milp-positional`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $F_m \mid \text{prmu}, \text{blocking} \mid \sum T_j$
 * Positional MILP `--algorithm milp-positional`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 ### Job shop
+
+#### Objective makespan
 
 $J_m \mid \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -79,9 +96,13 @@ $J_m \mid \text{no-wait} \mid C_{\max}$
 
 $J_m \mid \text{mixed no-idle} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $J_m \mid \text{blocking} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+
+#### Objective total flow time
 
 $J_m \mid \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -93,23 +114,33 @@ $J_m \mid \text{no-wait} \mid \sum w_j C_j$
 
 $J_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $J_m \mid \text{blocking} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+
+#### Objective total tardiness
 
 $J_m \mid \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $J_m \mid \text{no-wait} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $J_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $J_m \mid \text{blocking} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 ### Flexible job shop
+
+#### Objective makespan
 
 $FJ_m \mid \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -121,9 +152,13 @@ $FJ_m \mid \text{no-wait} \mid C_{\max}$
 
 $FJ_m \mid \text{mixed no-idle} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{blocking} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+
+#### Objective total flow time
 
 $FJ_m \mid \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -133,29 +168,35 @@ $FJ_m \mid \text{no-wait} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
-$FJ_m \mid \text{no-wait} \mid \sum w_j C_j$
+$FJ_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
-$FJ_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-
 $FJ_m \mid \text{blocking} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+
+#### Objective total tardiness
 
 $FJ_m \mid \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{no-wait} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{blocking} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 ### Open shop
+
+#### Objective makespan
 
 $O_m \mid \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -170,6 +211,8 @@ $O_m \mid \text{mixed no-idle} \mid C_{\max}$
 $O_m \mid \text{blocking} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
+#### Objective total flow time
+
 $O_m \mid \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
@@ -183,8 +226,11 @@ $O_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
 $O_m \mid \text{blocking} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
+#### Objective total tardiness
+
 $O_m \mid \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{no-wait} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -197,8 +243,11 @@ $O_m \mid \text{blocking} \mid \sum w_j T_j$
 
 ### Flexible open shop
 
+#### Objective makespan
+
 $FO_m \mid \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{no-wait} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -209,8 +258,11 @@ $FO_m \mid \text{mixed no-idle} \mid C_{\max}$
 $FO_m \mid \text{blocking} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
+#### Objective total flow time
+
 $FO_m \mid \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{no-wait} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -221,8 +273,11 @@ $FO_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
 $FO_m \mid \text{blocking} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 
+#### Objective total tardiness
+
 $FO_m \mid \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{no-wait} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -238,7 +293,14 @@ Generate test instances list for each algorithm:
 ```shell
 python scripts/solve_test_data.py  --algorithm milp-positional  --output data/test_milp_positional.txt  --instances \
         data/test_pfss_makespan.txt \
-        data/test_pfss_tft.txt
+        data/test_pfss_makespan_no_idle.txt \
+        data/test_pfss_makespan_blocking.txt \
+        data/test_pfss_tft.txt \
+        data/test_pfss_tft_no_idle.txt \
+        data/test_pfss_tft_blocking.txt \
+        data/test_pfss_tt.txt \
+        data/test_pfss_tt_no_idle.txt \
+        data/test_pfss_tt_blocking.txt
 python scripts/solve_test_data.py  --algorithm milp-disjunctive  --output data/test_milp_disjunctive.txt  --instances \
         data/test_jss_makespan.txt \
         data/test_jss_makespan_no_wait.txt \
@@ -261,26 +323,25 @@ python scripts/solve_test_data.py  --algorithm milp-disjunctive  --output data/t
         data/test_fjss_twt.txt \
         data/test_fjss_twt_no_wait.txt \
         data/test_oss_makespan.txt \
-        data/test_oss_makespan_no_wait.txt \
         data/test_oss_tft.txt \
-        data/test_oss_tft_no_wait.txt \
         data/test_oss_twft.txt \
-        data/test_oss_twft_no_wait.txt \
         data/test_oss_tt.txt \
-        data/test_oss_tt_no_wait.txt \
         data/test_oss_twt.txt \
-        data/test_oss_twt_no_wait.txt \
         data/test_foss_makespan.txt \
-        data/test_foss_makespan_no_wait.txt \
         data/test_foss_tft.txt \
-        data/test_foss_tft_no_wait.txt \
         data/test_foss_twft.txt \
-        data/test_foss_twft_no_wait.txt \
         data/test_foss_tt.txt \
-        data/test_foss_tt_no_wait.txt \
-        data/test_foss_twt.txt \
-        data/test_foss_twt_no_wait.txt
+        data/test_foss_twt.txt
 python scripts/solve_test_data.py  --algorithm constraint-programming-optalcp  --output data/test_constraint_programming_optalcp.txt  --instances \
+        data/test_pfss_makespan.txt \
+        data/test_pfss_makespan_no_idle.txt \
+        data/test_pfss_makespan_blocking.txt \
+        data/test_pfss_tft.txt \
+        data/test_pfss_tft_no_idle.txt \
+        data/test_pfss_tft_blocking.txt \
+        data/test_pfss_tt.txt \
+        data/test_pfss_tt_no_idle.txt \
+        data/test_pfss_tt_blocking.txt \
         data/test_jss_makespan.txt \
         data/test_jss_makespan_no_wait.txt \
         data/test_jss_tft.txt \
@@ -302,27 +363,18 @@ python scripts/solve_test_data.py  --algorithm constraint-programming-optalcp  -
         data/test_fjss_twt.txt \
         data/test_fjss_twt_no_wait.txt \
         data/test_oss_makespan.txt \
-        data/test_oss_makespan_no_wait.txt \
         data/test_oss_tft.txt \
-        data/test_oss_tft_no_wait.txt \
         data/test_oss_twft.txt \
-        data/test_oss_twft_no_wait.txt \
         data/test_oss_tt.txt \
-        data/test_oss_tt_no_wait.txt \
         data/test_oss_twt.txt \
-        data/test_oss_twt_no_wait.txt \
         data/test_foss_makespan.txt \
-        data/test_foss_makespan_no_wait.txt \
         data/test_foss_tft.txt \
-        data/test_foss_tft_no_wait.txt \
         data/test_foss_twft.txt \
-        data/test_foss_twft_no_wait.txt \
         data/test_foss_tt.txt \
-        data/test_foss_tt_no_wait.txt \
-        data/test_foss_twt.txt \
-        data/test_foss_twt_no_wait.txt
+        data/test_foss_twt.txt
 python scripts/solve_test_data.py --algorithm tree-search-pfss-makespan  --output data/test_tree_search_pfss_makespan.txt  --instances \
         data/test_pfss_makespan.txt
 python scripts/solve_test_data.py --algorithm tree-search-pfss-tft  --output data/test_tree_search_pfss_tft.txt  --instances \
         data/test_pfss_tft.txt
+ctest --parallel --output-on-failure  --test-dir build/test
 ```

@@ -264,6 +264,8 @@ void SolutionBuilder::read(
                     json_operation["alternative_id"],
                     json_operation["start"]);
         }
+        sort_machines();
+        sort_jobs();
     } else if (format == "permutation") {
         const Instance& instance = this->solution_.instance();
         std::vector<JobId> job_ids;

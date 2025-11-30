@@ -447,6 +447,8 @@ CbcEventHandler::CbcAction EventHandler::event(CbcEvent which_event)
         algorithm_formatter_.update_makespan_bound(bound, "node " + std::to_string(number_of_nodes));
     } else if (instance_.objective() == Objective::TotalFlowTime) {
         algorithm_formatter_.update_total_flow_time_bound(bound, "node " + std::to_string(number_of_nodes));
+    } else if (instance_.objective() == Objective::TotalTardiness) {
+        algorithm_formatter_.update_total_tardiness_bound(bound, "node " + std::to_string(number_of_nodes));
     }
 
     // Check end.
@@ -492,6 +494,8 @@ void xpress_callback(
         d.algorithm_formatter.update_makespan_bound(bound, "");
     } else if (d.instance.objective() == Objective::TotalFlowTime) {
         d.algorithm_formatter.update_total_flow_time_bound(bound, "");
+    } else if (d.instance.objective() == Objective::TotalTardiness) {
+        d.algorithm_formatter.update_total_tardiness_bound(bound, "");
     }
 
     // Check end.
@@ -572,6 +576,8 @@ Output shopschedulingsolver::milp_positional(
                                 algorithm_formatter.update_makespan_bound(bound, "node " + std::to_string(highs_output->mip_node_count));
                             } else if (instance.objective() == Objective::TotalFlowTime) {
                                 algorithm_formatter.update_total_flow_time_bound(bound, "node " + std::to_string(highs_output->mip_node_count));
+                            } else if (instance.objective() == Objective::TotalTardiness) {
+                                algorithm_formatter.update_total_tardiness_bound(bound, "node " + std::to_string(highs_output->mip_node_count));
                             }
                         }
                     }
@@ -622,6 +628,8 @@ Output shopschedulingsolver::milp_positional(
         algorithm_formatter.update_makespan_bound(milp_bound, "");
     } else if (instance.objective() == Objective::TotalFlowTime) {
         algorithm_formatter.update_total_flow_time_bound(milp_bound, "");
+    } else if (instance.objective() == Objective::TotalTardiness) {
+        algorithm_formatter.update_total_tardiness_bound(milp_bound, "");
     }
 
     algorithm_formatter.end();

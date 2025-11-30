@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as CP from '@scheduleopt/optalcp';
+import { writeFile } from "fs/promises";
 
 let params = {
   usage: "Usage: node jobshop.mjs INSTANCE_PATH PARAMETERS_PATH OUTPUT_PATH CERTIFICATE_PATH"
@@ -17,60 +18,90 @@ async function main()
 
     let model = new CP.Model("shopscheduling");
     const number_of_jobs = instance.jobs.length;
-    const number_of_machines = instance.number_of_machines;
+    const number_of_machines = instance.machines.length;
 
     ///////////////
     // Variables //
     ///////////////
 
     // Variables: interval variables for each operation.
-    // Stored by machine.
-    let machines: CP.IntervalVar[][] = [];
+    // Stored by machine for the machine non-overlap constraint.
+    let machines_alternatives: CP.IntervalVar[][] = [];
     for (let machine_id = 0; machine_id < number_of_machines; ++machine_id)
-        machines[machine_id] = [];
+        machines_alternatives[machine_id] = [];
     // Stored by job.
-    let jobs: CP.IntervalVar[][] = [];
-    let jobs_2: CP.IntervalVar[][][] = [];
+    let jobs_operations: CP.IntervalVar[][] = [];
+    // Job alternatives, used to retrieve the solution.
+    let jobs_alternatives: CP.IntervalVar[][][] = [];
     for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
-        jobs[job_id] = [];
-        jobs_2[job_id] = [];
+        let job = instance.jobs[job_id];
+        jobs_operations[job_id] = [];
+        jobs_alternatives[job_id] = [];
         for (let operation_id = 0;
-                operation_id < instance.jobs[job_id].operations.length;
+                operation_id < job.operations.length;
                 ++operation_id) {
-            jobs_2[job_id][operation_id] = [];
-            if (instance.jobs[job_id].operations[operation_id].machines.length == 1) {
+            let operation = job.operations[operation_id];
+            jobs_alternatives[job_id][operation_id] = [];
+            if (operation.alternatives.length == 1) {
+                // Not flexible.
+
                 // Create a new operation:
-                const machine_id = instance.jobs[job_id].operations[operation_id].machines[0].machine;
-                const duration = instance.jobs[job_id].operations[operation_id].machines[0].processing_time;
-                let operation = model.intervalVar({
-                    length: duration,
+                let alternative = operation.alternatives[0];
+                const duration_max = (!instance.operations_arbitrary_order && instance.blocking && operation_id < job.operations.length - 1)?
+                    CP.IntervalMax: alternative.processing_time;
+                let optalcp_operation = model.intervalVar({
+                    length: [alternative.processing_time, duration_max],
                     name: "J" + (job_id) + "O" + (operation_id)
                 });
                 // Operation requires some machine:
-                machines[machine_id].push(operation);
-                jobs[job_id].push(operation)
-                jobs_2[job_id][operation_id].push(operation)
+                machines_alternatives[alternative.machine].push(optalcp_operation);
+                jobs_operations[job_id].push(optalcp_operation)
+                jobs_alternatives[job_id][operation_id].push(optalcp_operation)
+
             } else {
-                const operation = model.intervalVar()
-                jobs[job_id].push(operation)
-                jobs_2[job_id][operation_id] = []
-                const alternatives = []
+                // Flexible.
+
+                const optalcp_operation = model.intervalVar()
+                jobs_operations[job_id].push(optalcp_operation)
+                jobs_alternatives[job_id][operation_id] = []
+                const optalcp_alternatives = []
                 for (let alternative_id = 0;
-                        alternative_id < instance.jobs[job_id].operations[operation_id].machines.length;
+                        alternative_id < operation.alternatives.length;
                         ++alternative_id) {
-                    const machine_id = instance.jobs[job_id].operations[operation_id].machines[alternative_id].machine;
-                    const duration = instance.jobs[job_id].operations[operation_id].machines[alternative_id].processing_time;
-                    const alternative = model.intervalVar({
+                    let alternative = operation.alternatives[alternative_id];
+                    const duration_max = (!instance.operations_arbitrary_order && instance.blocking && operation_id < job.operations.length - 1)?
+                        CP.IntervalMax: alternative.processing_time;
+                    const optalcp_alternative = model.intervalVar({
+                        length: [alternative.processing_time, duration_max],
                         name: "J" + (job_id) + "O" + (operation_id) + "M" + (alternative_id),
-                        length : duration,
                         optional : true,
                     });
-                    alternatives.push(alternative);
-                    machines[machine_id].push(alternative);
-                    jobs_2[job_id][operation_id].push(alternative)
+                    optalcp_alternatives.push(optalcp_alternative);
+                    machines_alternatives[alternative.machine].push(optalcp_alternative);
+                    jobs_alternatives[job_id][operation_id].push(optalcp_alternative)
                 }
-                model.alternative(operation, alternatives)
+                model.alternative(optalcp_operation, optalcp_alternatives)
             }
+        }
+    }
+    let machines_sequences: CP.SequenceVar[] = [];
+    for (let machine_id = 0; machine_id < number_of_machines; ++machine_id) {
+        const optalcp_sequence = model.sequenceVar(machines_alternatives[machine_id]);
+        machines_sequences.push(optalcp_sequence);
+    }
+    let jobs_sequences: CP.SequenceVar[] = [];
+    if (instance.operations_arbitrary_order) {
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            const optalcp_sequence = model.sequenceVar(jobs_operations[job_id]);
+            jobs_sequences.push(optalcp_sequence);
+        }
+    }
+
+    // Position variables.
+    let jobs_positions: CP.IntVar[] = [];
+    if (instance.permutation) {
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            jobs_positions.push(model.intVar({ name: "position_" + (job_id) }));
         }
     }
 
@@ -78,13 +109,14 @@ async function main()
     let jobs_ends: CP.IntExpr[] = [];
     if (instance.objective == "Total flow time"
             || instance.objective == "Total tardiness") {
-        if (!instance.operations_arbitrary_order) {
+        if (instance.operations_arbitrary_order) {
             for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+                let job = instance.jobs[job_id];
                 let ends: CP.IntExpr[] = [];
                 for (let operation_id = 0;
-                        operation_id < instance.jobs[job_id].operations.length;
+                        operation_id < job.operations.length;
                         ++operation_id) {
-                    let operation = jobs[job_id][operation_id];
+                    let operation = jobs_operations[job_id][operation_id];
                     ends.push((operation as CP.IntervalVar).end());
                 }
                 let job_end = model.max(ends);
@@ -95,10 +127,29 @@ async function main()
 
     let jobs_tardiness: CP.IntExpr[] = [];
     if (instance.objective == "Total tardiness") {
-        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
-            const due_date = instance.jobs[job_id].due_date;
-            let job_tardiness = model.max([model.sum([jobs_ends[job_id], due_date]), 0]);
-            jobs_tardiness.push(job_tardiness);
+        if (!instance.operations_arbitrary_order) {
+            for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+                let job = instance.jobs[job_id];
+                const due_date = job.due_date;
+                let operation = jobs_operations[job_id][job.operations.length - 1];
+                let job_tardiness = model.max([
+                    model.sum([
+                        (operation as CP.IntervalVar).end(),
+                        -due_date]),
+                    0]);
+                jobs_tardiness.push(job_tardiness);
+            }
+        } else {
+            for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+                let job = instance.jobs[job_id];
+                const due_date = job.due_date;
+                let job_tardiness = model.max([
+                    model.sum([
+                        jobs_ends[job_id],
+                        -due_date]),
+                    0]);
+                jobs_tardiness.push(job_tardiness);
+            }
         }
     }
 
@@ -111,15 +162,17 @@ async function main()
         let ends: CP.IntExpr[] = [];
         if (!instance.operations_arbitrary_order) {
             for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
-                let operation = jobs[job_id][instance.jobs[job_id].operations.length - 1];
+                let job = instance.jobs[job_id];
+                let operation = jobs_operations[job_id][job.operations.length - 1];
                 ends.push((operation as CP.IntervalVar).end());
             }
         } else {
             for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+                let job = instance.jobs[job_id];
                 for (let operation_id = 0;
-                        operation_id < instance.jobs[job_id].operations.length;
+                        operation_id < job.operations.length;
                         ++operation_id) {
-                    let operation = jobs[job_id][operation_id];
+                    let operation = jobs_operations[job_id][operation_id];
                     ends.push((operation as CP.IntervalVar).end());
                 }
             }
@@ -131,16 +184,18 @@ async function main()
         let weighted_flow_times: CP.IntExpr[] = [];
         if (!instance.operations_arbitrary_order) {
             for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
-                let operation = jobs[job_id][instance.jobs[job_id].operations.length - 1];
+                let job = instance.jobs[job_id];
+                let operation = jobs_operations[job_id][job.operations.length - 1];
                 weighted_flow_times.push(model.times(
                     (operation as CP.IntervalVar).end(),
-                    instance.jobs[job_id].weight));
+                    job.weight));
             }
         } else {
             for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+                let job = instance.jobs[job_id];
                 weighted_flow_times.push(model.times(
                     jobs_ends[job_id],
-                    instance.jobs[job_id].weight));
+                    job.weight));
             }
         }
         let total_weighted_flow_time = model.sum(weighted_flow_times);
@@ -149,9 +204,10 @@ async function main()
         // Objective: minimize the total weighted tardiness.
         let weighted_tardiness: CP.IntExpr[] = [];
         for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            let job = instance.jobs[job_id];
             weighted_tardiness.push(model.times(
                 jobs_tardiness[job_id],
-                instance.jobs[job_id].weight));
+                job.weight));
         }
         let total_weighted_tardiness = model.sum(weighted_tardiness);
         total_weighted_tardiness.minimize();
@@ -164,27 +220,64 @@ async function main()
     if (!instance.operations_arbitrary_order) {
         // Constraints: precedence constraints between operations of a job (job shop).
         for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            let job = instance.jobs[job_id];
             for (let operation_id = 1;
-                    operation_id < instance.jobs[job_id].operations.length;
+                    operation_id < job.operations.length;
                     ++operation_id) {
-                 let operation = jobs[job_id][operation_id];
-                 let operation_prev = jobs[job_id][operation_id - 1];
-                 if (!instance.no_wait) {
-                     operation_prev.endBeforeStart(operation);
-                 } else {
+                 let operation = jobs_operations[job_id][operation_id];
+                 let operation_prev = jobs_operations[job_id][operation_id - 1];
+                 if (instance.no_wait) {
                      operation_prev.endAtStart(operation);
+                 } else if (instance.blocking) {
+                     operation_prev.endAtStart(operation);
+                 } else {
+                     operation_prev.endBeforeStart(operation);
                  }
             }
         }
     } else {
         // Constraints: operations of each job must not overlap.
         for (let job_id = 0; job_id < number_of_jobs; ++job_id)
-            model.noOverlap(jobs[job_id]);
+            model.noOverlap(jobs_sequences[job_id]);
     }
 
     // Constraints: operations on each machine must not overlap.
     for (let machine_id = 0; machine_id < number_of_machines; ++machine_id)
-        model.noOverlap(machines[machine_id]);
+        model.noOverlap(machines_sequences[machine_id]);
+
+    // Permutation constraints.
+    if (instance.permutation) {
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            for (let machine_id = 0; machine_id < number_of_machines; ++machine_id) {
+                let pos = model.position(machines_alternatives[machine_id][job_id], machines_sequences[machine_id]);
+                model.constraint(jobs_positions[job_id].eq(pos));
+            }
+        }
+    }
+
+    // No-wait for open shop
+    //if (instance.operations_arbitrary_order
+    //        && (instance.no_idle || instance.blocking)) {
+    //    for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+    //        let job_sequence = jobs_sequences[job_id];
+    //        for (let pos = 0; pos < jobs_operations[job_id].length - 1; ++pos)
+    //            model.constraint(job_sequence[pos].end().eq(job_sequence[pos + 1].start()));
+    //    }
+    //}
+
+    // No-idle.
+    //for (let machine_id = 0; machine_id < number_of_machines; ++machine_id) {
+    //    if (!instance.machines[machine_id].no_idle)
+    //        continue;
+    //    let machine_sequence = machines_sequences[machine_id];
+    //    for (let pos = 0; pos < machines_alternatives[machine_id].length - 1; ++pos)
+    //    model.constraint(model.end(machine_sequence[pos]).eq(model.start(machine_sequence[pos + 1])));
+    //}
+
+    //const txt = await CP.problem2txt(model);
+    //if (txt !== undefined) {
+    //    await writeFile("model.txt", txt, "utf8");
+    //}
 
     ////////////////
     // Parameters //
@@ -213,7 +306,9 @@ async function main()
     type WorkerType = keyof typeof defaults;
 
     const cp_parameters: CP.Parameters = {
-        timeLimit: parameters.TimeLimit,
+        ...(typeof parameters.TimeLimit === "number"?
+            { timeLimit: parameters.TimeLimit }: {}),
+        relativeGapTolerance: 0.0,
         workers: (["FDS", "FDSLB", "LNS", "LNS"] as WorkerType[]).map(v => defaults[v]),
         usePrecedenceEnergy : 1,
         packPropagationLevel : 2,
@@ -242,19 +337,21 @@ async function main()
             operations: [],
         };
         for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            let job = instance.jobs[job_id];
             for (let operation_id = 0;
-                    operation_id < instance.jobs[job_id].operations.length;
+                    operation_id < job.operations.length;
                     ++operation_id) {
+                let operation = job.operations[operation_id];
                 for (let alternative_id = 0;
-                        alternative_id < instance.jobs[job_id].operations[operation_id].machines.length;
+                        alternative_id < operation.alternatives.length;
                         ++alternative_id) {
-                    if (solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][alternative_id]) == null)
+                    if (solve_result.bestSolution!.getStart(jobs_alternatives[job_id][operation_id][alternative_id]) == null)
                         continue;
                     let solution_operation: OperationSolution = {
                         job_id,
                         operation_id,
                         alternative_id,
-                        start: solve_result.bestSolution!.getStart(jobs_2[job_id][operation_id][alternative_id])
+                        start: solve_result.bestSolution!.getStart(jobs_alternatives[job_id][operation_id][alternative_id])
                     };
                     solution.operations.push(solution_operation)
                 }

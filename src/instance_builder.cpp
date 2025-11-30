@@ -210,13 +210,13 @@ void InstanceBuilder::read_json(std::ifstream& file)
     }
 
     if (j.contains("permutation"))
-        set_no_wait(j["permutation"]);
+        set_permutation(j["permutation"]);
     if (j.contains("operations_arbitrary_order"))
-        set_no_wait(j["operations_arbitrary_order"]);
+        set_operations_arbitrary_order(j["operations_arbitrary_order"]);
     if (j.contains("no_wait"))
         set_no_wait(j["no_wait"]);
     if (j.contains("blocking"))
-        set_no_wait(j["blocking"]);
+        set_blocking(j["blocking"]);
 
     // Read machines.
     set_number_of_machines(j["machines"].size());
@@ -379,7 +379,6 @@ void InstanceBuilder::read_flexible_job_shop(std::ifstream& file)
 
 Instance InstanceBuilder::build()
 {
-    instance_.flow_shop_ = true;
     for (JobId job_id = 0; job_id < instance_.number_of_jobs(); ++job_id) {
         const Job& job = instance_.jobs_[job_id];
         instance_.number_of_operations_ += job.operations.size();
@@ -387,6 +386,8 @@ Instance InstanceBuilder::build()
 
     // Is flow shop?
     this->instance_.flow_shop_ = true;
+    if (this->instance_.operations_arbitrary_order())
+        this->instance_.flow_shop_ = false;
     this->instance_.flexible_ = false;
     for (JobId job_id = 0; job_id < this->instance_.number_of_jobs(); ++job_id) {
         Job& job = this->instance_.jobs_[job_id];

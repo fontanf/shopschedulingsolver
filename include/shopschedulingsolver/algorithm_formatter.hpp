@@ -66,13 +66,16 @@ struct Output: optimizationtools::Output
         };
     }
 
-    virtual int format_width() const { return 11; }
+    virtual int format_width() const { return 24; }
 
     virtual void format(std::ostream& os) const
     {
         int width = format_width();
         os
-            << std::setw(width) << std::left << "Time (s): " << time << std::endl
+            << std::setw(width) << std::left << "Time (s): " << this->time << std::endl
+            << std::setw(width) << std::left << "Makespan bound: " << this->makespan_bound << std::endl
+            << std::setw(width) << std::left << "Total flow time bound: " << this->total_flow_time_bound << std::endl
+            << std::setw(width) << std::left << "Total tardiness bound: " << this->total_tardiness_bound << std::endl
             ;
     }
 };
@@ -132,7 +135,7 @@ public:
             const std::string& s);
 
     /** Update maximum lateness bound. */
-    void update_maximum_lateness_bound(
+    void update_throughput_bound(
             Time bound,
             const std::string& s);
 

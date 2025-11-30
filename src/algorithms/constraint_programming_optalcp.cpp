@@ -38,14 +38,17 @@ Output shopschedulingsolver::constraint_programming_optalcp(
     std::system(command.c_str());
 
     // Retrieve solution.
-    SolutionBuilder solution_builder;
-    solution_builder.set_instance(instance);
-    solution_builder.read(certificate_path);
-    solution_builder.sort_machines();
-    solution_builder.sort_jobs();
-    Solution solution = solution_builder.build();
-    //solution.format(std::cout, 3);
-    algorithm_formatter.update_solution(solution, "");
+    if (std::ifstream(certificate_path).good()) {
+        SolutionBuilder solution_builder;
+        solution_builder.set_instance(instance);
+        solution_builder.read(certificate_path);
+        solution_builder.sort_machines();
+        solution_builder.sort_jobs();
+        Solution solution = solution_builder.build();
+        //solution.format(std::cout, 3);
+        algorithm_formatter.update_solution(solution, "");
+        std::remove(certificate_path);
+    }
 
     std::ifstream output_file{output_path};
     if (!output_file.good()) {
@@ -58,12 +61,25 @@ Output shopschedulingsolver::constraint_programming_optalcp(
 
     // Retrieve bound.
     Time bound = output_json["bound"];
-    algorithm_formatter.update_makespan_bound(bound, "");
+    switch (instance.objective()) {
+    case Objective::Makespan: {
+        algorithm_formatter.update_makespan_bound(bound, "");
+        break;
+    } case Objective::TotalFlowTime: {
+        algorithm_formatter.update_total_flow_time_bound(bound, "");
+        break;
+    } case Objective::Throughput: {
+        algorithm_formatter.update_throughput_bound(bound, "");
+        break;
+    } case Objective::TotalTardiness: {
+        algorithm_formatter.update_total_tardiness_bound(bound, "");
+        break;
+    }
+    }
 
     // Remove temporary files.
     std::remove(instance_path);
     std::remove(parameters_path);
-    std::remove(certificate_path);
     std::remove(output_path);
 
     algorithm_formatter.end();

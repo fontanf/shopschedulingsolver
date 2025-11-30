@@ -45,8 +45,8 @@ with open(args.output, 'w') as output_file:
             for line in instances_file:
                 instance_base_path = line[:-1]
                 instance_full_path = os.path.join("data", instance_base_path)
-                certificate_full_path = f"{instance_full_path}_solution.txt"
-                certificate_tmp_path = f"solution.txt"
+                certificate_full_path = f"{instance_full_path}_solution.json"
+                certificate_tmp_path = f"solution.json"
                 json_output_path = "output.json"
                 command = (
                         main

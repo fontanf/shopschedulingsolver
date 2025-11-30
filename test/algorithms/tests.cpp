@@ -34,7 +34,7 @@ std::vector<TestInstancePath> shopschedulingsolver::get_test_instance_paths(
     while (getline(file, tmp)) {
         TestInstancePath test_instance_path;
         test_instance_path.instance_path = tmp;
-        test_instance_path.certificate_path = tmp + "_solution.txt";
+        test_instance_path.certificate_path = tmp + "_solution.json";
         output.push_back(test_instance_path);
     }
     return output;
