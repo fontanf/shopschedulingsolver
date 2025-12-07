@@ -27,5 +27,5 @@ INSTANTIATE_TEST_SUITE_P(
                     },
                 },
                 {
-                    get_test_instance_paths(get_path({"data", "test_milp_positional.txt"})),
+                    get_test_instance_paths(get_path({"test", "algorithms", "milp_positional_test.txt"})),
                 })));

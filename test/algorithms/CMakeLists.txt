@@ -9,6 +9,7 @@ add_library(ShopSchedulingSolver::tests ALIAS ShopSchedulingSolver_tests)
 
 add_executable(ShopSchedulingSolver_milp_positional_test)
 target_sources(ShopSchedulingSolver_milp_positional_test PRIVATE
+    milp_positional_test.txt
     milp_positional_test.cpp)
 target_link_libraries(ShopSchedulingSolver_milp_positional_test
     ShopSchedulingSolver_tests
@@ -20,6 +21,7 @@ gtest_discover_tests(ShopSchedulingSolver_milp_positional_test
 
 add_executable(ShopSchedulingSolver_milp_disjunctive_test)
 target_sources(ShopSchedulingSolver_milp_disjunctive_test PRIVATE
+    milp_disjunctive_test.txt
     milp_disjunctive_test.cpp)
 target_link_libraries(ShopSchedulingSolver_milp_disjunctive_test
     ShopSchedulingSolver_tests
@@ -32,6 +34,7 @@ gtest_discover_tests(ShopSchedulingSolver_milp_disjunctive_test
 if(SHOPSCHEDULINGSOLVER_USE_OPTALCP)
     add_executable(ShopSchedulingSolver_constraint_programming_optalcp_test)
     target_sources(ShopSchedulingSolver_constraint_programming_optalcp_test PRIVATE
+        constraint_programming_optalcp_test.txt
         constraint_programming_optalcp_test.cpp)
     target_link_libraries(ShopSchedulingSolver_constraint_programming_optalcp_test
         ShopSchedulingSolver_tests
@@ -44,6 +47,7 @@ endif()
 
 add_executable(ShopSchedulingSolver_tree_search_pfss_makespan_test)
 target_sources(ShopSchedulingSolver_tree_search_pfss_makespan_test PRIVATE
+    tree_search_pfss_makespan_test.txt
     tree_search_pfss_makespan_test.cpp)
 target_link_libraries(ShopSchedulingSolver_tree_search_pfss_makespan_test
     ShopSchedulingSolver_tests
@@ -55,6 +59,7 @@ gtest_discover_tests(ShopSchedulingSolver_tree_search_pfss_makespan_test
 
 add_executable(ShopSchedulingSolver_tree_search_pfss_tft_test)
 target_sources(ShopSchedulingSolver_tree_search_pfss_tft_test PRIVATE
+    tree_search_pfss_tft_test.txt
     tree_search_pfss_tft_test.cpp)
 target_link_libraries(ShopSchedulingSolver_tree_search_pfss_tft_test
     ShopSchedulingSolver_tests

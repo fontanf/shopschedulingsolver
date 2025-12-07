@@ -44,13 +44,13 @@ with contextlib.ExitStack() as stack:
     for shop_type, shop_type_short in shop_types:
         for objective, objective_short in objectives:
             for prop in properties:
-                for number_of_jobs in [1, 2, 5, 10, 20]:
-                    for number_of_machine_groups in [1, 2, 5, 10]:
-                        for number_of_machines_per_groups in [1, 2, 3]:
+                for number_of_jobs in [1, 2, 3, 4, 5, 6, 7, 8]:
+                    for number_of_machine_groups in [1, 2, 3]:
+                        for number_of_machines_per_groups in [1, 2]:
                             if number_of_machines_per_groups != 1:
                                 if shop_type_short not in ["ffss", "fjss", "foss"]:
                                     continue
-                            for seed in range(5):
+                            for seed in [0, 1]:
                                 instances_path = instances_paths[(shop_type, objective, prop)]
 
                                 shop_type_str = shop_type

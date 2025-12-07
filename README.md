@@ -204,12 +204,15 @@ $O_m \mid \mid C_{\max}$
 
 $O_m \mid \text{no-wait} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{mixed no-idle} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{blocking} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 #### Objective total flow time
 
@@ -219,12 +222,15 @@ $O_m \mid \mid \sum w_j C_j$
 
 $O_m \mid \text{no-wait} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{blocking} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 #### Objective total tardiness
 
@@ -234,12 +240,15 @@ $O_m \mid \mid \sum w_j T_j$
 
 $O_m \mid \text{no-wait} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{blocking} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 ### Flexible open shop
 
@@ -251,12 +260,15 @@ $FO_m \mid \mid C_{\max}$
 
 $FO_m \mid \text{no-wait} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{mixed no-idle} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{blocking} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 #### Objective total flow time
 
@@ -266,12 +278,15 @@ $FO_m \mid \mid \sum w_j C_j$
 
 $FO_m \mid \text{no-wait} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{blocking} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 #### Objective total tardiness
 
@@ -281,17 +296,20 @@ $FO_m \mid \mid \sum w_j T_j$
 
 $FO_m \mid \text{no-wait} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{blocking} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
+* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 
 Generate test instances list for each algorithm:
 ```shell
-python scripts/solve_test_data.py  --algorithm milp-positional  --output data/test_milp_positional.txt  --instances \
+python scripts/solve_test_data.py  --algorithm milp-positional  --output test/algorithms/milp_positional_test.txt  --instances \
         data/test_pfss_makespan.txt \
         data/test_pfss_makespan_no_idle.txt \
         data/test_pfss_makespan_blocking.txt \
@@ -301,38 +319,68 @@ python scripts/solve_test_data.py  --algorithm milp-positional  --output data/te
         data/test_pfss_tt.txt \
         data/test_pfss_tt_no_idle.txt \
         data/test_pfss_tt_blocking.txt
-python scripts/solve_test_data.py  --algorithm milp-disjunctive  --output data/test_milp_disjunctive.txt  --instances \
+python scripts/solve_test_data.py  --algorithm milp-disjunctive  --output test/algorithms/milp_disjunctive_test.txt  --instances \
         data/test_jss_makespan.txt \
         data/test_jss_makespan_no_wait.txt \
+        data/test_jss_makespan_blocking.txt \
         data/test_jss_tft.txt \
         data/test_jss_tft_no_wait.txt \
+        data/test_jss_tft_blocking.txt \
         data/test_jss_twft.txt \
         data/test_jss_twft_no_wait.txt \
+        data/test_jss_twft_blocking.txt \
         data/test_jss_tt.txt \
         data/test_jss_tt_no_wait.txt \
+        data/test_jss_tt_blocking.txt \
         data/test_jss_twt.txt \
         data/test_jss_twt_no_wait.txt \
+        data/test_jss_twt_blocking.txt \
         data/test_fjss_makespan.txt \
         data/test_fjss_makespan_no_wait.txt \
+        data/test_fjss_makespan_blocking.txt \
         data/test_fjss_tft.txt \
         data/test_fjss_tft_no_wait.txt \
+        data/test_fjss_tft_blocking.txt \
         data/test_fjss_twft.txt \
         data/test_fjss_twft_no_wait.txt \
+        data/test_fjss_twft_blocking.txt \
         data/test_fjss_tt.txt \
         data/test_fjss_tt_no_wait.txt \
+        data/test_fjss_tt_blocking.txt \
         data/test_fjss_twt.txt \
         data/test_fjss_twt_no_wait.txt \
+        data/test_fjss_twt_blocking.txt \
         data/test_oss_makespan.txt \
+        data/test_oss_makespan_no_wait.txt \
+        data/test_oss_makespan_blocking.txt \
         data/test_oss_tft.txt \
+        data/test_oss_tft_no_wait.txt \
+        data/test_oss_tft_blocking.txt \
         data/test_oss_twft.txt \
+        data/test_oss_twft_no_wait.txt \
+        data/test_oss_twft_blocking.txt \
         data/test_oss_tt.txt \
+        data/test_oss_tt_no_wait.txt \
+        data/test_oss_tt_blocking.txt \
         data/test_oss_twt.txt \
+        data/test_oss_twt_no_wait.txt \
+        data/test_oss_twt_blocking.txt \
         data/test_foss_makespan.txt \
+        data/test_foss_makespan_no_wait.txt \
+        data/test_foss_makespan_blocking.txt \
         data/test_foss_tft.txt \
+        data/test_foss_tft_no_wait.txt \
+        data/test_foss_tft_blocking.txt \
         data/test_foss_twft.txt \
+        data/test_foss_twft_no_wait.txt \
+        data/test_foss_twft_blocking.txt \
         data/test_foss_tt.txt \
-        data/test_foss_twt.txt
-python scripts/solve_test_data.py  --algorithm constraint-programming-optalcp  --output data/test_constraint_programming_optalcp.txt  --instances \
+        data/test_foss_tt_no_wait.txt \
+        data/test_foss_tt_blocking.txt \
+        data/test_foss_twt.txt \
+        data/test_foss_twt_no_wait.txt \
+        data/test_foss_twt_blocking.txt
+python scripts/solve_test_data.py  --algorithm constraint-programming-optalcp  --output test/algorithms/constraint_programming_optalcp_test.txt  --instances \
         data/test_pfss_makespan.txt \
         data/test_pfss_makespan_no_idle.txt \
         data/test_pfss_makespan_blocking.txt \
@@ -344,37 +392,68 @@ python scripts/solve_test_data.py  --algorithm constraint-programming-optalcp  -
         data/test_pfss_tt_blocking.txt \
         data/test_jss_makespan.txt \
         data/test_jss_makespan_no_wait.txt \
+        data/test_jss_makespan_blocking.txt \
         data/test_jss_tft.txt \
         data/test_jss_tft_no_wait.txt \
+        data/test_jss_tft_blocking.txt \
         data/test_jss_twft.txt \
         data/test_jss_twft_no_wait.txt \
+        data/test_jss_twft_blocking.txt \
         data/test_jss_tt.txt \
         data/test_jss_tt_no_wait.txt \
+        data/test_jss_tt_blocking.txt \
         data/test_jss_twt.txt \
         data/test_jss_twt_no_wait.txt \
+        data/test_jss_twt_blocking.txt \
         data/test_fjss_makespan.txt \
         data/test_fjss_makespan_no_wait.txt \
+        data/test_fjss_makespan_blocking.txt \
         data/test_fjss_tft.txt \
         data/test_fjss_tft_no_wait.txt \
+        data/test_fjss_tft_blocking.txt \
         data/test_fjss_twft.txt \
         data/test_fjss_twft_no_wait.txt \
+        data/test_fjss_twft_blocking.txt \
         data/test_fjss_tt.txt \
         data/test_fjss_tt_no_wait.txt \
+        data/test_fjss_tt_blocking.txt \
         data/test_fjss_twt.txt \
         data/test_fjss_twt_no_wait.txt \
+        data/test_fjss_twt_blocking.txt \
         data/test_oss_makespan.txt \
+        data/test_oss_makespan_no_wait.txt \
+        data/test_oss_makespan_blocking.txt \
         data/test_oss_tft.txt \
+        data/test_oss_tft_no_wait.txt \
+        data/test_oss_tft_blocking.txt \
         data/test_oss_twft.txt \
+        data/test_oss_twft_no_wait.txt \
+        data/test_oss_twft_blocking.txt \
         data/test_oss_tt.txt \
+        data/test_oss_tt_no_wait.txt \
+        data/test_oss_tt_blocking.txt \
         data/test_oss_twt.txt \
+        data/test_oss_twt_no_wait.txt \
+        data/test_oss_twt_blocking.txt \
         data/test_foss_makespan.txt \
+        data/test_foss_makespan_no_wait.txt \
+        data/test_foss_makespan_blocking.txt \
         data/test_foss_tft.txt \
+        data/test_foss_tft_no_wait.txt \
+        data/test_foss_tft_blocking.txt \
         data/test_foss_twft.txt \
+        data/test_foss_twft_no_wait.txt \
+        data/test_foss_twft_blocking.txt \
         data/test_foss_tt.txt \
-        data/test_foss_twt.txt
-python scripts/solve_test_data.py --algorithm tree-search-pfss-makespan  --output data/test_tree_search_pfss_makespan.txt  --instances \
+        data/test_foss_tt_no_wait.txt \
+        data/test_foss_tt_blocking.txt \
+        data/test_foss_twt.txt \
+        data/test_foss_twt_no_wait.txt \
+        data/test_foss_twt_blocking.txt
+python scripts/solve_test_data.py --algorithm tree-search-pfss-makespan  --output test/algorithms/tree_search_pfss_makespan_test.txt  --instances \
         data/test_pfss_makespan.txt
-python scripts/solve_test_data.py --algorithm tree-search-pfss-tft  --output data/test_tree_search_pfss_tft.txt  --instances \
+python scripts/solve_test_data.py --algorithm tree-search-pfss-tft  --output test/algorithms/tree_search_pfss_tft_test.txt  --instances \
         data/test_pfss_tft.txt
+cmake --build build --config Release --parallel  &&  cmake --install build --config Release --prefix install
 ctest --parallel --output-on-failure  --test-dir build/test
 ```

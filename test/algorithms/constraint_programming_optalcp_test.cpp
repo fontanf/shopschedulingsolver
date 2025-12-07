@@ -1,6 +1,7 @@
 #include "tests.hpp"
 #include "shopschedulingsolver/algorithms/constraint_programming_optalcp.hpp"
 
+
 using namespace shopschedulingsolver;
 
 TEST_P(ExactAlgorithmTest, ExactAlgorithm)
@@ -27,5 +28,5 @@ INSTANTIATE_TEST_SUITE_P(
                     },
                 },
                 {
-                    get_test_instance_paths(get_path({"data", "test_constraint_programming_optalcp.txt"})),
+                    get_test_instance_paths(get_path({"test", "algorithms", "constraint_programming_optalcp_test.txt"})),
                 })));

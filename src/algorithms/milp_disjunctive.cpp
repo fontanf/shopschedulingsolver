@@ -83,7 +83,8 @@ struct Model
     /**
      * s_j the starting time of job j.
      *
-     * These variables are only required in the no-wait case.
+     * These variables are only required in the no-wait and blocking open shop
+     * case.
      */
     std::vector<int> s;
 
@@ -355,7 +356,8 @@ Model create_milp_model(
     }
 
     // Varibles s.
-    if (instance.no_wait()) {
+    if ((instance.no_wait() || instance.blocking())
+            && instance.operations_arbitrary_order()) {
         model.s = std::vector<int>(instance.number_of_jobs());
         for (JobId job_id = 0;
                 job_id < instance.number_of_jobs();
@@ -819,7 +821,7 @@ Model create_milp_model(
                 model.model.elements_variables.push_back(model.c[job_id][operation_id]);
                 model.model.elements_coefficients.push_back(-1.0);
                 if (instance.blocking()) {
-                    model.model.elements_variables.push_back(model.p[job_id][operation_id]);
+                    model.model.elements_variables.push_back(model.pblock[job_id][operation_id]);
                     model.model.elements_coefficients.push_back(-1.0);
                 }
                 if (instance.flexible()) {
@@ -1029,8 +1031,8 @@ Model create_milp_model(
                 model.model.constraints_lower_bounds.push_back(0);
                 model.model.constraints_upper_bounds.push_back(0);
             } else {
-                model.model.constraints_lower_bounds.push_back(-psum);
-                model.model.constraints_upper_bounds.push_back(-psum);
+                model.model.constraints_lower_bounds.push_back(psum);
+                model.model.constraints_upper_bounds.push_back(psum);
             }
         }
     }
@@ -1080,7 +1082,7 @@ Model create_milp_model(
         }
     }
 
-    //model.model.format(std::cout, 2);
+    //model.model.format(std::cout, 4);
     //std::vector<double> solution = {0, 1, 3, 0, 3, 3, 3};
     //model.model.check_solution(solution);
     return model;
@@ -1091,9 +1093,6 @@ Solution retrieve_solution(
         const Model& model,
         const std::vector<double>& milp_solution)
 {
-    //for (double value: milp_solution)
-    //    std::cout << " " << value;
-    //std::cout << std::endl;
     SolutionBuilder solution_builder;
     solution_builder.set_instance(instance);
     for (JobId job_id = 0;
@@ -1122,11 +1121,11 @@ Solution retrieve_solution(
             if (selected_alternative_id == -1)
                 continue;
 
-            Time processing_time = (instance.blocking())?
-                std::round(milp_solution[model.p[job_id][operation_id]]):
-                operation.machines[selected_alternative_id].processing_time;
+            const Alternative& alternative = operation.machines[selected_alternative_id];
             Time completion_time = std::round(milp_solution[model.c[job_id][operation_id]]);
-            Time start = completion_time - processing_time;
+            if (instance.blocking())
+                completion_time -= std::round(milp_solution[model.pblock[job_id][operation_id]]);
+            Time start = completion_time - alternative.processing_time;
             solution_builder.append_operation(
                     job_id,
                     operation_id,
@@ -1341,11 +1340,11 @@ Output shopschedulingsolver::milp_disjunctive(
                         if (bound != std::numeric_limits<double>::infinity())
                             if (instance.objective() == Objective::Makespan)
                                 algorithm_formatter.update_makespan_bound(bound, "node " + std::to_string(highs_output->mip_node_count));
+                    } else {
+                        // Check end.
+                        if (parameters.timer.needs_to_end())
+                            highs_input->user_interrupt = 1;
                     }
-
-                    // Check end.
-                    if (parameters.timer.needs_to_end())
-                        highs_input->user_interrupt = 1;
                 },
                 nullptr);
         HighsStatus highs_status;

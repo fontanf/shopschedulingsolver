@@ -27,5 +27,5 @@ INSTANTIATE_TEST_SUITE_P(
                     },
                 },
                 {
-                    get_test_instance_paths(get_path({"data", "test_tree_search_pfss_makespan.txt"})),
+                    get_test_instance_paths(get_path({"test", "algorithms", "tree_search_pfss_makespan_test.txt"})),
                 })));

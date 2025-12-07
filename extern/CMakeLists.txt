@@ -48,7 +48,7 @@ endif()
 FetchContent_Declare(
     mathoptsolverscmake
     GIT_REPOSITORY https://github.com/fontanf/mathoptsolverscmake.git
-    GIT_TAG 330ac7c3229d63ea60ffaff52d33e2c7efc773d3)
+    GIT_TAG 71916dc9253f8784f4db52637add2f2d15a869a3)
     #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../mathoptsolverscmake/")
 FetchContent_MakeAvailable(mathoptsolverscmake)
 

@@ -97,12 +97,42 @@ async function main()
         }
     }
 
-    // Position variables.
+    // Position variables (for permutation flow shop).
     let jobs_positions: CP.IntVar[] = [];
     if (instance.permutation) {
         for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
             jobs_positions.push(model.intVar({ name: "position_" + (job_id) }));
         }
+    }
+
+    // Jobs interval variables (for no-wait and blocking).
+    // For each job, one interval variable starting at the job start and ending
+    // at the job end.
+    let jobs_intervals: CP.IntervalVar[] = [];
+    if (instance.operations_arbitrary_order && (instance.no_wait || instance.blocking)) {
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            let optalcp_interval = model.intervalVar({
+                length: [0, CP.IntervalMax],
+                name: "J" + (job_id)
+            });
+            jobs_intervals[job_id] = optalcp_interval;
+        }
+    }
+
+    // Machines interval variables (for no-idle).
+    // For each machine, one interval variable starting at the start time of
+    // the first operation scheduled on the machine and ending at the end time
+    // of the last operation scheduled on the machine.
+    let machines_intervals: CP.IntervalVar[] = [];
+    for (let machine_id = 0; machine_id < number_of_machines; ++machine_id) {
+        let machine = instance.machines[machine_id];
+        if (!machine.no_idle)
+            continue;
+        let optalcp_interval = model.intervalVar({
+            length: [0, CP.IntervalMax],
+            name: "M" + (machine_id)
+        });
+        machines_intervals[machine_id] = optalcp_interval;
     }
 
     // Define jobs ends variables.
@@ -255,29 +285,53 @@ async function main()
         }
     }
 
-    // No-wait for open shop
-    //if (instance.operations_arbitrary_order
-    //        && (instance.no_idle || instance.blocking)) {
-    //    for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
-    //        let job_sequence = jobs_sequences[job_id];
-    //        for (let pos = 0; pos < jobs_operations[job_id].length - 1; ++pos)
-    //            model.constraint(job_sequence[pos].end().eq(job_sequence[pos + 1].start()));
-    //    }
-    //}
+    // No-wait and blocking constraints for open shop.
+    if (instance.operations_arbitrary_order && (instance.no_wait || instance.blocking)) {
+        for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
+            let job = instance.jobs[job_id];
+            let starts: CP.IntExpr[] = [];
+            let ends: CP.IntExpr[] = [];
+            let lengths: CP.IntExpr[] = [];
+            for (let operation_id = 0;
+                    operation_id < job.operations.length;
+                    ++operation_id) {
+                let operation = jobs_operations[job_id][operation_id];
+                starts.push((operation as CP.IntervalVar).start());
+                ends.push((operation as CP.IntervalVar).end());
+                lengths.push((operation as CP.IntervalVar).length());
+            }
+            let job_start = model.min(starts);
+            let job_end = model.max(ends);
+            let job_length = model.sum(lengths);
+            model.constraint(jobs_intervals[job_id].start().eq(job_start));
+            model.constraint(jobs_intervals[job_id].end().eq(job_end));
+            model.constraint(jobs_intervals[job_id].length().eq(job_length));
+        }
+    }
 
-    // No-idle.
-    //for (let machine_id = 0; machine_id < number_of_machines; ++machine_id) {
-    //    if (!instance.machines[machine_id].no_idle)
-    //        continue;
-    //    let machine_sequence = machines_sequences[machine_id];
-    //    for (let pos = 0; pos < machines_alternatives[machine_id].length - 1; ++pos)
-    //    model.constraint(model.end(machine_sequence[pos]).eq(model.start(machine_sequence[pos + 1])));
-    //}
-
-    //const txt = await CP.problem2txt(model);
-    //if (txt !== undefined) {
-    //    await writeFile("model.txt", txt, "utf8");
-    //}
+    // No-idle constraints for open shop.
+    for (let machine_id = 0; machine_id < number_of_machines; ++machine_id) {
+        let machine = instance.machines[machine_id];
+        if (!machine.no_idle)
+            continue;
+        let starts: CP.IntExpr[] = [];
+        let ends: CP.IntExpr[] = [];
+        let lengths: CP.IntExpr[] = [];
+        for (let operation_id = 0;
+                operation_id < machines_alternatives.length;
+                ++operation_id) {
+            let operation = machines_alternatives[machine_id][operation_id];
+            starts.push((operation as CP.IntervalVar).start());
+            ends.push((operation as CP.IntervalVar).end());
+            lengths.push((operation as CP.IntervalVar).length());
+        }
+        let machine_start = model.min(starts);
+        let machine_end = model.max(ends);
+        let machine_length = model.sum(lengths);
+        model.constraint(machines_intervals[machine_id].start().eq(machine_start));
+        model.constraint(machines_intervals[machine_id].end().eq(machine_end));
+        model.constraint(machines_intervals[machine_id].length().eq(machine_length));
+    }
 
     ////////////////
     // Parameters //
