@@ -110,7 +110,7 @@ public:
             for (MachineId machine_id = 0;
                     machine_id < instance_.number_of_machines();
                     ++machine_id) {
-                Time p = job.operations[machine_id].machines[0].processing_time;
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
                 r->machines[machine_id].remaining_processing_time += p;
             }
         }
@@ -118,7 +118,7 @@ public:
         for (JobId job_id = 0; job_id < instance_.number_of_jobs(); ++job_id) {
             const Job& job = instance_.job(job_id);
             MachineId machine_id = instance_.number_of_machines() - 1;
-            Time p = job.operations[machine_id].machines[0].processing_time;
+            Time p = job.operations[machine_id].alternatives[0].processing_time;
             r->bound += p;
         }
         if (best_node_ == nullptr)
@@ -135,13 +135,13 @@ public:
         node->available_jobs[node->job_id] = false;
         node->machines = parent->machines;
         if (parent->forward) {
-            Time p0 = job.operations[0].machines[0].processing_time;
+            Time p0 = job.operations[0].alternatives[0].processing_time;
             node->machines[0].time_forward += p0;
             node->machines[0].remaining_processing_time -= p0;
             for (MachineId machine_id = 1;
                     machine_id < instance_.number_of_machines();
                     ++machine_id) {
-                Time p = job.operations[machine_id].machines[0].processing_time;
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
                 if (node->machines[machine_id - 1].time_forward
                         > parent->machines[machine_id].time_forward) {
                     Time idle_time = node->machines[machine_id - 1].time_forward
@@ -156,13 +156,13 @@ public:
             }
         } else {
             MachineId machine_id = instance_.number_of_machines() - 1;
-            Time p = job.operations[machine_id].machines[0].processing_time;
+            Time p = job.operations[machine_id].alternatives[0].processing_time;
             node->machines[machine_id].time_backward += p;
             node->machines[machine_id].remaining_processing_time -= p;
             for (MachineId machine_id = instance_.number_of_machines() - 2;
                     machine_id >= 0;
                     --machine_id) {
-                Time p = job.operations[machine_id].machines[0].processing_time;
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
                 if (node->machines[machine_id + 1].time_backward
                         > parent->machines[machine_id].time_backward) {
                     Time idle_time = node->machines[machine_id + 1].time_backward
@@ -214,7 +214,7 @@ public:
                 if (!parent->available_jobs[job_next_id])
                     continue;
                 const Job& job_next = instance_.job(job_next_id);
-                Time p0 = job_next.operations[0].machines[0].processing_time;
+                Time p0 = job_next.operations[0].alternatives[0].processing_time;
                 // Forward.
                 Time bf = 0;
                 Time t_prec = parent->machines[0].time_forward + p0;
@@ -227,7 +227,7 @@ public:
                 for (MachineId machine_id = 1;
                         machine_id < instance_.number_of_machines();
                         ++machine_id) {
-                    Time p = job_next.operations[machine_id].machines[0].processing_time;
+                    Time p = job_next.operations[machine_id].alternatives[0].processing_time;
                     if (t_prec > parent->machines[machine_id].time_forward) {
                         t = t_prec + p;
                     } else {
@@ -247,7 +247,7 @@ public:
                 }
                 // Backward.
                 MachineId machine_id = instance_.number_of_machines() - 1;
-                Time pm1 = job_next.operations[machine_id].machines[0].processing_time;
+                Time pm1 = job_next.operations[machine_id].alternatives[0].processing_time;
                 Time bb = 0;
                 t_prec = parent->machines[machine_id].time_backward + pm1;
                 bb = std::max(bb,
@@ -258,7 +258,7 @@ public:
                 for (MachineId machine_id = instance_.number_of_machines() - 2;
                         machine_id >= 0;
                         --machine_id) {
-                    Time p = job_next.operations[machine_id].machines[0].processing_time;
+                    Time p = job_next.operations[machine_id].alternatives[0].processing_time;
                     if (t_prec > parent->machines[machine_id].time_backward) {
                         t = t_prec + p;
                     } else {
@@ -314,7 +314,7 @@ public:
         Time t = 0;
         Time t_prec = 0;
         if (parent->forward) {
-            Time p = job_next.operations[0].machines[0].processing_time;
+            Time p = job_next.operations[0].alternatives[0].processing_time;
             t_prec = parent->machines[0].time_forward + p;
             Time remaining_processing_time
                 = parent->machines[0].remaining_processing_time - p;
@@ -327,7 +327,7 @@ public:
             for (MachineId machine_id = 1;
                     machine_id < instance_.number_of_machines();
                     ++machine_id) {
-                Time p = job_next.operations[machine_id].machines[0].processing_time;
+                Time p = job_next.operations[machine_id].alternatives[0].processing_time;
                 Time machine_idle_time = parent->machines[machine_id].idle_time_forward;
                 if (t_prec > parent->machines[machine_id].time_forward) {
                     Time idle_time = t_prec - parent->machines[machine_id].time_forward;
@@ -352,7 +352,7 @@ public:
             }
         } else {
             MachineId machine_id = instance_.number_of_machines() - 1;
-            Time p = job_next.operations[machine_id].machines[0].processing_time;
+            Time p = job_next.operations[machine_id].alternatives[0].processing_time;
             t_prec = parent->machines[machine_id].time_backward + p;
             Time remaining_processing_time
                 = parent->machines[machine_id].remaining_processing_time - p;
@@ -365,7 +365,7 @@ public:
             for (MachineId machine_id = instance_.number_of_machines() - 2;
                     machine_id >= 0;
                     --machine_id) {
-                Time p = job_next.operations[machine_id].machines[0].processing_time;
+                Time p = job_next.operations[machine_id].alternatives[0].processing_time;
                 Time machine_idle_time = parent->machines[machine_id].idle_time_backward;
                 if (t_prec > parent->machines[machine_id].time_backward) {
                     Time idle_time = t_prec - parent->machines[machine_id].time_backward;
@@ -608,7 +608,7 @@ Output shopschedulingsolver::tree_search_pfss_makespan(
                         0,  // operation_id
                         0,  // operation_machine_id
                         start0);
-                Time p0 = job.operations[0].machines[0].processing_time;
+                Time p0 = job.operations[0].alternatives[0].processing_time;
                 machines_current_times[0] = start0 + p0;
                 for (MachineId machine_id = 1;
                         machine_id < instance.number_of_machines();
@@ -625,7 +625,7 @@ Output shopschedulingsolver::tree_search_pfss_makespan(
                             machine_id,  // operation_id
                             0,  // operation_machine_id
                             start);
-                    Time p = job.operations[machine_id].machines[0].processing_time;
+                    Time p = job.operations[machine_id].alternatives[0].processing_time;
                     machines_current_times[machine_id] = start + p;
                 }
             }

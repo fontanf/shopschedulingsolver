@@ -95,7 +95,7 @@ public:
         for (JobId job_id = 0; job_id < instance_.number_of_jobs(); ++job_id) {
             const Job& job = instance_.job(job_id);
             MachineId machine_id = instance_.number_of_machines() - 1;
-            r->bound += job.operations[machine_id].machines[0].processing_time;
+            r->bound += job.operations[machine_id].alternatives[0].processing_time;
         }
         return r;
     }
@@ -108,12 +108,12 @@ public:
         node->available_jobs = parent->available_jobs;
         node->available_jobs[node->job_id] = false;
         node->times = parent->times;
-        Time p0 = job.operations[0].machines[0].processing_time;
+        Time p0 = job.operations[0].alternatives[0].processing_time;
         node->times[0] = parent->times[0] + p0;
         for (MachineId machine_id = 1;
                 machine_id < instance_.number_of_machines();
                 ++machine_id) {
-            Time p = job.operations[machine_id].machines[0].processing_time;
+            Time p = job.operations[machine_id].alternatives[0].processing_time;
             if (node->times[machine_id - 1] > parent->times[machine_id]) {
                 node->times[machine_id] = node->times[machine_id - 1] + p;
             } else {
@@ -159,13 +159,13 @@ public:
         child->number_of_jobs = parent->number_of_jobs + 1;
         child->idle_time = parent->idle_time;
         child->weighted_idle_time = parent->weighted_idle_time;
-        Time p0 = job_next.operations[0].machines[0].processing_time;
+        Time p0 = job_next.operations[0].alternatives[0].processing_time;
         Time t = parent->times[0] + p0;
         Time t_prec = t;
         for (MachineId machine_id = 1;
                 machine_id < instance_.number_of_machines();
                 ++machine_id) {
-            Time p = job_next.operations[machine_id].machines[0].processing_time;
+            Time p = job_next.operations[machine_id].alternatives[0].processing_time;
             if (t_prec > parent->times[machine_id]) {
                 Time idle_time = t_prec - parent->times[machine_id];
                 t = t_prec + p;
@@ -181,7 +181,7 @@ public:
         MachineId machine_id = instance_.number_of_machines() - 1;
         child->bound = parent->bound
             + (instance_.number_of_jobs() - parent->number_of_jobs) * (t - parent->times[instance_.number_of_machines() - 1])
-            - job_next.operations[machine_id].machines[0].processing_time;
+            - job_next.operations[machine_id].alternatives[0].processing_time;
         // Compute guide.
         double alpha = (double)child->number_of_jobs / instance_.number_of_jobs();
         switch (parameters_.guide_id) {
@@ -394,7 +394,7 @@ Output shopschedulingsolver::tree_search_pfss_tft(
                         0,  // operation_id
                         0,  // operation_machine_id
                         start0);
-                Time p0 = job.operations[0].machines[0].processing_time;
+                Time p0 = job.operations[0].alternatives[0].processing_time;
                 machines_current_times[0] = start0 + p0;
                 for (MachineId machine_id = 1;
                         machine_id < instance.number_of_machines();
@@ -411,7 +411,7 @@ Output shopschedulingsolver::tree_search_pfss_tft(
                             machine_id,  // operation_id
                             0,  // operation_machine_id
                             start);
-                    Time p = job.operations[machine_id].machines[0].processing_time;
+                    Time p = job.operations[machine_id].alternatives[0].processing_time;
                     machines_current_times[machine_id] = start + p;
                 }
             }

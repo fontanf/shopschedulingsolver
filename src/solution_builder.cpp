@@ -24,7 +24,7 @@ void SolutionBuilder::append_operation(
     const Instance& instance = solution_.instance();
     const Job& job = instance.job(job_id);
     const Operation& operation = job.operations[operation_id];
-    const Alternative& alternative = operation.machines[alternative_id];
+    const Alternative& alternative = operation.alternatives[alternative_id];
     Solution::Machine& solution_machine = this->solution_.machines_[alternative.machine_id];
     Solution::Job& solution_job = this->solution_.jobs_[job_id];
 
@@ -109,7 +109,7 @@ Solution SolutionBuilder::build()
         OperationId operation_prev_id = -1;
         for (SolutionOperationId solution_operation_id: solution_job.solution_operations) {
             const Solution::Operation& o = this->solution_.operations_[solution_operation_id];
-            const auto& machine_operation = job.operations[o.operation_id].machines[o.alternative_id];
+            const auto& machine_operation = job.operations[o.operation_id].alternatives[o.alternative_id];
             Time end = o.start + machine_operation.processing_time;
             // Update job.start.
             if (solution_job.start == -1)
@@ -160,7 +160,7 @@ Solution SolutionBuilder::build()
         Time current_time = 0;
         for (SolutionOperationId solution_operation_id: solution_machine.solution_operations) {
             const Solution::Operation& o = this->solution_.operations_[solution_operation_id];
-            Time end = o.start + instance.job(o.job_id).operations[o.operation_id].machines[o.alternative_id].processing_time;
+            Time end = o.start + instance.job(o.job_id).operations[o.operation_id].alternatives[o.alternative_id].processing_time;
             // Update solution_machine.start.
             if (solution_machine.start == -1)
                 solution_machine.start = o.start;
@@ -233,7 +233,7 @@ void SolutionBuilder::from_permutation(
                 0,  // operation_id
                 0,  // alternative_id
                 start0);
-        Time p0 = job.operations[0].machines[0].processing_time;
+        Time p0 = job.operations[0].alternatives[0].processing_time;
         machines_current_times[0] = start0 + p0;
         for (MachineId machine_id = 1;
                 machine_id < instance.number_of_machines();
@@ -250,7 +250,7 @@ void SolutionBuilder::from_permutation(
                     machine_id,  // operation_id
                     0,  // alternative_id
                     start);
-            Time p = job.operations[machine_id].machines[0].processing_time;
+            Time p = job.operations[machine_id].alternatives[0].processing_time;
             machines_current_times[machine_id] = start + p;
         }
     }

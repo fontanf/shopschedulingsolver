@@ -96,9 +96,9 @@ void Instance::write(
                 ++operation_id) {
             const Operation& operation = job.operations[operation_id];
             for (AlternativeId alternative_id = 0;
-                    alternative_id < (AlternativeId)operation.machines.size();
+                    alternative_id < (AlternativeId)operation.alternatives.size();
                     ++alternative_id) {
-                const Alternative& alternative = operation.machines[alternative_id];
+                const Alternative& alternative = operation.alternatives[alternative_id];
                 json["jobs"][job_id]["operations"][operation_id]["alternatives"][alternative_id]["machine"] = alternative.machine_id;
                 json["jobs"][job_id]["operations"][operation_id]["alternatives"][alternative_id]["processing_time"] = alternative.processing_time;
             }
@@ -202,7 +202,7 @@ std::ostream& Instance::format(
                 os
                     << std::setw(12) << job_id
                     << std::setw(12) << operation_id
-                    << std::setw(12) << operation.machines.size()
+                    << std::setw(12) << operation.alternatives.size()
                     << std::endl;
             }
         }
@@ -229,9 +229,9 @@ std::ostream& Instance::format(
                     ++operation_id) {
                 const Operation& operation = job.operations[operation_id];
                 for (AlternativeId alternative_id = 0;
-                        alternative_id < (AlternativeId)operation.machines.size();
+                        alternative_id < (AlternativeId)operation.alternatives.size();
                         ++alternative_id) {
-                    const Alternative& alternative = operation.machines[alternative_id];
+                    const Alternative& alternative = operation.alternatives[alternative_id];
                     os
                         << std::setw(12) << job_id
                         << std::setw(12) << operation_id

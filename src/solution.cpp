@@ -73,7 +73,7 @@ void Solution::write(
         const Solution::Operation& solution_operation = this->operation(solution_operation_id);
         const auto& job = this->instance().job(solution_operation.job_id);
         const auto& operation = job.operations[solution_operation.operation_id];
-        const auto& machine_operation = operation.machines[solution_operation.alternative_id];
+        const auto& alternative = operation.alternatives[solution_operation.alternative_id];
         json["operations"][solution_operation_id]["job_id"] = solution_operation.job_id;
         json["operations"][solution_operation_id]["job_position"] = solution_operation.job_position;
         json["operations"][solution_operation_id]["operation_id"] = solution_operation.operation_id;
@@ -81,8 +81,8 @@ void Solution::write(
         json["operations"][solution_operation_id]["machine_id"] = solution_operation.machine_id;
         json["operations"][solution_operation_id]["machine_position"] = solution_operation.machine_position;
         json["operations"][solution_operation_id]["start"] = solution_operation.start;
-        json["operations"][solution_operation_id]["processing_time"] = machine_operation.processing_time;
-        json["operations"][solution_operation_id]["end"] = solution_operation.start + machine_operation.processing_time;
+        json["operations"][solution_operation_id]["processing_time"] = alternative.processing_time;
+        json["operations"][solution_operation_id]["end"] = solution_operation.start + alternative.processing_time;
     }
     file << std::setw(4) << json << std::endl;
 }
@@ -215,7 +215,7 @@ void Solution::format(
                 const Solution::Operation& solution_operation = this->operation(solution_operation_id);
                 const auto& job = instance.job(solution_operation.job_id);
                 const auto& operation = job.operations[solution_operation.operation_id];
-                const auto& alternative = operation.machines[solution_operation.alternative_id];
+                const auto& alternative = operation.alternatives[solution_operation.alternative_id];
                 Time end = solution_operation.start + alternative.processing_time;
                 os
                     << std::setw(12) << machine_id
@@ -259,7 +259,7 @@ void Solution::format(
             for (SolutionOperationId solution_operation_id: solution_job.solution_operations) {
                 const Solution::Operation& solution_operation = this->operation(solution_operation_id);
                 const auto& operation = job.operations[solution_operation.operation_id];
-                const auto& alternative = operation.machines[solution_operation.alternative_id];
+                const auto& alternative = operation.alternatives[solution_operation.alternative_id];
                 Time end = solution_operation.start + alternative.processing_time;
                 os
                     << std::setw(12) << job_id

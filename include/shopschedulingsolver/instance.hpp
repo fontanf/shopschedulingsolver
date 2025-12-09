@@ -62,8 +62,8 @@ struct Alternative
  */
 struct Operation
 {
-    /** Machines that can perform the operation. */
-    std::vector<Alternative> machines;
+    /** Alternatives of the operation. */
+    std::vector<Alternative> alternatives;
 };
 
 /**

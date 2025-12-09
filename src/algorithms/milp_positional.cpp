@@ -154,7 +154,7 @@ Model create_milp_model(
                     ++job_id) {
                 const Job& job = instance.job(job_id);
                 const Operation& operation = job.operations[machine_id];
-                Time p = operation.machines[0].processing_time;
+                Time p = operation.alternatives[0].processing_time;
 
                 model.model.elements_variables.push_back(model.x[job_id][pos]);
                 model.model.elements_coefficients.push_back(-p);

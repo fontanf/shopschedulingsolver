@@ -103,7 +103,7 @@ void InstanceBuilder::add_alternative(
     Alternative alternative;
     alternative.machine_id = machine_id;
     alternative.processing_time = processing_time;
-    operation.machines.push_back(alternative);
+    operation.alternatives.push_back(alternative);
 }
 
 void InstanceBuilder::set_job_release_date(
@@ -399,12 +399,12 @@ Instance InstanceBuilder::build()
                 ++operation_id) {
             const Operation& operation = job.operations[operation_id];
             // Compute flexible_.
-            if (operation.machines.size() != 1)
+            if (operation.alternatives.size() != 1)
                 this->instance_.flexible_ = true;
             for (AlternativeId alternative_id = 0;
-                    alternative_id < (AlternativeId)operation.machines.size();
+                    alternative_id < (AlternativeId)operation.alternatives.size();
                     ++alternative_id) {
-                const Alternative& alternative = operation.machines[alternative_id];
+                const Alternative& alternative = operation.alternatives[alternative_id];
                 job.number_of_machine_operations++;
                 job.mean_processing_time += alternative.processing_time;
                 // Update machines_.
