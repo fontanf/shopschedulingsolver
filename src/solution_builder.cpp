@@ -188,8 +188,21 @@ Solution SolutionBuilder::build()
                     SolutionOperationId solution_operation_prev_next_id = solution_job_prev.solution_operations[o_prev.job_position + 1];
                     const Solution::Operation& o_prev_next = solution_.operations_[solution_operation_prev_next_id];
                     // This operation must start before the start of the current operation.
-                    if (o_prev_next.start > o.start)
+                    if (o_prev_next.start > o.start) {
+                        //std::cout << "machine_id " << machine_id << std::endl
+                        //    << "solution_operation_id " << solution_operation_id << std::endl
+                        //    << "o.job_id " << o.job_id << std::endl
+                        //    << "o.operation_id " << o.operation_id << std::endl
+                        //    << "o.start " << o.start << std::endl
+                        //    << "end " << end << std::endl
+                        //    << "machine_position " << o.machine_position << std::endl
+                        //    << "o_prev.job_id " << o_prev.job_id << std::endl
+                        //    << "o_prev.operation_id " << o_prev.operation_id << std::endl
+                        //    << "o_prev_next.operation_id " << o_prev_next.operation_id << std::endl
+                        //    << "o_prev_next.start " << o_prev_next.start << std::endl
+                        //    ;
                         this->solution_.blocking_ = false;
+                    }
                 }
             }
             // Check permutation.

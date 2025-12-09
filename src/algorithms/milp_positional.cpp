@@ -374,6 +374,57 @@ Solution retrieve_solution(
     }
     Solution solution = solution_builder.build();
     //solution.format(std::cout, 3);
+
+    bool milp_feasible = model.model.check_solution(milp_solution, 0);
+    if (milp_feasible) {
+        if (!solution.feasible()) {
+            throw std::invalid_argument(
+                    FUNC_SIGNATURE + ": "
+                    "wrong solution feasibility; "
+                    "solution.feasible(): " + std::to_string(solution.feasible()) + "; "
+                    "milp_feasible: " + std::to_string(milp_feasible) + ".");
+        }
+        double milp_objective_value = model.model.evaluate_objective(milp_solution);
+        switch (instance.objective()) {
+        case Objective::Makespan: {
+            if (solution.makespan() > std::round(milp_objective_value)) {
+                throw std::invalid_argument(
+                        FUNC_SIGNATURE + ": "
+                        "wrong solution makespan; "
+                        "solution.makespan(): " + std::to_string(solution.makespan()) + "; "
+                        "milp_objective_value: " + std::to_string(milp_objective_value) + ".");
+            }
+            break;
+        } case Objective::TotalFlowTime: {
+            if (solution.total_flow_time() > std::round(milp_objective_value)) {
+                throw std::invalid_argument(
+                        FUNC_SIGNATURE + ": "
+                        "wrong solution total flow time; "
+                        "solution.total_flow_time(): " + std::to_string(solution.total_flow_time()) + "; "
+                        "milp_objective_value: " + std::to_string(milp_objective_value) + ".");
+            }
+            break;
+        } case Objective::Throughput: {
+            if (solution.throughput() > std::round(milp_objective_value)) {
+                throw std::invalid_argument(
+                        FUNC_SIGNATURE + ": "
+                        "wrong solution throughput; "
+                        "solution.throughput(): " + std::to_string(solution.throughput()) + "; "
+                        "milp_objective_value: " + std::to_string(milp_objective_value) + ".");
+            }
+            break;
+        } case Objective::TotalTardiness: {
+            if (solution.total_tardiness() > std::round(milp_objective_value)) {
+                throw std::invalid_argument(
+                        FUNC_SIGNATURE + ": "
+                        "wrong solution total tardiness; "
+                        "solution.total_tardiness(): " + std::to_string(solution.total_tardiness()) + "; "
+                        "milp_objective_value: " + std::to_string(milp_objective_value) + ".");
+            }
+            break;
+        }
+        }
+    }
     return solution;
 }
 
