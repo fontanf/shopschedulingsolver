@@ -47,8 +47,13 @@ async function main()
 
                 // Create a new operation:
                 let alternative = operation.alternatives[0];
-                const duration_max = (!instance.operations_arbitrary_order && instance.blocking && operation_id < job.operations.length - 1)?
-                    CP.IntervalMax: alternative.processing_time;
+                let duration_max = alternative.processing_time;
+                if (instance.blocking) {
+                    if (instance.operations_arbitrary_order)
+                        duration_max = CP.IntervalMax
+                    if (!instance.operations_arbitrary_order && operation_id < job.operations.length - 1)
+                        duration_max = CP.IntervalMax
+                }
                 let optalcp_operation = model.intervalVar({
                     length: [alternative.processing_time, duration_max],
                     name: "J" + (job_id) + "O" + (operation_id)
@@ -332,6 +337,11 @@ async function main()
         model.constraint(machines_intervals[machine_id].end().eq(machine_end));
         model.constraint(machines_intervals[machine_id].length().eq(machine_length));
     }
+
+    //const txt = await CP.problem2txt(model);
+    //if (txt !== undefined) {
+    //    await writeFile("model.txt", txt, "utf8");
+    //}
 
     ////////////////
     // Parameters //

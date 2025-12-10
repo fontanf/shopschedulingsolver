@@ -454,6 +454,7 @@ python scripts/solve_test_data.py --algorithm tree-search-pfss-makespan  --outpu
         data/test_pfss_makespan.txt
 python scripts/solve_test_data.py --algorithm tree-search-pfss-tft  --output test/algorithms/tree_search_pfss_tft_test.txt  --instances \
         data/test_pfss_tft.txt
+cmake --build build --config Release --target clean
 cmake --build build --config Release --parallel  &&  cmake --install build --config Release --prefix install
 ctest --parallel --output-on-failure  --test-dir build/test
 ```
