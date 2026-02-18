@@ -263,7 +263,7 @@ void SolutionBuilder::read(
     std::ifstream file(certificate_path);
     if (!file.good()) {
         throw std::runtime_error(
-                "shopschedulingsolver::SolutionBuilder::read: "
+                FUNC_SIGNATURE + ": "
                 "unable to open file \"" + certificate_path + "\".");
     }
 

@@ -587,7 +587,7 @@ Output shopschedulingsolver::milp_positional(
         milp_solution = mathoptsolverscmake::get_solution(cbc_model);
         milp_bound = mathoptsolverscmake::get_bound(cbc_model);
 #else
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
 #endif
 
     } else if (parameters.solver == mathoptsolverscmake::SolverName::Highs) {
@@ -645,7 +645,7 @@ Output shopschedulingsolver::milp_positional(
         milp_solution = mathoptsolverscmake::get_solution(highs);
         milp_bound = mathoptsolverscmake::get_bound(highs);
 #else
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
 #endif
 
     } else if (parameters.solver == mathoptsolverscmake::SolverName::Xpress) {
@@ -663,11 +663,11 @@ Output shopschedulingsolver::milp_positional(
         milp_bound = mathoptsolverscmake::get_bound(xpress_model);
         XPRSdestroyprob(xpress_model);
 #else
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
 #endif
 
     } else {
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
     }
 
     // Retrieve solution.

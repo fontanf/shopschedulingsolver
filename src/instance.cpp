@@ -68,7 +68,8 @@ void Instance::write(
     std::ofstream file{instance_path};
     if (!file.good()) {
         throw std::runtime_error(
-                "Unable to open file \"" + instance_path + "\".");
+                FUNC_SIGNATURE + ": "
+                "unable to open file \"" + instance_path + "\".");
     }
 
     nlohmann::json json;

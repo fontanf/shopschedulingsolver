@@ -28,7 +28,7 @@ set(OPTIMIZATIONTOOLS_BUILD_TEST OFF)
 FetchContent_Declare(
     optimizationtools
     GIT_REPOSITORY https://github.com/fontanf/optimizationtools.git
-    GIT_TAG e8c379203792fcad764cce239986b325619475fd)
+    GIT_TAG 6398c6bf14a4a95010c65ec4cb7966aaedc8179d)
     #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../optimizationtools/")
 FetchContent_MakeAvailable(optimizationtools)
 

@@ -53,7 +53,7 @@ Output shopschedulingsolver::constraint_programming_optalcp(
     std::ifstream output_file{output_path};
     if (!output_file.good()) {
         throw std::runtime_error(
-                "shopschedulingsolver::constraint_programming_optalcp: "
+                FUNC_SIGNATURE + ": "
                 "unable to open file \"" + std::string(output_path) + "\".");
     }
     nlohmann ::json output_json;

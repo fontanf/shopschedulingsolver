@@ -1411,7 +1411,7 @@ Output shopschedulingsolver::milp_disjunctive(
         milp_solution = mathoptsolverscmake::get_solution(cbc_model);
         milp_bound = mathoptsolverscmake::get_bound(cbc_model);
 #else
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
 #endif
 
     } else if (parameters.solver == mathoptsolverscmake::SolverName::Highs) {
@@ -1463,7 +1463,7 @@ Output shopschedulingsolver::milp_disjunctive(
         milp_solution = mathoptsolverscmake::get_solution(highs);
         milp_bound = mathoptsolverscmake::get_bound(highs);
 #else
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
 #endif
 
     } else if (parameters.solver == mathoptsolverscmake::SolverName::Xpress) {
@@ -1481,11 +1481,11 @@ Output shopschedulingsolver::milp_disjunctive(
         milp_bound = mathoptsolverscmake::get_bound(xpress_model);
         XPRSdestroyprob(xpress_model);
 #else
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
 #endif
 
     } else {
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
     }
 
     // Retrieve solution.
@@ -1521,7 +1521,7 @@ void shopschedulingsolver::write_mps(
         mathoptsolverscmake::load(cbc_model, milp_model.model);
         cbc_model.solver()->writeMps(output_path.c_str());
 #else
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
 #endif
 
     } else if (solver == mathoptsolverscmake::SolverName::Highs) {
@@ -1530,7 +1530,7 @@ void shopschedulingsolver::write_mps(
         mathoptsolverscmake::load(highs, milp_model.model);
         highs.writeModel(output_path);
 #else
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
 #endif
 
     } else if (solver == mathoptsolverscmake::SolverName::Xpress) {
@@ -1541,11 +1541,11 @@ void shopschedulingsolver::write_mps(
         mathoptsolverscmake::write_mps(xpress_model, "kpc.mps");
         XPRSdestroyprob(xpress_model);
 #else
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
 #endif
 
     } else {
-        throw std::invalid_argument("");
+        throw std::invalid_argument(FUNC_SIGNATURE);
     }
 
 }

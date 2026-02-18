@@ -8,7 +8,7 @@ void InstanceBuilder::set_number_of_machines(MachineId number_of_machines)
 {
     if (number_of_machines <= 0) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::set_number_of_machines: "
+                FUNC_SIGNATURE + ": "
                 "'number_of_machines' must be > 0; "
                 "number_of_machines: " + std::to_string(number_of_machines) + ".");
     }
@@ -51,7 +51,7 @@ OperationId InstanceBuilder::add_operation(
 {
     if (job_id < 0 || job_id >= instance_.jobs_.size()) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::set_job_processing_time: "
+                FUNC_SIGNATURE + ": "
                 "invalid 'job_id'; "
                 "job_id: " + std::to_string(job_id) + "; "
                 "instance_.jobs_.size(): " + std::to_string(instance_.jobs_.size()) + ".");
@@ -72,7 +72,7 @@ void InstanceBuilder::add_alternative(
 {
     if (job_id < 0 || job_id >= instance_.jobs_.size()) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::set_job_processing_time: "
+                FUNC_SIGNATURE + ": "
                 "invalid 'job_id'; "
                 "job_id: " + std::to_string(job_id) + "; "
                 "instance_.jobs_.size(): " + std::to_string(instance_.jobs_.size()) + ".");
@@ -80,7 +80,7 @@ void InstanceBuilder::add_alternative(
     Job& job = instance_.jobs_[job_id];
     if (operation_id < 0 || operation_id >= job.operations.size()) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::add_operation: "
+                FUNC_SIGNATURE + ": "
                 "invalid 'operation_id'; "
                 "operation_id: " + std::to_string(operation_id) + "; "
                 "job.operations.size(): " + std::to_string(job.operations.size()) + ".");
@@ -88,14 +88,14 @@ void InstanceBuilder::add_alternative(
     Operation& operation = job.operations[operation_id];
     if (machine_id < 0 || machine_id >= instance_.machines_.size()) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::set_job_processing_time: "
+                FUNC_SIGNATURE + ": "
                 "invalid 'machine_id'; "
                 "machine_id: " + std::to_string(machine_id) + "; "
                 "instance_.machines_.size(): " + std::to_string(instance_.machines_.size()) + ".");
     }
     if (processing_time <= 0) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::set_job_processing_time: "
+                FUNC_SIGNATURE + ": "
                 "'processing_time' must be > 0; "
                 "processing_time: " + std::to_string(processing_time) + ".");
     }
@@ -112,14 +112,14 @@ void InstanceBuilder::set_job_release_date(
 {
     if (job_id < 0 || job_id >= instance_.jobs_.size()) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::set_job_release_date: "
+                FUNC_SIGNATURE + ": "
                 "invalid 'job_id'; "
                 "job_id: " + std::to_string(job_id) + "; "
                 "instance_.jobs_.size(): " + std::to_string(instance_.jobs_.size()) + ".");
     }
     if (release_date < 0) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::set_job_release_date: "
+                FUNC_SIGNATURE + ": "
                 "'release_date' must be >= 0; "
                 "release_date: " + std::to_string(release_date) + ".");
     }
@@ -133,14 +133,14 @@ void InstanceBuilder::set_job_due_date(
 {
     if (job_id < 0 || job_id >= instance_.jobs_.size()) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::set_job_due_date: "
+                FUNC_SIGNATURE + ": "
                 "invalid 'job_id'; "
                 "job_id: " + std::to_string(job_id) + "; "
                 "instance_.jobs_.size(): " + std::to_string(instance_.jobs_.size()) + ".");
     }
     if (due_date < 0) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::set_job_due_date: "
+                FUNC_SIGNATURE + ": "
                 "'due_date' must be >= 0; "
                 "due_date: " + std::to_string(due_date) + ".");
     }
@@ -154,14 +154,14 @@ void InstanceBuilder::set_job_weight(
 {
     if (job_id < 0 || job_id >= instance_.jobs_.size()) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::set_job_weight: "
+                FUNC_SIGNATURE + ": "
                 "invalid 'job_id'; "
                 "job_id: " + std::to_string(job_id) + "; "
                 "instance_.jobs_.size(): " + std::to_string(instance_.jobs_.size()) + ".");
     }
     if (weight < 0) {
         throw std::invalid_argument(
-                "shopschedulingsolver::InstanceBuilder::set_job_weight: "
+                FUNC_SIGNATURE + ": "
                 "'weight' must be >= 0; "
                 "weight: " + std::to_string(weight) + ".");
     }
@@ -176,7 +176,8 @@ void InstanceBuilder::read(
     std::ifstream file(instance_path);
     if (!file.good()) {
         throw std::runtime_error(
-                "Unable to open file \"" + instance_path + "\".");
+                FUNC_SIGNATURE + ": "
+                "unable to open file \"" + instance_path + "\".");
     }
 
     if (format == "" || format == "json") {
@@ -191,7 +192,8 @@ void InstanceBuilder::read(
         read_flexible_job_shop(file);
     } else {
         throw std::invalid_argument(
-                "Unknown instance format \"" + format + "\".");
+                FUNC_SIGNATURE + ": "
+                "unknown instance format \"" + format + "\".");
     }
     file.close();
 }

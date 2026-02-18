@@ -106,7 +106,8 @@ Output run(
 
     } else {
         throw std::invalid_argument(
-                "Unknown algorithm \"" + algorithm + "\".");
+                FUNC_SIGNATURE + ": "
+                "unknown algorithm \"" + algorithm + "\".");
     }
 
     return Output(instance);
