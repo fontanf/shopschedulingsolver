@@ -62,7 +62,7 @@ with open(args.output, 'w') as output_file:
                 # If solved to optimality, add to output file.
                 json_output_file = open(json_output_path, "r")
                 json_data = json.load(json_output_file)
-                if json_data["Output"]["Value"] == "inf":
+                if not bool(json_data["Output"]["Optimal"]):
                     continue
                 bound = int(json_data["Output"]["Bound"])
                 value = int(json_data["Output"]["Value"])

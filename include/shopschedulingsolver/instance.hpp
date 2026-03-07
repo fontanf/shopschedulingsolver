@@ -2,6 +2,7 @@
 
 #include "optimizationtools/utils/output.hpp"
 #include "optimizationtools/utils/common.hpp"
+#include "optimizationtools/utils/utils.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -33,6 +34,22 @@ std::istream& operator>>(
 std::ostream& operator<<(
         std::ostream& os,
         Objective objective);
+
+inline optimizationtools::ObjectiveDirection objective_direction(
+        Objective objective)
+{
+    switch (objective) {
+    case Objective::Makespan:
+        return optimizationtools::ObjectiveDirection::Minimize;
+    case Objective::TotalFlowTime:
+        return optimizationtools::ObjectiveDirection::Minimize;
+    case Objective::TotalTardiness:
+        return optimizationtools::ObjectiveDirection::Minimize;
+    case Objective::Throughput:
+        return optimizationtools::ObjectiveDirection::Maximize;
+    }
+    return optimizationtools::ObjectiveDirection::Minimize;
+}
 
 struct MachineOperation
 {
