@@ -9,12 +9,6 @@
 namespace shopschedulingsolver
 {
 
-inline optimizationtools::ObjectiveDirection objective_direction(
-        Objective objective)
-{
-    return optimizationtools::ObjectiveDirection::Minimize;
-}
-
 struct Output: optimizationtools::Output
 {
     /** Constructor. */
@@ -62,6 +56,7 @@ struct Output: optimizationtools::Output
             {"ThroughputBound", this->throughput_bound},
             {"Bound", this->bound()},
             {"Value", this->solution.objective_value()},
+            {"Optimal", this->bound() == this->solution.objective_value()},
             {"Time", this->time}
         };
     }
