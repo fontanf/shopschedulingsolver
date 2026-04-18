@@ -20,7 +20,7 @@
 
 #include "shopschedulingsolver/algorithm_formatter.hpp"
 
-#include "mathoptsolverscmake/milp.hpp"
+#include "mathoptsolverscmake/mathopt.hpp"
 
 namespace shopschedulingsolver
 {
