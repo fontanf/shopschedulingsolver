@@ -25,7 +25,7 @@ target_include_directories(ShopSchedulingSolver_milp_positional PUBLIC
     ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(ShopSchedulingSolver_milp_positional PUBLIC
     ShopSchedulingSolver_shopschedulingsolver
-    MathOptSolversCMake::milp)
+    MathOptSolversCMake::mathopt)
 add_library(ShopSchedulingSolver::milp_positional ALIAS ShopSchedulingSolver_milp_positional)
 
 add_library(ShopSchedulingSolver_milp_disjunctive)
@@ -35,7 +35,7 @@ target_include_directories(ShopSchedulingSolver_milp_disjunctive PUBLIC
     ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(ShopSchedulingSolver_milp_disjunctive PUBLIC
     ShopSchedulingSolver_shopschedulingsolver
-    MathOptSolversCMake::milp)
+    MathOptSolversCMake::mathopt)
 add_library(ShopSchedulingSolver::milp_disjunctive ALIAS ShopSchedulingSolver_milp_disjunctive)
 
 if(SHOPSCHEDULINGSOLVER_USE_OPTALCP)

@@ -1,6 +1,14 @@
 #include "shopschedulingsolver/algorithms/milp_disjunctive.hpp"
 
-#include "mathoptsolverscmake/milp.hpp"
+#ifdef CBC_FOUND
+#include "mathoptsolverscmake/mathopt_cbc.hpp"
+#endif
+#ifdef HIGHS_FOUND
+#include "mathoptsolverscmake/mathopt_highs.hpp"
+#endif
+#ifdef XPRESS_FOUND
+#include "mathoptsolverscmake/mathopt_xpress.hpp"
+#endif
 
 using namespace shopschedulingsolver;
 
@@ -10,7 +18,7 @@ namespace
 struct Model
 {
     /** Model. */
-    mathoptsolverscmake::MilpModel model;
+    mathoptsolverscmake::MathOptModel model;
 
     /**
      * Let (j1, o1) and (j2, o2) be two operation of the same machine
