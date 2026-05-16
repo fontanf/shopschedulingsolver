@@ -10,6 +10,12 @@ Instance shopschedulingsolver::generate(
         const GenerateInput& input,
         std::mt19937_64& generator)
 {
+    if (input.permutation && !input.flow_shop) {
+        throw std::invalid_argument(
+                FUNC_SIGNATURE + ": "
+                "permutation requires a flow shop environment.");
+    }
+
     InstanceBuilder instance_builder;
     instance_builder.set_objective(input.objective);
     instance_builder.set_operations_arbitrary_order(input.operations_arbitrary_order);
@@ -33,6 +39,8 @@ Instance shopschedulingsolver::generate(
                 input.number_of_operations_per_job,
                 input.number_of_machine_groups,
                 generator);
+        if (!input.flow_shop)
+            std::shuffle(machine_groups_ids.begin(), machine_groups_ids.end(), generator);
         for (OperationId operation_id = 0;
                 operation_id < input.number_of_operations_per_job;
                 ++operation_id) {

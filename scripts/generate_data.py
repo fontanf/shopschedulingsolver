@@ -81,6 +81,8 @@ with contextlib.ExitStack() as stack:
                                     weight_range = 100
 
                                 command = generator_main
+                                if shop_type_short in ["pfss", "fss", "ffss"]:
+                                    command += "  --flow-shop 1"
                                 if shop_type_short in ["oss", "foss"]:
                                     command += "  --operations-arbitrary-order 1"
                                 command += "  --objective " + objective.replace("_weighted", "").replace("_", "-")
