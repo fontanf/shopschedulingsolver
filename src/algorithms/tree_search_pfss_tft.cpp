@@ -14,7 +14,7 @@
 
 #include "shopschedulingsolver/solution_builder.hpp"
 
-#include "treesearchsolver/iterative_beam_search.hpp"
+#include "treesearchsolver/iterative_beam_search_2.hpp"
 
 #include <memory>
 #include <sstream>
@@ -63,9 +63,6 @@ public:
 
         /** Guide. */
         double guide = 0;
-
-        /** Next child to generate. */
-        JobId next_child_pos = 0;
 
         /** Unique id of the node. */
         NodeId id = -1;
@@ -122,95 +119,75 @@ public:
         }
     }
 
-    inline std::shared_ptr<Node> next_child(
+    inline std::vector<std::shared_ptr<Node>> children(
             const std::shared_ptr<Node>& parent) const
     {
-        // Compute parent's structures.
+        // Compute parent's structures if needed.
         if (parent->times.empty())
             compute_structures(parent);
 
-        //if (parent->next_child_pos == 0)
-        //    std::cout << "parent"
-        //        << " j " << parent->job_id
-        //        << " n " << parent->number_of_jobs
-        //        << " ct " << parent->total_completion_time
-        //        << " it " << parent->idle_time
-        //        << " wit " << parent->weighted_idle_time
-        //        << " guide " << parent->guide
-        //        << std::endl;
+        std::vector<std::shared_ptr<Node>> result;
+        for (JobId job_next_id = 0;
+                job_next_id < instance_.number_of_jobs();
+                ++job_next_id) {
+            if (!parent->available_jobs[job_next_id])
+                continue;
 
-        // Get the next job to process.
-        JobId job_next_id = parent->next_child_pos;
-
-        // Update parent
-        parent->next_child_pos++;
-
-        // Check job availibility.
-        if (!parent->available_jobs[job_next_id])
-            return nullptr;
-
-        // Compute new child.
-        const Job& job_next = instance_.job(job_next_id);
-        auto child = std::shared_ptr<Node>(new BranchingScheme::Node());
-        child->id = node_id_;
-        node_id_++;
-        child->parent = parent;
-        child->job_id = job_next_id;
-        child->number_of_jobs = parent->number_of_jobs + 1;
-        child->idle_time = parent->idle_time;
-        child->weighted_idle_time = parent->weighted_idle_time;
-        Time p0 = job_next.operations[0].alternatives[0].processing_time;
-        Time t = parent->times[0] + p0;
-        Time t_prec = t;
-        for (MachineId machine_id = 1;
-                machine_id < instance_.number_of_machines();
-                ++machine_id) {
-            Time p = job_next.operations[machine_id].alternatives[0].processing_time;
-            if (t_prec > parent->times[machine_id]) {
-                Time idle_time = t_prec - parent->times[machine_id];
-                t = t_prec + p;
-                child->idle_time += idle_time;
-                child->weighted_idle_time += ((double)parent->number_of_jobs / instance_.number_of_jobs() + 1) * (instance_.number_of_machines() - machine_id) * idle_time;
-            } else {
-                t = parent->times[machine_id] + p;
+            const Job& job_next = instance_.job(job_next_id);
+            auto child = std::shared_ptr<Node>(new BranchingScheme::Node());
+            child->id = node_id_;
+            node_id_++;
+            child->parent = parent;
+            child->job_id = job_next_id;
+            child->number_of_jobs = parent->number_of_jobs + 1;
+            child->idle_time = parent->idle_time;
+            child->weighted_idle_time = parent->weighted_idle_time;
+            Time p0 = job_next.operations[0].alternatives[0].processing_time;
+            Time t = parent->times[0] + p0;
+            Time t_prec = t;
+            for (MachineId machine_id = 1;
+                    machine_id < instance_.number_of_machines();
+                    ++machine_id) {
+                Time p = job_next.operations[machine_id].alternatives[0].processing_time;
+                if (t_prec > parent->times[machine_id]) {
+                    Time idle_time = t_prec - parent->times[machine_id];
+                    t = t_prec + p;
+                    child->idle_time += idle_time;
+                    child->weighted_idle_time += ((double)parent->number_of_jobs / instance_.number_of_jobs() + 1) * (instance_.number_of_machines() - machine_id) * idle_time;
+                } else {
+                    t = parent->times[machine_id] + p;
+                }
+                t_prec = t;
             }
-            t_prec = t;
+            child->total_completion_time = parent->total_completion_time + t;
+            // Compute bound.
+            MachineId machine_id = instance_.number_of_machines() - 1;
+            child->bound = parent->bound
+                + (instance_.number_of_jobs() - parent->number_of_jobs) * (t - parent->times[instance_.number_of_machines() - 1])
+                - job_next.operations[machine_id].alternatives[0].processing_time;
+            // Compute guide.
+            double alpha = (double)child->number_of_jobs / instance_.number_of_jobs();
+            switch (parameters_.guide_id) {
+            case 0: {
+                child->guide = child->bound;
+                break;
+            } case 1: {
+                child->guide = child->idle_time;
+                break;
+            } case 2: {
+                child->guide = alpha * child->total_completion_time
+                    + (1.0 - alpha) * child->idle_time * child->number_of_jobs / instance_.number_of_machines();
+                break;
+            } case 3: {
+                child->guide = alpha * child->total_completion_time
+                    + (1.0 - alpha) * (child->weighted_idle_time / instance_.number_of_machines() + child->idle_time) / 2 * child->number_of_jobs / instance_.number_of_machines();
+                break;
+            } default: {
+            }
+            }
+            result.push_back(child);
         }
-        child->total_completion_time = parent->total_completion_time + t;
-        // Compute bound.
-        MachineId machine_id = instance_.number_of_machines() - 1;
-        child->bound = parent->bound
-            + (instance_.number_of_jobs() - parent->number_of_jobs) * (t - parent->times[instance_.number_of_machines() - 1])
-            - job_next.operations[machine_id].alternatives[0].processing_time;
-        // Compute guide.
-        double alpha = (double)child->number_of_jobs / instance_.number_of_jobs();
-        switch (parameters_.guide_id) {
-        case 0: {
-            child->guide = child->bound;
-            break;
-        } case 1: {
-            child->guide = child->idle_time;
-            break;
-        } case 2: {
-            child->guide = alpha * child->total_completion_time
-                + (1.0 - alpha) * child->idle_time * child->number_of_jobs / instance_.number_of_machines();
-            break;
-        } case 3: {
-            //child->guide = alpha * child->total_completion_time
-            //    + (1.0 - alpha) * (child->weighted_idle_time + m * child->idle_time) / 2;
-            child->guide = alpha * child->total_completion_time
-                + (1.0 - alpha) * (child->weighted_idle_time / instance_.number_of_machines() + child->idle_time) / 2 * child->number_of_jobs / instance_.number_of_machines();
-            break;
-        } default: {
-        }
-        }
-        return child;
-    }
-
-    inline bool infertile(
-            const std::shared_ptr<Node>& node) const
-    {
-        return (node->next_child_pos == instance_.number_of_jobs());
+        return result;
     }
 
     inline bool operator()(
@@ -366,14 +343,14 @@ Output shopschedulingsolver::tree_search_pfss_tft(
     BranchingScheme::Parameters branching_scheme_parameters;
     BranchingScheme branching_scheme(instance, branching_scheme_parameters);
 
-    treesearchsolver::IterativeBeamSearchParameters<BranchingScheme> ibs_parameters;
+    treesearchsolver::IterativeBeamSearch2Parameters<BranchingScheme> ibs_parameters;
     ibs_parameters.verbosity_level = 0;
     ibs_parameters.timer = parameters.timer;
     ibs_parameters.new_solution_callback
         = [&instance, &algorithm_formatter](
                 const treesearchsolver::Output<BranchingScheme>& ts_output)
         {
-            const auto& ibs_output = static_cast<const treesearchsolver::IterativeBeamSearchOutput<BranchingScheme>&>(ts_output);
+            const auto& ibs_output = static_cast<const treesearchsolver::IterativeBeamSearch2Output<BranchingScheme>&>(ts_output);
             auto node = ts_output.solution_pool.best();
             std::vector<JobId> jobs;
             for (auto node_tmp = node;
@@ -420,7 +397,7 @@ Output shopschedulingsolver::tree_search_pfss_tft(
             ss << "queue " << ibs_output.maximum_size_of_the_queue;
             algorithm_formatter.update_solution(solution, ss.str());
         };
-    auto ts_output = treesearchsolver::iterative_beam_search(branching_scheme, ibs_parameters);
+    auto ts_output = treesearchsolver::iterative_beam_search_2(branching_scheme, ibs_parameters);
 
     if (ts_output.optimal) {
         algorithm_formatter.update_total_flow_time_bound(
