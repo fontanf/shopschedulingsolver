@@ -224,34 +224,95 @@ void SolutionBuilder::from_permutation(
         const std::vector<JobId>& job_ids)
 {
     const Instance& instance = this->solution_.instance();
-    std::vector<Time> machines_current_times(instance.number_of_machines(), 0);
-    for (JobId job_id: job_ids) {
-        const Job& job = instance.job(job_id);
-        Time start0 = machines_current_times[0];
-        this->append_operation(
-                job_id,
-                0,  // operation_id
-                0,  // alternative_id
-                start0);
-        Time p0 = job.operations[0].alternatives[0].processing_time;
-        machines_current_times[0] = start0 + p0;
-        for (MachineId machine_id = 1;
-                machine_id < instance.number_of_machines();
-                ++machine_id) {
-            Time start = -1;
-            if (machines_current_times[machine_id - 1]
-                    > machines_current_times[machine_id]) {
-                start = machines_current_times[machine_id - 1];
-            } else {
-                start = machines_current_times[machine_id];
+    if (instance.blocking()) {
+        std::vector<Time> machines_departure_times(instance.number_of_machines(), 0);
+        MachineId last_machine_id = instance.number_of_machines() - 1;
+        for (JobId job_id: job_ids) {
+            const Job& job = instance.job(job_id);
+            {
+                Time start0 = machines_departure_times[0];
+                this->append_operation(
+                        job_id,
+                        0,  // operation_id
+                        0,  // operation_machine_id
+                        start0);
+                Time p0 = job.operations[0].alternatives[0].processing_time;
+                // Departure from machine 0 = when job starts on machine 1
+                // = max(finish on 0, machine 1 free). For M=1 there is no
+                // machine 1, so departure equals finish.
+                if (last_machine_id > 0) {
+                    machines_departure_times[0] = (std::max)(
+                            start0 + p0,
+                            machines_departure_times[1]);
+                } else {
+                    machines_departure_times[0] = start0 + p0;
+                }
             }
+            for (MachineId machine_id = 1;
+                    machine_id < instance.number_of_machines() - 1;
+                    ++machine_id) {
+                // start[k][m] = d[k][m-1]: guaranteed >= d[k-1][m] by the
+                // recurrence, so no explicit max with the old departure needed.
+                Time start = machines_departure_times[machine_id - 1];
+                this->append_operation(
+                        job_id,
+                        machine_id,  // operation_id
+                        0,  // operation_machine_id
+                        start);
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                Time d1 = start + p;
+                Time d2 = machines_departure_times[machine_id + 1];
+                machines_departure_times[machine_id] = (std::max)(d1, d2);
+            }
+            if (last_machine_id > 0) {
+                // The recurrence guarantees d[k][M-2] >= d[k-1][M-1], so
+                // machines_departure_times[last-1] is already the correct start.
+                Time start = machines_departure_times[last_machine_id - 1];
+                this->append_operation(
+                        job_id,
+                        last_machine_id,  // operation_id
+                        0,  // operation_machine_id
+                        start);
+                Time p = job.operations[last_machine_id].alternatives[0].processing_time;
+                machines_departure_times[last_machine_id] = start + p;
+            }
+        }
+    } else if (instance.no_idle()) {
+        throw std::invalid_argument(
+                FUNC_SIGNATURE + ": no-idle not supported.");
+    } else if (instance.no_wait()) {
+        throw std::invalid_argument(
+                FUNC_SIGNATURE + ": no-wait not supported.");
+    } else {
+        std::vector<Time> machines_current_times(instance.number_of_machines(), 0);
+        for (JobId job_id: job_ids) {
+            const Job& job = instance.job(job_id);
+            Time start0 = machines_current_times[0];
             this->append_operation(
                     job_id,
-                    machine_id,  // operation_id
-                    0,  // alternative_id
-                    start);
-            Time p = job.operations[machine_id].alternatives[0].processing_time;
-            machines_current_times[machine_id] = start + p;
+                    0,  // operation_id
+                    0,  // operation_machine_id
+                    start0);
+            Time p0 = job.operations[0].alternatives[0].processing_time;
+            machines_current_times[0] = start0 + p0;
+            for (MachineId machine_id = 1;
+                    machine_id < instance.number_of_machines();
+                    ++machine_id) {
+                Time start = -1;
+                if (machines_current_times[machine_id - 1]
+                        > machines_current_times[machine_id]) {
+                    start = machines_current_times[machine_id - 1];
+                } else {
+                    start = machines_current_times[machine_id];
+                }
+                this->append_operation(
+                        job_id,
+                        machine_id,  // operation_id
+                        0,  // operation_machine_id
+                        start);
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                machines_current_times[machine_id] = start + p;
+            }
         }
     }
 }
