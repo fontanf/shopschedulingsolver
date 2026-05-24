@@ -58,34 +58,72 @@ void update_completion_times(
         JobId p)
 {
     //std::cout << "update_completion_times p " << p << std::endl;
-    for (JobId pos = p + 1; pos <= (JobId)data.solution.jobs.size(); ++pos) {
-        JobId job_id = data.solution.jobs[pos - 1];
-        const Job& job = instance.job(job_id);
-        Time p0 = job.operations[0].alternatives[0].processing_time;
-        data.completion_times_0[pos][0] = data.completion_times_0[pos - 1][0] + p0;
-        //std::cout << "compute c"
-        //    << " pos " << pos
-        //    << " job_id " << job_id
-        //    << " machine_id " << 0
-        //    << " p " << p0
-        //    << " c " << data.completion_times_0[pos][0]
-        //    << std::endl;
-        for (MachineId machine_id = 1;
-                machine_id < instance.number_of_machines();
-                ++machine_id) {
-            Time p = job.operations[machine_id].alternatives[0].processing_time;
-            if (data.completion_times_0[pos - 1][machine_id] > data.completion_times_0[pos][machine_id - 1]) {
-                data.completion_times_0[pos][machine_id] = data.completion_times_0[pos - 1][machine_id] + p;
-            } else {
-                data.completion_times_0[pos][machine_id] = data.completion_times_0[pos][machine_id - 1] + p;
+    if (instance.blocking()) {
+        MachineId last_machine_id = instance.number_of_machines() - 1;
+        for (JobId pos = p + 1; pos <= (JobId)data.solution.jobs.size(); ++pos) {
+            JobId job_id = data.solution.jobs[pos - 1];
+            const Job& job = instance.job(job_id);
+            {
+                Time p0 = job.operations[0].alternatives[0].processing_time;
+                // D[pos][0] = max(D[pos-1][0] + p, D[pos-1][1])
+                if (last_machine_id > 0) {
+                    data.completion_times_0[pos][0] = (std::max)(
+                            data.completion_times_0[pos - 1][0] + p0,
+                            data.completion_times_0[pos - 1][1]);
+                } else {
+                    data.completion_times_0[pos][0] = data.completion_times_0[pos - 1][0] + p0;
+                }
             }
+            for (MachineId machine_id = 1;
+                    machine_id < instance.number_of_machines() - 1;
+                    ++machine_id) {
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                // D[pos][m] = max(D[pos][m-1] + p, D[pos-1][m+1])
+                data.completion_times_0[pos][machine_id] = (std::max)(
+                        data.completion_times_0[pos][machine_id - 1] + p,
+                        data.completion_times_0[pos - 1][machine_id + 1]);
+            }
+            if (last_machine_id > 0) {
+                Time p = job.operations[last_machine_id].alternatives[0].processing_time;
+                data.completion_times_0[pos][last_machine_id] = data.completion_times_0[pos][last_machine_id - 1] + p;
+            }
+        }
+    } else if (instance.no_idle()) {
+        throw std::invalid_argument(
+                FUNC_SIGNATURE + ": no-idle not supported.");
+    } else if (instance.no_wait()) {
+        throw std::invalid_argument(
+                FUNC_SIGNATURE + ": no-wait not supported.");
+    } else {
+        for (JobId pos = p + 1; pos <= (JobId)data.solution.jobs.size(); ++pos) {
+            JobId job_id = data.solution.jobs[pos - 1];
+            const Job& job = instance.job(job_id);
+            Time p0 = job.operations[0].alternatives[0].processing_time;
+            data.completion_times_0[pos][0] = data.completion_times_0[pos - 1][0] + p0;
             //std::cout << "compute c"
             //    << " pos " << pos
             //    << " job_id " << job_id
-            //    << " machine_id " << machine_id
-            //    << " p " << p
-            //    << " c " << data.completion_times_0[pos][machine_id]
+            //    << " machine_id " << 0
+            //    << " p " << p0
+            //    << " c " << data.completion_times_0[pos][0]
             //    << std::endl;
+            for (MachineId machine_id = 1;
+                    machine_id < instance.number_of_machines();
+                    ++machine_id) {
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                if (data.completion_times_0[pos - 1][machine_id] > data.completion_times_0[pos][machine_id - 1]) {
+                    data.completion_times_0[pos][machine_id] = data.completion_times_0[pos - 1][machine_id] + p;
+                } else {
+                    data.completion_times_0[pos][machine_id] = data.completion_times_0[pos][machine_id - 1] + p;
+                }
+                //std::cout << "compute c"
+                //    << " pos " << pos
+                //    << " job_id " << job_id
+                //    << " machine_id " << machine_id
+                //    << " p " << p
+                //    << " c " << data.completion_times_0[pos][machine_id]
+                //    << std::endl;
+            }
         }
     }
 }
@@ -97,19 +135,56 @@ void update_reverse_completion_times(
 {
     MachineId last_machine_id = instance.number_of_machines() - 1;
     JobId last_job_pos = data.solution.jobs.size() - 1;
-    for (JobId pos = p + 1; pos <= (JobId)data.solution.jobs.size(); ++pos) {
-        JobId job_id = data.solution.jobs[last_job_pos - pos + 1];
-        const Job& job = instance.job(job_id);
-        Time p0 = job.operations[last_machine_id].alternatives[0].processing_time;
-        data.reverse_completion_times_0[pos][last_machine_id] = data.reverse_completion_times_0[pos - 1][last_machine_id] + p0;
-        for (MachineId machine_id = last_machine_id - 1;
-                machine_id >= 0;
-                --machine_id) {
-            Time p = job.operations[machine_id].alternatives[0].processing_time;
-            if (data.reverse_completion_times_0[pos - 1][machine_id] > data.reverse_completion_times_0[pos][machine_id + 1]) {
-                data.reverse_completion_times_0[pos][machine_id] = data.reverse_completion_times_0[pos - 1][machine_id] + p;
-            } else {
-                data.reverse_completion_times_0[pos][machine_id] = data.reverse_completion_times_0[pos][machine_id + 1] + p;
+    if (instance.blocking()) {
+        for (JobId pos = p + 1; pos <= (JobId)data.solution.jobs.size(); ++pos) {
+            JobId job_id = data.solution.jobs[last_job_pos - pos + 1];
+            const Job& job = instance.job(job_id);
+            {
+                Time p0 = job.operations[last_machine_id].alternatives[0].processing_time;
+                // R[pos][M-1] = max(R[pos-1][M-1] + p, R[pos-1][M-2])
+                if (last_machine_id > 0) {
+                    data.reverse_completion_times_0[pos][last_machine_id] = (std::max)(
+                            data.reverse_completion_times_0[pos - 1][last_machine_id] + p0,
+                            data.reverse_completion_times_0[pos - 1][last_machine_id - 1]);
+                } else {
+                    data.reverse_completion_times_0[pos][last_machine_id] = data.reverse_completion_times_0[pos - 1][last_machine_id] + p0;
+                }
+            }
+            for (MachineId machine_id = last_machine_id - 1;
+                    machine_id >= 1;
+                    --machine_id) {
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                // R[pos][m] = max(R[pos][m+1] + p, R[pos-1][m-1])
+                data.reverse_completion_times_0[pos][machine_id] = (std::max)(
+                        data.reverse_completion_times_0[pos][machine_id + 1] + p,
+                        data.reverse_completion_times_0[pos - 1][machine_id - 1]);
+            }
+            if (last_machine_id > 0) {
+                Time p = job.operations[0].alternatives[0].processing_time;
+                data.reverse_completion_times_0[pos][0] = data.reverse_completion_times_0[pos][1] + p;
+            }
+        }
+    } else if (instance.no_idle()) {
+        throw std::invalid_argument(
+                FUNC_SIGNATURE + ": no-idle not supported.");
+    } else if (instance.no_wait()) {
+        throw std::invalid_argument(
+                FUNC_SIGNATURE + ": no-wait not supported.");
+    } else {
+        for (JobId pos = p + 1; pos <= (JobId)data.solution.jobs.size(); ++pos) {
+            JobId job_id = data.solution.jobs[last_job_pos - pos + 1];
+            const Job& job = instance.job(job_id);
+            Time p0 = job.operations[last_machine_id].alternatives[0].processing_time;
+            data.reverse_completion_times_0[pos][last_machine_id] = data.reverse_completion_times_0[pos - 1][last_machine_id] + p0;
+            for (MachineId machine_id = last_machine_id - 1;
+                    machine_id >= 0;
+                    --machine_id) {
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                if (data.reverse_completion_times_0[pos - 1][machine_id] > data.reverse_completion_times_0[pos][machine_id + 1]) {
+                    data.reverse_completion_times_0[pos][machine_id] = data.reverse_completion_times_0[pos - 1][machine_id] + p;
+                } else {
+                    data.reverse_completion_times_0[pos][machine_id] = data.reverse_completion_times_0[pos][machine_id + 1] + p;
+                }
             }
         }
     }
@@ -344,207 +419,419 @@ void local_search(
                 if (pos_old > data.solution.jobs.size() - size)
                     continue;
 
-                // Compute data.completion_times.
-                for (MachineId machine_id = 0;
-                        machine_id < instance.number_of_machines();
-                        ++machine_id) {
-                    data.completion_times[pos_old][machine_id] = data.completion_times_0[pos_old][machine_id];
-                    //std::cout << "compute c"
-                    //    << " machine_id " << machine_id
-                    //    << " c " << data.completion_times[pos_old][machine_id]
-                    //    << std::endl;
-                }
-                for (JobId pos = pos_old + 1;
-                        pos <= (JobId)data.solution.jobs.size() - size;
-                        ++pos) {
-                    JobId job_id = data.solution.jobs[pos - 1 + size];
-                    //std::cout << "compute c"
-                    //    << " pos " << pos
-                    //    << " job_id " << job_id
-                    //    << std::endl;
-                    const Job& job = instance.job(job_id);
-                    Time p0 = job.operations[0].alternatives[0].processing_time;
-                    data.completion_times[pos][0] = data.completion_times[pos - 1][0] + p0;
-                    //std::cout << "compute c"
-                    //    << " machine_id " << 0
-                    //    << " p " << p0
-                    //    << " c " << data.completion_times[pos][0]
-                    //    << std::endl;
-                    for (MachineId machine_id = 1;
+                if (instance.blocking()) {
+                    // Compute data.completion_times.
+                    for (MachineId machine_id = 0;
                             machine_id < instance.number_of_machines();
                             ++machine_id) {
-                        Time p = job.operations[machine_id].alternatives[0].processing_time;
-                        if (data.completion_times[pos - 1][machine_id] > data.completion_times[pos][machine_id - 1]) {
-                            data.completion_times[pos][machine_id] = data.completion_times[pos - 1][machine_id] + p;
-                        } else {
-                            data.completion_times[pos][machine_id] = data.completion_times[pos][machine_id - 1] + p;
-                        }
+                        data.completion_times[pos_old][machine_id] = data.completion_times_0[pos_old][machine_id];
                         //std::cout << "compute c"
                         //    << " machine_id " << machine_id
-                        //    << " p " << p
-                        //    << " c " << data.completion_times[pos][machine_id]
+                        //    << " c " << data.completion_times[pos_old][machine_id]
                         //    << std::endl;
                     }
-                }
-
-                // Compute data.reverse_completion_times.
-                // pos_old == solution.jobs.size() - 1, size == 1 => p = 0
-                // pos_old == solution.jobs.size() - 2, size == 2 => p = 0
-                // pos_old == solution.jobs.size() - 2, size == 1 => p = 1
-                JobId p = data.solution.jobs.size() - pos_old - size;
-                if (p < 0 || p >= data.reverse_completion_times.size()) {
-                    throw std::logic_error(
-                            FUNC_SIGNATURE + ": wrong 'p'; "
-                            "p: " + std::to_string(p) + "; "
-                            "data.reverse_completion_times.size(): " + std::to_string(data.reverse_completion_times.size()) + "; "
-                            "pos_old: " + std::to_string(pos_old) + "; "
-                            "size: " + std::to_string(size) + ".");
-                }
-                for (MachineId machine_id = 0;
-                        machine_id < instance.number_of_machines();
-                        ++machine_id) {
-                    data.reverse_completion_times[p][machine_id] = data.reverse_completion_times_0[p][machine_id];
-                }
-                for (JobId pos = p + 1;
-                        pos <= (JobId)data.solution.jobs.size() - size;
-                        ++pos) {
-                    // pos == 1, size == 1 => job_pos = data.solution.jobs.size() - 2
-                    // pos == 2, size == 2 => job_pos = data.solution.jobs.size() - 3
-                    // pos == 2, size == 1 => job_pos = data.solution.jobs.size() - 3
-                    JobId job_pos = data.solution.jobs.size() - pos - size;
-                    if (job_pos < 0 || job_pos >= data.solution.jobs.size()) {
-                        throw std::logic_error(
-                                FUNC_SIGNATURE + ": wrong 'job_pos'; "
-                                "job_pos: " + std::to_string(job_pos) + "; "
-                                "pos: " + std::to_string(pos) + "; "
-                                "data.solution.jobs.size(): " + std::to_string(data.solution.jobs.size()) +  ".");
-                    }
-                    JobId job_id = data.solution.jobs[job_pos];
-                    //std::cout << "compute r"
-                    //    << " p " << p
-                    //    << " pos " << pos
-                    //    << " job_pos " << job_pos
-                    //    << " job_id " << job_id
-                    //    << std::endl;
-                    const Job& job = instance.job(job_id);
-                    Time p0 = job.operations[last_machine_id].alternatives[0].processing_time;
-                    data.reverse_completion_times[pos][last_machine_id] = data.reverse_completion_times[pos - 1][last_machine_id] + p0;
-                    for (MachineId machine_id = last_machine_id - 1;
-                            machine_id >= 0;
-                            --machine_id) {
-                        Time p = job.operations[machine_id].alternatives[0].processing_time;
-                        if (data.reverse_completion_times[pos - 1][machine_id] > data.reverse_completion_times[pos][machine_id + 1]) {
-                            data.reverse_completion_times[pos][machine_id] = data.reverse_completion_times[pos - 1][machine_id] + p;
+                    for (JobId pos = pos_old + 1;
+                            pos <= (JobId)data.solution.jobs.size() - size;
+                            ++pos) {
+                        JobId job_id = data.solution.jobs[pos - 1 + size];
+                        const Job& job = instance.job(job_id);
+                        Time p0 = job.operations[0].alternatives[0].processing_time;
+                        if (last_machine_id > 0) {
+                            data.completion_times[pos][0] = (std::max)(
+                                    data.completion_times[pos - 1][0] + p0,
+                                    data.completion_times[pos - 1][1]);
                         } else {
-                            data.reverse_completion_times[pos][machine_id] = data.reverse_completion_times[pos][machine_id + 1] + p;
+                            data.completion_times[pos][0] = data.completion_times[pos - 1][0] + p0;
+                        }
+                        for (MachineId machine_id = 1;
+                                machine_id < instance.number_of_machines() - 1;
+                                ++machine_id) {
+                            Time p = job.operations[machine_id].alternatives[0].processing_time;
+                            data.completion_times[pos][machine_id] = (std::max)(
+                                    data.completion_times[pos][machine_id - 1] + p,
+                                    data.completion_times[pos - 1][machine_id + 1]);
+                        }
+                        if (last_machine_id > 0) {
+                            Time p = job.operations[last_machine_id].alternatives[0].processing_time;
+                            data.completion_times[pos][last_machine_id] = data.completion_times[pos][last_machine_id - 1] + p;
                         }
                     }
-                }
 
-                // Compute data.completion_times.
-                for (JobId pos_new = 0;
-                        pos_new <= (JobId)data.solution.jobs.size() - size;
-                        ++pos_new) {
-                    if (pos_new == pos_old)
-                        continue;
-                    if (pos_new < pos_old) {
-                        for (MachineId machine_id = 0;
-                                machine_id < instance.number_of_machines();
-                                ++machine_id) {
-                            data.completion_times_2[machine_id] = data.completion_times_0[pos_new][machine_id];
-                            //std::cout << "compute c2"
-                            //    << " pos_new " << pos_new
-                            //    << " machine_id " << machine_id
-                            //    << " c2 " << data.completion_times_2[machine_id]
-                            //    << std::endl;
+                    // Compute data.reverse_completion_times.
+                    // pos_old == solution.jobs.size() - 1, size == 1 => p = 0
+                    // pos_old == solution.jobs.size() - 2, size == 2 => p = 0
+                    // pos_old == solution.jobs.size() - 2, size == 1 => p = 1
+                    JobId p = data.solution.jobs.size() - pos_old - size;
+                    if (p < 0 || p >= data.reverse_completion_times.size()) {
+                        throw std::logic_error(
+                                FUNC_SIGNATURE + ": wrong 'p'; "
+                                "p: " + std::to_string(p) + "; "
+                                "data.reverse_completion_times.size(): " + std::to_string(data.reverse_completion_times.size()) + "; "
+                                "pos_old: " + std::to_string(pos_old) + "; "
+                                "size: " + std::to_string(size) + ".");
+                    }
+                    for (MachineId machine_id = 0;
+                            machine_id < instance.number_of_machines();
+                            ++machine_id) {
+                        data.reverse_completion_times[p][machine_id] = data.reverse_completion_times_0[p][machine_id];
+                    }
+                    for (JobId pos = p + 1;
+                            pos <= (JobId)data.solution.jobs.size() - size;
+                            ++pos) {
+                        // pos == 1, size == 1 => job_pos = data.solution.jobs.size() - 2
+                        // pos == 2, size == 2 => job_pos = data.solution.jobs.size() - 3
+                        // pos == 2, size == 1 => job_pos = data.solution.jobs.size() - 3
+                        JobId job_pos = data.solution.jobs.size() - pos - size;
+                        if (job_pos < 0 || job_pos >= data.solution.jobs.size()) {
+                            throw std::logic_error(
+                                    FUNC_SIGNATURE + ": wrong 'job_pos'; "
+                                    "job_pos: " + std::to_string(job_pos) + "; "
+                                    "pos: " + std::to_string(pos) + "; "
+                                    "data.solution.jobs.size(): " + std::to_string(data.solution.jobs.size()) +  ".");
                         }
-                    } else {
-                        for (MachineId machine_id = 0;
-                                machine_id < instance.number_of_machines();
-                                ++machine_id) {
-                            data.completion_times_2[machine_id] = data.completion_times[pos_new][machine_id];
-                            //std::cout << "compute c2"
-                            //    << " pos_new " << pos_new
-                            //    << " machine_id " << machine_id
-                            //    << " c2 " << data.completion_times_2[machine_id]
-                            //    << std::endl;
+                        JobId job_id = data.solution.jobs[job_pos];
+                        //std::cout << "compute r"
+                        //    << " p " << p
+                        //    << " pos " << pos
+                        //    << " job_pos " << job_pos
+                        //    << " job_id " << job_id
+                        //    << std::endl;
+                        const Job& job = instance.job(job_id);
+                        Time p0 = job.operations[last_machine_id].alternatives[0].processing_time;
+                        if (last_machine_id > 0) {
+                            data.reverse_completion_times[pos][last_machine_id] = (std::max)(
+                                    data.reverse_completion_times[pos - 1][last_machine_id] + p0,
+                                    data.reverse_completion_times[pos - 1][last_machine_id - 1]);
+                        } else {
+                            data.reverse_completion_times[pos][last_machine_id] = data.reverse_completion_times[pos - 1][last_machine_id] + p0;
+                        }
+                        for (MachineId machine_id = last_machine_id - 1;
+                                machine_id >= 1;
+                                --machine_id) {
+                            Time p = job.operations[machine_id].alternatives[0].processing_time;
+                            data.reverse_completion_times[pos][machine_id] = (std::max)(
+                                    data.reverse_completion_times[pos][machine_id + 1] + p,
+                                    data.reverse_completion_times[pos - 1][machine_id - 1]);
+                        }
+                        if (last_machine_id > 0) {
+                            Time p = job.operations[0].alternatives[0].processing_time;
+                            data.reverse_completion_times[pos][0] = data.reverse_completion_times[pos][1] + p;
                         }
                     }
-                    for (JobId pos_0 = pos_old; pos_0 < pos_old + size; ++pos_0) {
-                        JobId job_id = data.solution.jobs[pos_0];
-                        //std::cout << "compute c2"
-                        //    << " pos_0 " << pos_0
+
+                    // Compute data.completion_times.
+                    for (JobId pos_new = 0;
+                            pos_new <= (JobId)data.solution.jobs.size() - size;
+                            ++pos_new) {
+                        if (pos_new == pos_old)
+                            continue;
+                        if (pos_new < pos_old) {
+                            for (MachineId machine_id = 0;
+                                    machine_id < instance.number_of_machines();
+                                    ++machine_id) {
+                                data.completion_times_2[machine_id] = data.completion_times_0[pos_new][machine_id];
+                                //std::cout << "compute c2"
+                                //    << " pos_new " << pos_new
+                                //    << " machine_id " << machine_id
+                                //    << " c2 " << data.completion_times_2[machine_id]
+                                //    << std::endl;
+                            }
+                        } else {
+                            for (MachineId machine_id = 0;
+                                    machine_id < instance.number_of_machines();
+                                    ++machine_id) {
+                                data.completion_times_2[machine_id] = data.completion_times[pos_new][machine_id];
+                                //std::cout << "compute c2"
+                                //    << " pos_new " << pos_new
+                                //    << " machine_id " << machine_id
+                                //    << " c2 " << data.completion_times_2[machine_id]
+                                //    << std::endl;
+                            }
+                        }
+                        for (JobId pos_0 = pos_old; pos_0 < pos_old + size; ++pos_0) {
+                            JobId job_id = data.solution.jobs[pos_0];
+                            const Job& job = instance.job(job_id);
+                            Time p0 = job.operations[0].alternatives[0].processing_time;
+                            // D2[0] = max(D2[0] + p, D2[1]); D2[1] is still old at this point.
+                            if (last_machine_id > 0) {
+                                data.completion_times_2[0] = (std::max)(
+                                        data.completion_times_2[0] + p0,
+                                        data.completion_times_2[1]);
+                            } else {
+                                data.completion_times_2[0] = data.completion_times_2[0] + p0;
+                            }
+                            for (MachineId machine_id = 1;
+                                    machine_id < instance.number_of_machines() - 1;
+                                    ++machine_id) {
+                                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                                // D2[m] = max(new D2[m-1] + p, old D2[m+1])
+                                data.completion_times_2[machine_id] = (std::max)(
+                                        data.completion_times_2[machine_id - 1] + p,
+                                        data.completion_times_2[machine_id + 1]);
+                            }
+                            if (last_machine_id > 0) {
+                                Time p = job.operations[last_machine_id].alternatives[0].processing_time;
+                                data.completion_times_2[last_machine_id] = data.completion_times_2[last_machine_id - 1] + p;
+                            }
+                        }
+
+                        data.makespans[pos_new] = 0;
+                        if (pos_new > pos_old) {
+                            // pos_new = solution.jobs.size() - 1, size == 1, => p = 0
+                            // pos_new = solution.jobs.size() - 2, size == 2, => p = 0
+                            // pos_new = solution.jobs.size() - 2, size == 1, => p = 1
+                            JobId p = data.solution.jobs.size() - pos_new - size;
+                            for (MachineId machine_id = 0;
+                                    machine_id < instance.number_of_machines();
+                                    ++machine_id) {
+                                data.makespans[pos_new] = std::max(
+                                        data.makespans[pos_new],
+                                        data.completion_times_2[machine_id]
+                                        + data.reverse_completion_times_0[p][machine_id]);
+                                //std::cout << "compute m"
+                                //    << " size " << size
+                                //    << " pos_old " << pos_old
+                                //    << " pos_new " << pos_new
+                                //    << " machine_id " << machine_id
+                                //    << " p " << p
+                                //    << " c " << data.completion_times_2[machine_id]
+                                //    << " r " << data.reverse_completion_times[p][machine_id]
+                                //    << " m " << data.makespans[pos_new]
+                                //    << std::endl;
+                            }
+                        } else {
+                            JobId p = data.solution.jobs.size() - pos_new - size;
+                            for (MachineId machine_id = 0;
+                                    machine_id < instance.number_of_machines();
+                                    ++machine_id) {
+                                data.makespans[pos_new] = std::max(
+                                        data.makespans[pos_new],
+                                        data.completion_times_2[machine_id]
+                                        + data.reverse_completion_times[p][machine_id]);
+                                //std::cout << "size " << size
+                                //    << " pos_old " << pos_old
+                                //    << " pos_new " << pos_new
+                                //    << " machine_id " << machine_id
+                                //    << " p " << p
+                                //    << " c " << data.completion_times_2[machine_id]
+                                //    << " r " << data.reverse_completion_times[p][machine_id]
+                                //    << " m " << data.makespans[pos_new]
+                                //    << std::endl;
+                            }
+                        }
+                    }
+
+                } else if (instance.no_idle()) {
+                    throw std::invalid_argument(
+                            FUNC_SIGNATURE + ": no-idle not supported.");
+
+                } else if (instance.no_wait()) {
+                    throw std::invalid_argument(
+                            FUNC_SIGNATURE + ": no-wait not supported.");
+
+                } else {
+                    // Compute data.completion_times.
+                    for (MachineId machine_id = 0;
+                            machine_id < instance.number_of_machines();
+                            ++machine_id) {
+                        data.completion_times[pos_old][machine_id] = data.completion_times_0[pos_old][machine_id];
+                        //std::cout << "compute c"
+                        //    << " machine_id " << machine_id
+                        //    << " c " << data.completion_times[pos_old][machine_id]
+                        //    << std::endl;
+                    }
+                    for (JobId pos = pos_old + 1;
+                            pos <= (JobId)data.solution.jobs.size() - size;
+                            ++pos) {
+                        JobId job_id = data.solution.jobs[pos - 1 + size];
+                        //std::cout << "compute c"
+                        //    << " pos " << pos
                         //    << " job_id " << job_id
                         //    << std::endl;
                         const Job& job = instance.job(job_id);
                         Time p0 = job.operations[0].alternatives[0].processing_time;
-                        data.completion_times_2[0] = data.completion_times_2[0] + p0;
-                        //std::cout << "compute c2"
-                        //    << " pos_new " << pos_new
+                        data.completion_times[pos][0] = data.completion_times[pos - 1][0] + p0;
+                        //std::cout << "compute c"
                         //    << " machine_id " << 0
                         //    << " p " << p0
-                        //    << " c2 " << data.completion_times_2[0]
+                        //    << " c " << data.completion_times[pos][0]
                         //    << std::endl;
                         for (MachineId machine_id = 1;
                                 machine_id < instance.number_of_machines();
                                 ++machine_id) {
                             Time p = job.operations[machine_id].alternatives[0].processing_time;
-                            if (data.completion_times_2[machine_id] > data.completion_times_2[machine_id - 1]) {
-                                data.completion_times_2[machine_id] = data.completion_times_2[machine_id] + p;
+                            if (data.completion_times[pos - 1][machine_id] > data.completion_times[pos][machine_id - 1]) {
+                                data.completion_times[pos][machine_id] = data.completion_times[pos - 1][machine_id] + p;
                             } else {
-                                data.completion_times_2[machine_id] = data.completion_times_2[machine_id - 1] + p;
+                                data.completion_times[pos][machine_id] = data.completion_times[pos][machine_id - 1] + p;
                             }
-                            //std::cout << "compute c2"
-                            //    << " pos_new " << pos_new
+                            //std::cout << "compute c"
                             //    << " machine_id " << machine_id
                             //    << " p " << p
-                            //    << " c2 " << data.completion_times_2[machine_id]
+                            //    << " c " << data.completion_times[pos][machine_id]
                             //    << std::endl;
                         }
                     }
 
-                    data.makespans[pos_new] = 0;
-                    if (pos_new > pos_old) {
-                        // pos_new = solution.jobs.size() - 1, size == 1, => p = 0
-                        // pos_new = solution.jobs.size() - 2, size == 2, => p = 0
-                        // pos_new = solution.jobs.size() - 2, size == 1, => p = 1
-                        JobId p = data.solution.jobs.size() - pos_new - size;
-                        for (MachineId machine_id = 0;
-                                machine_id < instance.number_of_machines();
-                                ++machine_id) {
-                            data.makespans[pos_new] = std::max(
-                                    data.makespans[pos_new],
-                                    data.completion_times_2[machine_id]
-                                    + data.reverse_completion_times_0[p][machine_id]);
-                            //std::cout << "compute m"
-                            //    << " size " << size
-                            //    << " pos_old " << pos_old
-                            //    << " pos_new " << pos_new
-                            //    << " machine_id " << machine_id
-                            //    << " p " << p
-                            //    << " c " << data.completion_times_2[machine_id]
-                            //    << " r " << data.reverse_completion_times[p][machine_id]
-                            //    << " m " << data.makespans[pos_new]
-                            //    << std::endl;
+                    // Compute data.reverse_completion_times.
+                    // pos_old == solution.jobs.size() - 1, size == 1 => p = 0
+                    // pos_old == solution.jobs.size() - 2, size == 2 => p = 0
+                    // pos_old == solution.jobs.size() - 2, size == 1 => p = 1
+                    JobId p = data.solution.jobs.size() - pos_old - size;
+                    if (p < 0 || p >= data.reverse_completion_times.size()) {
+                        throw std::logic_error(
+                                FUNC_SIGNATURE + ": wrong 'p'; "
+                                "p: " + std::to_string(p) + "; "
+                                "data.reverse_completion_times.size(): " + std::to_string(data.reverse_completion_times.size()) + "; "
+                                "pos_old: " + std::to_string(pos_old) + "; "
+                                "size: " + std::to_string(size) + ".");
+                    }
+                    for (MachineId machine_id = 0;
+                            machine_id < instance.number_of_machines();
+                            ++machine_id) {
+                        data.reverse_completion_times[p][machine_id] = data.reverse_completion_times_0[p][machine_id];
+                    }
+                    for (JobId pos = p + 1;
+                            pos <= (JobId)data.solution.jobs.size() - size;
+                            ++pos) {
+                        // pos == 1, size == 1 => job_pos = data.solution.jobs.size() - 2
+                        // pos == 2, size == 2 => job_pos = data.solution.jobs.size() - 3
+                        // pos == 2, size == 1 => job_pos = data.solution.jobs.size() - 3
+                        JobId job_pos = data.solution.jobs.size() - pos - size;
+                        if (job_pos < 0 || job_pos >= data.solution.jobs.size()) {
+                            throw std::logic_error(
+                                    FUNC_SIGNATURE + ": wrong 'job_pos'; "
+                                    "job_pos: " + std::to_string(job_pos) + "; "
+                                    "pos: " + std::to_string(pos) + "; "
+                                    "data.solution.jobs.size(): " + std::to_string(data.solution.jobs.size()) +  ".");
                         }
-                    } else {
-                        JobId p = data.solution.jobs.size() - pos_new - size;
-                        for (MachineId machine_id = 0;
-                                machine_id < instance.number_of_machines();
-                                ++machine_id) {
-                            data.makespans[pos_new] = std::max(
-                                    data.makespans[pos_new],
-                                    data.completion_times_2[machine_id]
-                                    + data.reverse_completion_times[p][machine_id]);
-                            //std::cout << "size " << size
-                            //    << " pos_old " << pos_old
-                            //    << " pos_new " << pos_new
-                            //    << " machine_id " << machine_id
-                            //    << " p " << p
-                            //    << " c " << data.completion_times_2[machine_id]
-                            //    << " r " << data.reverse_completion_times[p][machine_id]
-                            //    << " m " << data.makespans[pos_new]
+                        JobId job_id = data.solution.jobs[job_pos];
+                        //std::cout << "compute r"
+                        //    << " p " << p
+                        //    << " pos " << pos
+                        //    << " job_pos " << job_pos
+                        //    << " job_id " << job_id
+                        //    << std::endl;
+                        const Job& job = instance.job(job_id);
+                        Time p0 = job.operations[last_machine_id].alternatives[0].processing_time;
+                        data.reverse_completion_times[pos][last_machine_id] = data.reverse_completion_times[pos - 1][last_machine_id] + p0;
+                        for (MachineId machine_id = last_machine_id - 1;
+                                machine_id >= 0;
+                                --machine_id) {
+                            Time p = job.operations[machine_id].alternatives[0].processing_time;
+                            if (data.reverse_completion_times[pos - 1][machine_id] > data.reverse_completion_times[pos][machine_id + 1]) {
+                                data.reverse_completion_times[pos][machine_id] = data.reverse_completion_times[pos - 1][machine_id] + p;
+                            } else {
+                                data.reverse_completion_times[pos][machine_id] = data.reverse_completion_times[pos][machine_id + 1] + p;
+                            }
+                        }
+                    }
+
+                    // Compute data.completion_times.
+                    for (JobId pos_new = 0;
+                            pos_new <= (JobId)data.solution.jobs.size() - size;
+                            ++pos_new) {
+                        if (pos_new == pos_old)
+                            continue;
+                        if (pos_new < pos_old) {
+                            for (MachineId machine_id = 0;
+                                    machine_id < instance.number_of_machines();
+                                    ++machine_id) {
+                                data.completion_times_2[machine_id] = data.completion_times_0[pos_new][machine_id];
+                                //std::cout << "compute c2"
+                                //    << " pos_new " << pos_new
+                                //    << " machine_id " << machine_id
+                                //    << " c2 " << data.completion_times_2[machine_id]
+                                //    << std::endl;
+                            }
+                        } else {
+                            for (MachineId machine_id = 0;
+                                    machine_id < instance.number_of_machines();
+                                    ++machine_id) {
+                                data.completion_times_2[machine_id] = data.completion_times[pos_new][machine_id];
+                                //std::cout << "compute c2"
+                                //    << " pos_new " << pos_new
+                                //    << " machine_id " << machine_id
+                                //    << " c2 " << data.completion_times_2[machine_id]
+                                //    << std::endl;
+                            }
+                        }
+                        for (JobId pos_0 = pos_old; pos_0 < pos_old + size; ++pos_0) {
+                            JobId job_id = data.solution.jobs[pos_0];
+                            //std::cout << "compute c2"
+                            //    << " pos_0 " << pos_0
+                            //    << " job_id " << job_id
                             //    << std::endl;
+                            const Job& job = instance.job(job_id);
+                            Time p0 = job.operations[0].alternatives[0].processing_time;
+                            data.completion_times_2[0] = data.completion_times_2[0] + p0;
+                            //std::cout << "compute c2"
+                            //    << " pos_new " << pos_new
+                            //    << " machine_id " << 0
+                            //    << " p " << p0
+                            //    << " c2 " << data.completion_times_2[0]
+                            //    << std::endl;
+                            for (MachineId machine_id = 1;
+                                    machine_id < instance.number_of_machines();
+                                    ++machine_id) {
+                                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                                if (data.completion_times_2[machine_id] > data.completion_times_2[machine_id - 1]) {
+                                    data.completion_times_2[machine_id] = data.completion_times_2[machine_id] + p;
+                                } else {
+                                    data.completion_times_2[machine_id] = data.completion_times_2[machine_id - 1] + p;
+                                }
+                                //std::cout << "compute c2"
+                                //    << " pos_new " << pos_new
+                                //    << " machine_id " << machine_id
+                                //    << " p " << p
+                                //    << " c2 " << data.completion_times_2[machine_id]
+                                //    << std::endl;
+                            }
+                        }
+
+                        data.makespans[pos_new] = 0;
+                        if (pos_new > pos_old) {
+                            // pos_new = solution.jobs.size() - 1, size == 1, => p = 0
+                            // pos_new = solution.jobs.size() - 2, size == 2, => p = 0
+                            // pos_new = solution.jobs.size() - 2, size == 1, => p = 1
+                            JobId p = data.solution.jobs.size() - pos_new - size;
+                            for (MachineId machine_id = 0;
+                                    machine_id < instance.number_of_machines();
+                                    ++machine_id) {
+                                data.makespans[pos_new] = std::max(
+                                        data.makespans[pos_new],
+                                        data.completion_times_2[machine_id]
+                                        + data.reverse_completion_times_0[p][machine_id]);
+                                //std::cout << "compute m"
+                                //    << " size " << size
+                                //    << " pos_old " << pos_old
+                                //    << " pos_new " << pos_new
+                                //    << " machine_id " << machine_id
+                                //    << " p " << p
+                                //    << " c " << data.completion_times_2[machine_id]
+                                //    << " r " << data.reverse_completion_times[p][machine_id]
+                                //    << " m " << data.makespans[pos_new]
+                                //    << std::endl;
+                            }
+                        } else {
+                            JobId p = data.solution.jobs.size() - pos_new - size;
+                            for (MachineId machine_id = 0;
+                                    machine_id < instance.number_of_machines();
+                                    ++machine_id) {
+                                data.makespans[pos_new] = std::max(
+                                        data.makespans[pos_new],
+                                        data.completion_times_2[machine_id]
+                                        + data.reverse_completion_times[p][machine_id]);
+                                //std::cout << "size " << size
+                                //    << " pos_old " << pos_old
+                                //    << " pos_new " << pos_new
+                                //    << " machine_id " << machine_id
+                                //    << " p " << p
+                                //    << " c " << data.completion_times_2[machine_id]
+                                //    << " r " << data.reverse_completion_times[p][machine_id]
+                                //    << " m " << data.makespans[pos_new]
+                                //    << std::endl;
+                            }
                         }
                     }
                 }
@@ -598,6 +885,183 @@ void local_search(
     }
 }
 
+// Forward declaration — defined later in this file.
+void add_job(
+        const Instance& instance,
+        const LocalSearchParameters& parameters,
+        std::mt19937_64& generator,
+        LocalSearchData& data,
+        JobId job_id);
+
+void generate_initial_solution_greedy(
+        const Instance& instance,
+        const LocalSearchParameters& parameters,
+        std::mt19937_64& generator,
+        const LocalSearchOutput& output,
+        AlgorithmFormatter& algorithm_formatter,
+        LocalSearchData& data)
+{
+    // Clear the solution.
+    data.solution.jobs.clear();
+    std::fill(
+            data.solution.jobs_positions.begin(),
+            data.solution.jobs_positions.end(),
+            -1);
+    for (MachineId machine_id = 0;
+            machine_id < instance.number_of_machines();
+            ++machine_id) {
+        data.completion_times_0[0][machine_id] = 0;
+    }
+    data.solution.makespan = 0;
+
+    // Sort jobs by total processing time (descending).
+    std::vector<JobId> sorted_jobs(instance.number_of_jobs());
+    std::iota(sorted_jobs.begin(), sorted_jobs.end(), 0);
+    std::sort(
+            sorted_jobs.begin(),
+            sorted_jobs.end(),
+            [&instance](JobId job_1_id, JobId job_2_id) -> bool
+            {
+                const Job& job_1 = instance.job(job_1_id);
+                const Job& job_2 = instance.job(job_2_id);
+                return job_1.mean_processing_time > job_2.mean_processing_time;
+            });
+    for (JobId job_id: sorted_jobs) {
+        add_job(instance, parameters, generator, data, job_id);
+        local_search(instance, parameters, generator, output, algorithm_formatter, data);
+    }
+}
+
+void generate_initial_solution(
+        const Instance& instance,
+        const LocalSearchParameters& parameters,
+        std::mt19937_64& generator,
+        LocalSearchData& data)
+{
+    MachineId last_machin_id = instance.number_of_machines() - 1;
+
+    // Clear the solution.
+    data.solution.jobs.clear();
+    std::fill(
+            data.solution.jobs_positions.begin(),
+            data.solution.jobs_positions.end(),
+            -1);
+    for (MachineId machine_id = 0;
+            machine_id < instance.number_of_machines();
+            ++machine_id) {
+        data.completion_times_0[0][machine_id] = 0;
+    }
+    data.solution.makespan = 0;
+
+    // Jobs sorted by non-descending total processing time.
+    std::vector<JobId> remaining_jobs(instance.number_of_jobs());
+    std::iota(remaining_jobs.begin(), remaining_jobs.end(), 0);
+    std::sort(
+            remaining_jobs.begin(),
+            remaining_jobs.end(),
+            [&instance](JobId a, JobId b)
+            {
+                Time ta = 0;
+                Time tb = 0;
+                for (MachineId m = 0; m < instance.number_of_machines(); ++m) {
+                    ta += instance.job(a).operations[m].alternatives[0].processing_time;
+                    tb += instance.job(b).operations[m].alternatives[0].processing_time;
+                }
+                return ta < tb;
+            });
+
+    // Pick a random first job for diversity.
+    std::uniform_int_distribution<JobId> d_first(0, (JobId)remaining_jobs.size() - 1);
+    JobId first_idx = d_first(generator);
+    JobId first_job_id = remaining_jobs[first_idx];
+    remaining_jobs.erase(remaining_jobs.begin() + first_idx);
+    add_job(instance, data, first_job_id, 0);
+
+    // PF construction: append the job minimizing the sum of departure
+    // times across all machines for the last scheduled job (Eq. 4-5).
+    while (!remaining_jobs.empty()) {
+        JobId n = data.solution.jobs.size();
+        JobId best_idx = -1;
+        Time best_t = -1;
+
+        for (JobId idx = 0; idx < (JobId)remaining_jobs.size(); ++idx) {
+            const Job& job = instance.job(remaining_jobs[idx]);
+
+            for (MachineId machine_id = 0;
+                    machine_id < instance.number_of_machines();
+                    ++machine_id) {
+                data.completion_times_2[machine_id] = data.completion_times_0[n][machine_id];
+            }
+
+            if (instance.blocking()) {
+                Time p0 = job.operations[0].alternatives[0].processing_time;
+                if (last_machin_id > 0) {
+                    data.completion_times_2[0] = (std::max)(
+                            data.completion_times_2[0] + p0,
+                            data.completion_times_2[1]);
+                } else {
+                    data.completion_times_2[0] += p0;
+                }
+                for (MachineId machine_id = 1;
+                        machine_id < instance.number_of_machines() - 1;
+                        ++machine_id) {
+                    Time p = job.operations[machine_id].alternatives[0].processing_time;
+                    data.completion_times_2[machine_id] = (std::max)(
+                            data.completion_times_2[machine_id - 1] + p,
+                            data.completion_times_2[machine_id + 1]);
+                }
+                if (last_machin_id > 0) {
+                    Time p = job.operations[last_machin_id].alternatives[0].processing_time;
+                    data.completion_times_2[last_machin_id] =
+                            data.completion_times_2[last_machin_id - 1] + p;
+                }
+            } else {
+                Time p0 = job.operations[0].alternatives[0].processing_time;
+                data.completion_times_2[0] += p0;
+                for (MachineId machine_id = 1;
+                        machine_id < instance.number_of_machines();
+                        ++machine_id) {
+                    Time p = job.operations[machine_id].alternatives[0].processing_time;
+                    data.completion_times_2[machine_id] = (std::max)(
+                            data.completion_times_2[machine_id],
+                            data.completion_times_2[machine_id - 1]) + p;
+                }
+            }
+
+            Time t = 0;
+            for (MachineId machine_id = 0;
+                    machine_id < instance.number_of_machines();
+                    ++machine_id) {
+                t += data.completion_times_2[machine_id]
+                        - job.operations[machine_id].alternatives[0].processing_time;
+            }
+
+            if (best_idx == -1 || t < best_t) {
+                best_idx = idx;
+                best_t = t;
+            }
+        }
+
+        JobId job_id = remaining_jobs[best_idx];
+        remaining_jobs.erase(remaining_jobs.begin() + best_idx);
+        add_job(instance, data, job_id, (JobId)data.solution.jobs.size());
+    }
+
+    // Remove the last a = 4 jobs.
+    static const JobId a = 4;
+    std::vector<JobId> removed_jobs;
+    for (JobId i = 0; i < a && !data.solution.jobs.empty(); ++i) {
+        JobId pos = (JobId)data.solution.jobs.size() - 1;
+        removed_jobs.push_back(data.solution.jobs[pos]);
+        remove_job(instance, data, pos);
+    }
+
+    // Reinsert in random order, each at the position minimizing makespan.
+    std::shuffle(removed_jobs.begin(), removed_jobs.end(), generator);
+    for (JobId job_id: removed_jobs)
+        add_job(instance, parameters, generator, data, job_id);
+}
+
 void add_job(
         const Instance& instance,
         const LocalSearchParameters& parameters,
@@ -621,16 +1085,41 @@ void add_job(
             data.completion_times_2[machine_id] = data.completion_times_0[pos][machine_id];
         }
 
-        Time p0 = job.operations[0].alternatives[0].processing_time;
-        data.completion_times_2[0] = data.completion_times_2[0] + p0;
-        for (MachineId machine_id = 1;
-                machine_id < instance.number_of_machines();
-                ++machine_id) {
-            Time p = job.operations[machine_id].alternatives[0].processing_time;
-            if (data.completion_times_2[machine_id] > data.completion_times_2[machine_id - 1]) {
-                data.completion_times_2[machine_id] = data.completion_times_2[machine_id] + p;
+        if (instance.blocking()) {
+            MachineId last_machine_id = instance.number_of_machines() - 1;
+            Time p0 = job.operations[0].alternatives[0].processing_time;
+            if (last_machine_id > 0) {
+                data.completion_times_2[0] = (std::max)(
+                        data.completion_times_2[0] + p0,
+                        data.completion_times_2[1]);
             } else {
-                data.completion_times_2[machine_id] = data.completion_times_2[machine_id - 1] + p;
+                data.completion_times_2[0] += p0;
+            }
+            for (MachineId machine_id = 1;
+                    machine_id < instance.number_of_machines() - 1;
+                    ++machine_id) {
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                data.completion_times_2[machine_id] = (std::max)(
+                        data.completion_times_2[machine_id - 1] + p,
+                        data.completion_times_2[machine_id + 1]);
+            }
+            if (last_machine_id > 0) {
+                Time p = job.operations[last_machine_id].alternatives[0].processing_time;
+                data.completion_times_2[last_machine_id] =
+                        data.completion_times_2[last_machine_id - 1] + p;
+            }
+        } else {
+            Time p0 = job.operations[0].alternatives[0].processing_time;
+            data.completion_times_2[0] = data.completion_times_2[0] + p0;
+            for (MachineId machine_id = 1;
+                    machine_id < instance.number_of_machines();
+                    ++machine_id) {
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                if (data.completion_times_2[machine_id] > data.completion_times_2[machine_id - 1]) {
+                    data.completion_times_2[machine_id] = data.completion_times_2[machine_id] + p;
+                } else {
+                    data.completion_times_2[machine_id] = data.completion_times_2[machine_id - 1] + p;
+                }
             }
         }
 
@@ -643,7 +1132,7 @@ void add_job(
                 ++machine_id) {
             makespan = std::max(makespan,
                     data.completion_times_2[machine_id]
-                    + data.reverse_completion_times[p][machine_id]);
+                    + data.reverse_completion_times_0[p][machine_id]);
         }
 
         if (pos_best == -1
@@ -687,16 +1176,41 @@ void add_block(
 
         for (JobId job_id: job_ids) {
             const Job& job = instance.job(job_id);
-            Time p0 = job.operations[0].alternatives[0].processing_time;
-            data.completion_times_2[0] = data.completion_times_2[0] + p0;
-            for (MachineId machine_id = 1;
-                    machine_id < instance.number_of_machines();
-                    ++machine_id) {
-                Time p = job.operations[machine_id].alternatives[0].processing_time;
-                if (data.completion_times_2[machine_id] > data.completion_times_2[machine_id - 1]) {
-                    data.completion_times_2[machine_id] = data.completion_times_2[machine_id] + p;
+            if (instance.blocking()) {
+                MachineId last_machine_id = instance.number_of_machines() - 1;
+                Time p0 = job.operations[0].alternatives[0].processing_time;
+                if (last_machine_id > 0) {
+                    data.completion_times_2[0] = (std::max)(
+                            data.completion_times_2[0] + p0,
+                            data.completion_times_2[1]);
                 } else {
-                    data.completion_times_2[machine_id] = data.completion_times_2[machine_id - 1] + p;
+                    data.completion_times_2[0] += p0;
+                }
+                for (MachineId machine_id = 1;
+                        machine_id < instance.number_of_machines() - 1;
+                        ++machine_id) {
+                    Time p = job.operations[machine_id].alternatives[0].processing_time;
+                    data.completion_times_2[machine_id] = (std::max)(
+                            data.completion_times_2[machine_id - 1] + p,
+                            data.completion_times_2[machine_id + 1]);
+                }
+                if (last_machine_id > 0) {
+                    Time p = job.operations[last_machine_id].alternatives[0].processing_time;
+                    data.completion_times_2[last_machine_id] =
+                            data.completion_times_2[last_machine_id - 1] + p;
+                }
+            } else {
+                Time p0 = job.operations[0].alternatives[0].processing_time;
+                data.completion_times_2[0] = data.completion_times_2[0] + p0;
+                for (MachineId machine_id = 1;
+                        machine_id < instance.number_of_machines();
+                        ++machine_id) {
+                    Time p = job.operations[machine_id].alternatives[0].processing_time;
+                    if (data.completion_times_2[machine_id] > data.completion_times_2[machine_id - 1]) {
+                        data.completion_times_2[machine_id] = data.completion_times_2[machine_id] + p;
+                    } else {
+                        data.completion_times_2[machine_id] = data.completion_times_2[machine_id - 1] + p;
+                    }
                 }
             }
         }
@@ -710,7 +1224,7 @@ void add_block(
                 ++machine_id) {
             makespan = std::max(makespan,
                     data.completion_times_2[machine_id]
-                    + data.reverse_completion_times[p][machine_id]);
+                    + data.reverse_completion_times_0[p][machine_id]);
         }
 
         if (pos_best == -1
@@ -779,9 +1293,10 @@ std::vector<JobId> remove_random_block(
         const LocalSearchOutput& output,
         LocalSearchData& data)
 {
-    std::uniform_int_distribution<JobId> d_size(1, 4);
+    JobId max_size = std::min((JobId)4, (JobId)data.solution.jobs.size());
+    std::uniform_int_distribution<JobId> d_size(1, max_size);
     JobId size = d_size(generator);
-    std::uniform_int_distribution<JobId> d_pos(0, data.solution.jobs.size() - size);
+    std::uniform_int_distribution<JobId> d_pos(0, (JobId)data.solution.jobs.size() - size);
     JobId pos = d_pos(generator);
     std::vector<JobId> removed_jobs_ids(
             data.solution.jobs.begin() + pos,
@@ -947,28 +1462,15 @@ const LocalSearchOutput shopschedulingsolver::local_search_pfss_makespan(
         load_solution(data, *initial_solution);
         local_search(instance, parameters, generator, output, algorithm_formatter, data);
     } else {
-        // Sort jobs by total processing time.
-        std::vector<JobId> sorted_jobs(instance.number_of_jobs());
-        std::iota(sorted_jobs.begin(), sorted_jobs.end(), 0);
-        //std::shuffle(sorted_jobs.begin(), sorted_jobs.end(), generator);
-        std::sort(
-                sorted_jobs.begin(),
-                sorted_jobs.end(),
-                [&instance](JobId job_1_id, JobId job_2_id) -> bool
-                {
-                    const Job& job_1 = instance.job(job_1_id);
-                    const Job& job_2 = instance.job(job_2_id);
-                    return job_1.mean_processing_time > job_2.mean_processing_time;
-                });
-        for (JobId job_id: sorted_jobs) {
-            //std::cout << "add job " << job_id
-            //    << " size " << data.solution.jobs.size()
-            //    << " makespan " << data.solution.makespan
-            //    << std::endl;
-            add_job(instance, parameters, generator, data, job_id);
+        // Seed the population with PF-NEH(v=1) solutions (Section 4.1).
+        for (JobId i = 0;
+                i < population_parameters.maximum_size
+                        && !parameters.timer.needs_to_end();
+                ++i) {
+            generate_initial_solution(instance, parameters, generator, data);
             local_search(instance, parameters, generator, output, algorithm_formatter, data);
+            population.add(data.solution, generator);
         }
-        population.add(data.solution, generator);
     }
 
     for (output.number_of_iterations = 0;
