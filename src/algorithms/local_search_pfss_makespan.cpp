@@ -886,183 +886,7 @@ void local_search(
 }
 
 // Forward declaration — defined later in this file.
-void add_job(
-        const Instance& instance,
-        const LocalSearchParameters& parameters,
-        std::mt19937_64& generator,
-        LocalSearchData& data,
-        JobId job_id);
-
-void generate_initial_solution_greedy(
-        const Instance& instance,
-        const LocalSearchParameters& parameters,
-        std::mt19937_64& generator,
-        const LocalSearchOutput& output,
-        AlgorithmFormatter& algorithm_formatter,
-        LocalSearchData& data)
-{
-    // Clear the solution.
-    data.solution.jobs.clear();
-    std::fill(
-            data.solution.jobs_positions.begin(),
-            data.solution.jobs_positions.end(),
-            -1);
-    for (MachineId machine_id = 0;
-            machine_id < instance.number_of_machines();
-            ++machine_id) {
-        data.completion_times_0[0][machine_id] = 0;
-    }
-    data.solution.makespan = 0;
-
-    // Sort jobs by total processing time (descending).
-    std::vector<JobId> sorted_jobs(instance.number_of_jobs());
-    std::iota(sorted_jobs.begin(), sorted_jobs.end(), 0);
-    std::sort(
-            sorted_jobs.begin(),
-            sorted_jobs.end(),
-            [&instance](JobId job_1_id, JobId job_2_id) -> bool
-            {
-                const Job& job_1 = instance.job(job_1_id);
-                const Job& job_2 = instance.job(job_2_id);
-                return job_1.mean_processing_time > job_2.mean_processing_time;
-            });
-    for (JobId job_id: sorted_jobs) {
-        add_job(instance, parameters, generator, data, job_id);
-        local_search(instance, parameters, generator, output, algorithm_formatter, data);
-    }
-}
-
-void generate_initial_solution(
-        const Instance& instance,
-        const LocalSearchParameters& parameters,
-        std::mt19937_64& generator,
-        LocalSearchData& data)
-{
-    MachineId last_machin_id = instance.number_of_machines() - 1;
-
-    // Clear the solution.
-    data.solution.jobs.clear();
-    std::fill(
-            data.solution.jobs_positions.begin(),
-            data.solution.jobs_positions.end(),
-            -1);
-    for (MachineId machine_id = 0;
-            machine_id < instance.number_of_machines();
-            ++machine_id) {
-        data.completion_times_0[0][machine_id] = 0;
-    }
-    data.solution.makespan = 0;
-
-    // Jobs sorted by non-descending total processing time.
-    std::vector<JobId> remaining_jobs(instance.number_of_jobs());
-    std::iota(remaining_jobs.begin(), remaining_jobs.end(), 0);
-    std::sort(
-            remaining_jobs.begin(),
-            remaining_jobs.end(),
-            [&instance](JobId a, JobId b)
-            {
-                Time ta = 0;
-                Time tb = 0;
-                for (MachineId m = 0; m < instance.number_of_machines(); ++m) {
-                    ta += instance.job(a).operations[m].alternatives[0].processing_time;
-                    tb += instance.job(b).operations[m].alternatives[0].processing_time;
-                }
-                return ta < tb;
-            });
-
-    // Pick a random first job for diversity.
-    std::uniform_int_distribution<JobId> d_first(0, (JobId)remaining_jobs.size() - 1);
-    JobId first_idx = d_first(generator);
-    JobId first_job_id = remaining_jobs[first_idx];
-    remaining_jobs.erase(remaining_jobs.begin() + first_idx);
-    add_job(instance, data, first_job_id, 0);
-
-    // PF construction: append the job minimizing the sum of departure
-    // times across all machines for the last scheduled job (Eq. 4-5).
-    while (!remaining_jobs.empty()) {
-        JobId n = data.solution.jobs.size();
-        JobId best_idx = -1;
-        Time best_t = -1;
-
-        for (JobId idx = 0; idx < (JobId)remaining_jobs.size(); ++idx) {
-            const Job& job = instance.job(remaining_jobs[idx]);
-
-            for (MachineId machine_id = 0;
-                    machine_id < instance.number_of_machines();
-                    ++machine_id) {
-                data.completion_times_2[machine_id] = data.completion_times_0[n][machine_id];
-            }
-
-            if (instance.blocking()) {
-                Time p0 = job.operations[0].alternatives[0].processing_time;
-                if (last_machin_id > 0) {
-                    data.completion_times_2[0] = (std::max)(
-                            data.completion_times_2[0] + p0,
-                            data.completion_times_2[1]);
-                } else {
-                    data.completion_times_2[0] += p0;
-                }
-                for (MachineId machine_id = 1;
-                        machine_id < instance.number_of_machines() - 1;
-                        ++machine_id) {
-                    Time p = job.operations[machine_id].alternatives[0].processing_time;
-                    data.completion_times_2[machine_id] = (std::max)(
-                            data.completion_times_2[machine_id - 1] + p,
-                            data.completion_times_2[machine_id + 1]);
-                }
-                if (last_machin_id > 0) {
-                    Time p = job.operations[last_machin_id].alternatives[0].processing_time;
-                    data.completion_times_2[last_machin_id] =
-                            data.completion_times_2[last_machin_id - 1] + p;
-                }
-            } else {
-                Time p0 = job.operations[0].alternatives[0].processing_time;
-                data.completion_times_2[0] += p0;
-                for (MachineId machine_id = 1;
-                        machine_id < instance.number_of_machines();
-                        ++machine_id) {
-                    Time p = job.operations[machine_id].alternatives[0].processing_time;
-                    data.completion_times_2[machine_id] = (std::max)(
-                            data.completion_times_2[machine_id],
-                            data.completion_times_2[machine_id - 1]) + p;
-                }
-            }
-
-            Time t = 0;
-            for (MachineId machine_id = 0;
-                    machine_id < instance.number_of_machines();
-                    ++machine_id) {
-                t += data.completion_times_2[machine_id]
-                        - job.operations[machine_id].alternatives[0].processing_time;
-            }
-
-            if (best_idx == -1 || t < best_t) {
-                best_idx = idx;
-                best_t = t;
-            }
-        }
-
-        JobId job_id = remaining_jobs[best_idx];
-        remaining_jobs.erase(remaining_jobs.begin() + best_idx);
-        add_job(instance, data, job_id, (JobId)data.solution.jobs.size());
-    }
-
-    // Remove the last a = 4 jobs.
-    static const JobId a = 4;
-    std::vector<JobId> removed_jobs;
-    for (JobId i = 0; i < a && !data.solution.jobs.empty(); ++i) {
-        JobId pos = (JobId)data.solution.jobs.size() - 1;
-        removed_jobs.push_back(data.solution.jobs[pos]);
-        remove_job(instance, data, pos);
-    }
-
-    // Reinsert in random order, each at the position minimizing makespan.
-    std::shuffle(removed_jobs.begin(), removed_jobs.end(), generator);
-    for (JobId job_id: removed_jobs)
-        add_job(instance, parameters, generator, data, job_id);
-}
-
-void add_job(
+void add_job_at_best_position(
         const Instance& instance,
         const LocalSearchParameters& parameters,
         std::mt19937_64& generator,
@@ -1152,7 +976,7 @@ void add_job(
     //Solution solution = build_solution(instance, data.solution);
 }
 
-void add_block(
+void add_block_at_best_position(
         const Instance& instance,
         const LocalSearchParameters& parameters,
         std::mt19937_64& generator,
@@ -1244,6 +1068,69 @@ void add_block(
     //Solution solution = build_solution(instance, data.solution);
 }
 
+// Among unscheduled jobs (jobs_positions == -1), append the one minimizing
+// the sum of departure times across all machines (PF construction, Eq. 4-5).
+void append_best_job(
+        const Instance& instance,
+        LocalSearchData& data)
+{
+    MachineId last_machine_id = instance.number_of_machines() - 1;
+    JobId n = data.solution.jobs.size();
+    JobId best_job_id = -1;
+    Time best_t = -1;
+
+    for (JobId job_id = 0; job_id < instance.number_of_jobs(); ++job_id) {
+        if (data.solution.jobs_positions[job_id] != -1)
+            continue;
+
+        const Job& job = instance.job(job_id);
+
+        for (MachineId machine_id = 0; machine_id < instance.number_of_machines(); ++machine_id)
+            data.completion_times_2[machine_id] = data.completion_times_0[n][machine_id];
+
+        if (instance.blocking()) {
+            Time p0 = job.operations[0].alternatives[0].processing_time;
+            if (last_machine_id > 0) {
+                data.completion_times_2[0] = (std::max)(
+                        data.completion_times_2[0] + p0,
+                        data.completion_times_2[1]);
+            } else {
+                data.completion_times_2[0] += p0;
+            }
+            for (MachineId machine_id = 1; machine_id < instance.number_of_machines() - 1; ++machine_id) {
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                data.completion_times_2[machine_id] = (std::max)(
+                        data.completion_times_2[machine_id - 1] + p,
+                        data.completion_times_2[machine_id + 1]);
+            }
+            if (last_machine_id > 0) {
+                Time p = job.operations[last_machine_id].alternatives[0].processing_time;
+                data.completion_times_2[last_machine_id] = data.completion_times_2[last_machine_id - 1] + p;
+            }
+        } else {
+            Time p0 = job.operations[0].alternatives[0].processing_time;
+            data.completion_times_2[0] += p0;
+            for (MachineId machine_id = 1; machine_id < instance.number_of_machines(); ++machine_id) {
+                Time p = job.operations[machine_id].alternatives[0].processing_time;
+                data.completion_times_2[machine_id] = (std::max)(
+                        data.completion_times_2[machine_id],
+                        data.completion_times_2[machine_id - 1]) + p;
+            }
+        }
+
+        Time t = 0;
+        for (MachineId machine_id = 0; machine_id < instance.number_of_machines(); ++machine_id)
+            t += data.completion_times_2[machine_id] - job.operations[machine_id].alternatives[0].processing_time;
+
+        if (best_job_id == -1 || t < best_t) {
+            best_job_id = job_id;
+            best_t = t;
+        }
+    }
+
+    add_job(instance, data, best_job_id, n);
+}
+
 JobId remove_random_job(
         const Instance& instance,
         const LocalSearchParameters& parameters,
@@ -1306,7 +1193,7 @@ std::vector<JobId> remove_random_block(
     return removed_jobs_ids;
 }
 
-JobId remove_job(
+JobId remove_worst_job(
         const Instance& instance,
         const LocalSearchParameters& parameters,
         std::mt19937_64& generator,
@@ -1363,6 +1250,85 @@ JobId remove_job(
     remove_jobs(instance, data, positions);
     //Solution solution = build_solution(instance, data.solution);
     return job_id;
+}
+
+void generate_initial_solution_neh(
+        const Instance& instance,
+        const LocalSearchParameters& parameters,
+        std::mt19937_64& generator,
+        const LocalSearchOutput& output,
+        AlgorithmFormatter& algorithm_formatter,
+        LocalSearchData& data)
+{
+    // Clear the solution.
+    data.solution.jobs.clear();
+    std::fill(
+            data.solution.jobs_positions.begin(),
+            data.solution.jobs_positions.end(),
+            -1);
+    for (MachineId machine_id = 0;
+            machine_id < instance.number_of_machines();
+            ++machine_id) {
+        data.completion_times_0[0][machine_id] = 0;
+    }
+    data.solution.makespan = 0;
+
+    // Sort jobs by total processing time (descending).
+    std::vector<JobId> sorted_jobs(instance.number_of_jobs());
+    std::iota(sorted_jobs.begin(), sorted_jobs.end(), 0);
+    std::sort(
+            sorted_jobs.begin(),
+            sorted_jobs.end(),
+            [&instance](JobId job_1_id, JobId job_2_id) -> bool
+            {
+                const Job& job_1 = instance.job(job_1_id);
+                const Job& job_2 = instance.job(job_2_id);
+                return job_1.mean_processing_time > job_2.mean_processing_time;
+            });
+    for (JobId job_id: sorted_jobs) {
+        add_job_at_best_position(instance, parameters, generator, data, job_id);
+        local_search(instance, parameters, generator, output, algorithm_formatter, data);
+    }
+}
+
+void generate_initial_solution_pf_neh(
+        const Instance& instance,
+        const LocalSearchParameters& parameters,
+        std::mt19937_64& generator,
+        LocalSearchData& data)
+{
+    // Clear the solution.
+    data.solution.jobs.clear();
+    std::fill(
+            data.solution.jobs_positions.begin(),
+            data.solution.jobs_positions.end(),
+            -1);
+    for (MachineId machine_id = 0; machine_id < instance.number_of_machines(); ++machine_id)
+        data.completion_times_0[0][machine_id] = 0;
+    data.solution.makespan = 0;
+
+    // Pick a random first job for diversity.
+    std::uniform_int_distribution<JobId> d_first(0, instance.number_of_jobs() - 1);
+    add_job(instance, data, d_first(generator), 0);
+
+    // PF construction: repeatedly append the job minimizing the sum of
+    // departure times across all machines (Eq. 4-5).
+    while ((JobId)data.solution.jobs.size() < instance.number_of_jobs())
+        append_best_job(instance, data);
+
+    // Remove the last a = 4 jobs.
+    static const JobId a = 4;
+    std::vector<JobId> removed_jobs;
+    for (JobId i = 0; i < a && !data.solution.jobs.empty(); ++i) {
+        JobId pos = (JobId)data.solution.jobs.size() - 1;
+        removed_jobs.push_back(data.solution.jobs[pos]);
+        remove_job(instance, data, pos);
+    }
+
+    // Reinsert in random order, each at the position minimizing makespan.
+    std::shuffle(removed_jobs.begin(), removed_jobs.end(), generator);
+    for (JobId job_id: removed_jobs)
+        add_job_at_best_position(instance, parameters, generator, data, job_id);
 }
 
 }
@@ -1467,7 +1433,7 @@ const LocalSearchOutput shopschedulingsolver::local_search_pfss_makespan(
                 i < population_parameters.maximum_size
                         && !parameters.timer.needs_to_end();
                 ++i) {
-            generate_initial_solution(instance, parameters, generator, data);
+            generate_initial_solution_pf_neh(instance, parameters, generator, data);
             local_search(instance, parameters, generator, output, algorithm_formatter, data);
             population.add(data.solution, generator);
         }
@@ -1495,7 +1461,7 @@ const LocalSearchOutput shopschedulingsolver::local_search_pfss_makespan(
 
         std::vector<JobId> removed_jobs_ids = remove_random_block(instance, parameters, generator, output, data);
         local_search(instance, parameters, generator, output, algorithm_formatter, data);
-        add_block(instance, parameters, generator, data, removed_jobs_ids);
+        add_block_at_best_position(instance, parameters, generator, data, removed_jobs_ids);
         local_search(instance, parameters, generator, output, algorithm_formatter, data);
 
         //JobId removed_job_id = remove_random_job(instance, parameters, generator, output, data);
