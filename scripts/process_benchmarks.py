@@ -40,6 +40,157 @@ output_directories.sort()
 bksv_field = "Best known solution value"
 
 
+if benchmark == "pfss_blocking_makespan":
+
+    datacsv_path = os.path.join("data", "data_pfss_blocking_makespan.csv")
+    data_dir = os.path.dirname(os.path.realpath(datacsv_path))
+
+    with open(datacsv_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+
+        # Columns from the CSV that hold reference algorithm solution values.
+        ref_value_columns = [
+            f for f in reader.fieldnames
+            if " / Best" in f or " / Avg" in f]
+
+        # Build output fieldnames: keep all CSV columns, add RPD for each
+        # result column (reference + new runs), then append new run columns.
+        out_fieldnames = list(reader.fieldnames)
+        for col in ref_value_columns:
+            out_fieldnames.append(col.replace(" / ", " / RPD "))
+        for output_directory_run in output_directories:
+            out_fieldnames.append(output_directory_run + " / Solution value")
+            out_fieldnames.append(output_directory_run + " / RPD")
+
+        # All columns that hold a solution value (for highlighting).
+        solution_value_columns = (
+            ref_value_columns
+            + [od + " / Solution value" for od in output_directories])
+
+        # Group-level summary rows: one per (n × m) group, plus Total.
+        group_keys = [
+            (20, 5), (20, 10), (20, 20),
+            (50, 5), (50, 10), (50, 20),
+            (100, 5), (100, 10), (100, 20),
+            (200, 10), (200, 20),
+            (500, 20),
+        ]
+        def make_extra_row(label):
+            r = {f: "" for f in out_fieldnames}
+            r["Path"] = label
+            r[bksv_field] = 0
+            for c in solution_value_columns:
+                r[c] = 0
+                rpd_col = c.replace(" / Best", " / RPD Best").replace(
+                    " / Avg", " / RPD Avg").replace(
+                    " / Solution value", " / RPD")
+                if rpd_col in out_fieldnames:
+                    r[rpd_col] = 0.0
+            return r
+        group_rows = {gk: make_extra_row(f"{gk[0]}×{gk[1]}") for gk in group_keys}
+        total_row = make_extra_row("Total")
+
+        out_rows = []
+
+        for row in reader:
+            bks = int(row[bksv_field])
+            row[bksv_field] = bks
+
+            # Parse n and m from path: taillard1993/tai{n}_{m}_{idx}.txt
+            import re as _re
+            m_path = _re.search(r'tai(\d+)_(\d+)_', row["Path"])
+            n_jobs = int(m_path.group(1)) if m_path else 0
+            n_mach = int(m_path.group(2)) if m_path else 0
+            group_key = (n_jobs, n_mach)
+
+            # Reference algorithm columns: convert to int, compute RPD.
+            for col in ref_value_columns:
+                try:
+                    val = int(float(row[col]))
+                except:
+                    val = None
+                row[col] = val if val is not None else ""
+                rpd_col = col.replace(" / ", " / RPD ")
+                if val is not None and bks > 0:
+                    rpd = (val - bks) / bks * 100
+                    row[rpd_col] = round(rpd, 3)
+                    if group_key in group_rows:
+                        group_rows[group_key][col] = (
+                            group_rows[group_key].get(col) or 0) + val
+                        group_rows[group_key][rpd_col] = round(
+                            (group_rows[group_key].get(rpd_col) or 0.0) + rpd, 3)
+                    total_row[col] = (total_row.get(col) or 0) + val
+                    total_row[rpd_col] = round(
+                        (total_row.get(rpd_col) or 0.0) + rpd, 3)
+                else:
+                    row[rpd_col] = ""
+
+            # Update group and total BKS sums.
+            if group_key in group_rows:
+                group_rows[group_key][bksv_field] += bks
+            total_row[bksv_field] += bks
+
+            # New run output directories.
+            for output_directory_run in output_directories:
+                val_col = output_directory_run + " / Solution value"
+                rpd_col = output_directory_run + " / RPD"
+                json_path = os.path.join(
+                    benchmark_directory,
+                    output_directory_run,
+                    row["Path"] + "_output.json")
+                try:
+                    with open(json_path) as jf:
+                        jd = json.load(jf)
+                    val = jd["Output"]["Solution"]["Makespan"]
+                except:
+                    val = None
+                row[val_col] = val if val is not None else ""
+                if val is not None and bks > 0:
+                    rpd = (val - bks) / bks * 100
+                    row[rpd_col] = round(rpd, 3)
+                    if group_key in group_rows:
+                        group_rows[group_key][val_col] = (
+                            group_rows[group_key].get(val_col) or 0) + val
+                        group_rows[group_key][rpd_col] = round(
+                            (group_rows[group_key].get(rpd_col) or 0.0) + rpd, 3)
+                    total_row[val_col] = (total_row.get(val_col) or 0) + val
+                    total_row[rpd_col] = round(
+                        (total_row.get(rpd_col) or 0.0) + rpd, 3)
+                else:
+                    row[rpd_col] = ""
+
+            out_rows.append(row)
+
+        # Append group and total summary rows.
+        for gk in group_keys:
+            out_rows.append(group_rows[gk])
+        out_rows.append(total_row)
+
+        df = pd.DataFrame.from_records(out_rows, columns=out_fieldnames)
+
+        def highlight(s):
+            styles = []
+            for col in out_fieldnames:
+                if col in solution_value_columns:
+                    try:
+                        val = int(s[col])
+                        bks_val = int(s[bksv_field])
+                        if val == bks_val:
+                            styles.append('background-color: lightgreen')
+                        elif val > bks_val:
+                            styles.append('background-color: pink')
+                        else:
+                            styles.append('background-color: yellow')
+                    except:
+                        styles.append('')
+                else:
+                    styles.append('')
+            return styles
+
+        df = df.style.apply(highlight, axis=1)
+        show_datafram(df)
+
+
 if benchmark in ["pfss_makespan_vallada2015_small",
                  "pfss_makespan_vallada2015_large"]:
 
