@@ -26,7 +26,7 @@ python scripts/download_data.py
 
 Run:
 ```
-./install/bin/shopschedulingsolver  --verbosity-level 1  --input ./data/vallada2015/Small/VFR10_10_1_Gap.txt --format flow-shop --objective makespan  --algorithm tree-search  --certificate certificate.json
+./install/bin/shopschedulingsolver  --verbosity-level 1  --input ./data/vallada2015/Small/VFR10_10_1_Gap.txt --format flow-shop --objective makespan  --algorithm tree-search-pfss-makespan  --certificate certificate.json
 ```
 
 Visualize solution:
@@ -43,7 +43,8 @@ python scripts/visualize.py certificate.json
 $F_m \mid \text{prmu} \mid C_{\max}$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* Tree search `--algorithm tree-search`
+* Tree search `--algorithm tree-search-pfss-makespan`
+* Local search `--algorithm local-search-pfss-makespan`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid C_{\max}$
 * Positional MILP `--algorithm milp-positional`
@@ -52,13 +53,14 @@ $F_m \mid \text{prmu}, \text{mixed no-idle} \mid C_{\max}$
 $F_m \mid \text{prmu}, \text{blocking} \mid C_{\max}$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* Local search `--algorithm local-search-pfss-makespan`
 
 #### Objective total flow time
 
 $F_m \mid \text{prmu} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* Tree search `--algorithm tree-search`
+* Tree search `--algorithm tree-search-pfss-tft`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
