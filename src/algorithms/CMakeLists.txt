@@ -75,3 +75,14 @@ target_link_libraries(ShopSchedulingSolver_local_search_pfss_makespan PUBLIC
     ShopSchedulingSolver_shopschedulingsolver
     LocalSearchSolver_localsearchsolver)
 add_library(ShopSchedulingSolver::local_search_pfss_makespan ALIAS ShopSchedulingSolver_local_search_pfss_makespan)
+
+add_library(ShopSchedulingSolver_local_search_pfss)
+target_sources(ShopSchedulingSolver_local_search_pfss PRIVATE
+    local_search_pfss.cpp)
+target_include_directories(ShopSchedulingSolver_local_search_pfss PUBLIC
+    ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(ShopSchedulingSolver_local_search_pfss PUBLIC
+    ShopSchedulingSolver_shopschedulingsolver
+    ShopSchedulingSolver_tree_search_pfss
+    LocalSearchSolver_localsearchsolver)
+add_library(ShopSchedulingSolver::local_search_pfss ALIAS ShopSchedulingSolver_local_search_pfss)

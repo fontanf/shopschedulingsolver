@@ -8,6 +8,7 @@
 #include "shopschedulingsolver/algorithms/constraint_programming_optalcp.hpp"
 #endif
 #include "shopschedulingsolver/algorithms/local_search_pfss_makespan.hpp"
+#include "shopschedulingsolver/algorithms/local_search_pfss.hpp"
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
@@ -110,6 +111,14 @@ Output run(
             LocalSearchParameters parameters;
             read_args(parameters, vm);
             return local_search_pfss_makespan(instance, generator, nullptr, parameters);
+        }
+
+    } else if (algorithm == "local-search-pfss") {
+        if (instance.objective() == Objective::TotalFlowTime
+                || instance.objective() == Objective::TotalTardiness) {
+            LocalSearchPfssParameters parameters;
+            read_args(parameters, vm);
+            return local_search_pfss(instance, generator, nullptr, parameters);
         }
 
     } else {

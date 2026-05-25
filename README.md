@@ -62,6 +62,7 @@ $F_m \mid \text{prmu} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 * Tree search `--algorithm tree-search-pfss`
+* Local search `--algorithm local-search-pfss`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
@@ -71,6 +72,7 @@ $F_m \mid \text{prmu}, \text{blocking} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 * Tree search `--algorithm tree-search-pfss`
+* Local search `--algorithm local-search-pfss`
 
 #### Objective total tardiness
 
@@ -78,6 +80,7 @@ $F_m \mid \text{prmu} \mid \sum T_j$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 * Tree search `--algorithm tree-search-pfss`
+* Local search `--algorithm local-search-pfss`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum T_j$
 * Positional MILP `--algorithm milp-positional`
@@ -87,6 +90,7 @@ $F_m \mid \text{prmu}, \text{blocking} \mid \sum T_j$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 * Tree search `--algorithm tree-search-pfss`
+* Local search `--algorithm local-search-pfss`
 
 ### Job shop
 
