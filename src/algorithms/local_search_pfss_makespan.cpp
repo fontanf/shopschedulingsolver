@@ -1227,6 +1227,26 @@ std::vector<JobId> remove_random_block(
     return removed_jobs_ids;
 }
 
+// Perturbation: d random adjacent swaps (IARAS from Fernandez-Viagas et al. 2018).
+void random_adjacent_swaps(
+        const Instance& instance,
+        LocalSearchData& data,
+        std::mt19937_64& generator,
+        JobId d = 4)
+{
+    JobId n = data.solution.jobs.size();
+    std::uniform_int_distribution<JobId> d_pos(0, n - 2);
+    for (JobId i = 0; i < d; ++i) {
+        JobId pos = d_pos(generator);
+        std::swap(data.solution.jobs[pos], data.solution.jobs[pos + 1]);
+        data.solution.jobs_positions[data.solution.jobs[pos]] = pos;
+        data.solution.jobs_positions[data.solution.jobs[pos + 1]] = pos + 1;
+    }
+    update_completion_times(instance, data, 0);
+    update_reverse_completion_times(instance, data, 0);
+    data.solution.makespan = data.completion_times_0[n][instance.number_of_machines() - 1];
+}
+
 JobId remove_worst_job(
         const Instance& instance,
         const LocalSearchParameters& parameters,
