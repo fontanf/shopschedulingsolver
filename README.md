@@ -53,6 +53,7 @@ $F_m \mid \text{prmu}, \text{mixed no-idle} \mid C_{\max}$
 $F_m \mid \text{prmu}, \text{blocking} \mid C_{\max}$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* Tree search `--algorithm tree-search-pfss-makespan`
 * Local search `--algorithm local-search-pfss-makespan`
 
 #### Objective total flow time
@@ -60,7 +61,7 @@ $F_m \mid \text{prmu}, \text{blocking} \mid C_{\max}$
 $F_m \mid \text{prmu} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* Tree search `--algorithm tree-search-pfss-tft`
+* Tree search `--algorithm tree-search-pfss`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
@@ -69,12 +70,14 @@ $F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum C_j$
 $F_m \mid \text{prmu}, \text{blocking} \mid \sum C_j$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* Tree search `--algorithm tree-search-pfss`
 
 #### Objective total tardiness
 
 $F_m \mid \text{prmu} \mid \sum T_j$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* Tree search `--algorithm tree-search-pfss`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum T_j$
 * Positional MILP `--algorithm milp-positional`
@@ -83,6 +86,7 @@ $F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum T_j$
 $F_m \mid \text{prmu}, \text{blocking} \mid \sum T_j$
 * Positional MILP `--algorithm milp-positional`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* Tree search `--algorithm tree-search-pfss`
 
 ### Job shop
 
@@ -454,8 +458,11 @@ python scripts/solve_test_data.py  --algorithm constraint-programming-optalcp  -
         data/test_foss_twt_blocking.txt
 python scripts/solve_test_data.py --algorithm tree-search-pfss-makespan  --output test/algorithms/tree_search_pfss_makespan_test.txt  --instances \
         data/test_pfss_makespan.txt
-python scripts/solve_test_data.py --algorithm tree-search-pfss-tft  --output test/algorithms/tree_search_pfss_tft_test.txt  --instances \
-        data/test_pfss_tft.txt
+python scripts/solve_test_data.py --algorithm tree-search-pfss  --output test/algorithms/tree_search_pfss_test.txt  --instances \
+        data/test_pfss_tft.txt \
+        data/test_pfss_tft_blocking.txt \
+        data/test_pfss_tt.txt \
+        data/test_pfss_tt_blocking.txt
 cmake --build build --config Release --target clean
 cmake --build build --config Release --parallel  &&  cmake --install build --config Release --prefix install
 ctest --parallel --output-on-failure  --test-dir build/test

@@ -1,16 +1,18 @@
 /**
- * Permutation flow shop scheduling problem, total completion time
+ * Permutation flow shop scheduling problem
  *
  * Tree search:
  * - Forward branching
  * - Guide:
- *   - 0: total completion time
- *   - 1: idle time
- *   - 2: total completion time and idle time
- *   - 3: total completion time and weighted idle time
+ *   - 0: total completion time (TFT)
+ *   - 1: idle time (TFT)
+ *   - 2: total completion time and idle time (TFT, default for TotalFlowTime)
+ *   - 3: total completion time and weighted idle time (TFT)
+ *   - 4: total tardiness, total earliness and weighted idle time
+ *        (default for TotalTardiness; Fernandez-Viagas et al., 2018)
  */
 
-#include "shopschedulingsolver/algorithms/tree_search_pfss_tft.hpp"
+#include "shopschedulingsolver/algorithms/tree_search_pfss.hpp"
 
 #include "shopschedulingsolver/solution_builder.hpp"
 
@@ -58,16 +60,29 @@ public:
         /** Total completion time of the partial solution. */
         Time total_completion_time = 0;
 
+        /** Total tardiness of the partial solution. */
+        Time total_tardiness = 0;
+
+        /** Total earliness of the partial solution. */
+        Time total_earliness = 0;
+
         /** Idle time. */
         Time idle_time = 0;
 
         /**
-         * Weighted idle time.
+         * Weighted idle time for TFT guides.
          *
          * Sum over machines of idle_time / time.
          * Computed fresh for each child (not inherited from parent).
          */
         double weighted_idle_time = 0;
+
+        /**
+         * Weighted idle time for TT guide (Fernandez-Viagas et al., 2018).
+         *
+         * Accumulated over all scheduled jobs.
+         */
+        double weighted_idle_time_tt = 0;
 
         /** Bound. */
         Time bound = 0;
@@ -100,10 +115,12 @@ public:
         r->available_jobs.resize(instance_.number_of_jobs(), true);
         r->machines.resize(instance_.number_of_machines());
         r->bound = 0;
-        for (JobId job_id = 0; job_id < instance_.number_of_jobs(); ++job_id) {
-            const Job& job = instance_.job(job_id);
-            MachineId machine_id = instance_.number_of_machines() - 1;
-            r->bound += job.operations[machine_id].alternatives[0].processing_time;
+        if (instance_.objective() == Objective::TotalFlowTime) {
+            for (JobId job_id = 0; job_id < instance_.number_of_jobs(); ++job_id) {
+                const Job& job = instance_.job(job_id);
+                MachineId machine_id = instance_.number_of_machines() - 1;
+                r->bound += job.operations[machine_id].alternatives[0].processing_time;
+            }
         }
         return r;
     }
@@ -190,6 +207,9 @@ public:
         if (parent->machines.empty())
             compute_structures(parent);
 
+        const double n = instance_.number_of_jobs();
+        const double m = instance_.number_of_machines();
+
         std::vector<std::shared_ptr<Node>> result;
         for (JobId job_next_id = 0;
                 job_next_id < instance_.number_of_jobs();
@@ -205,7 +225,10 @@ public:
             child->job_id = job_next_id;
             child->number_of_jobs = parent->number_of_jobs + 1;
             child->idle_time = parent->idle_time;
+
             Time t_prec = 0;
+            double ti_job = 0.0;
+
             if (!instance_.blocking()) {
                 for (MachineId machine_id = 0;
                         machine_id < instance_.number_of_machines();
@@ -217,9 +240,16 @@ public:
                         Time idle_time = start_time - parent->machines[machine_id].time;
                         child->idle_time += idle_time;
                         machine_idle_time += idle_time;
+                        // TI contribution (paper's weighted idle time, machines 1..m-1)
+                        if (machine_id >= 1 && n > 2.0) {
+                            double denom = machine_id
+                                + (double)(child->number_of_jobs - 1)
+                                * (m - machine_id) / (n - 2.0);
+                            ti_job += m * idle_time / denom;
+                        }
                     }
                     t_prec = start_time + p;
-                    child->weighted_idle_time += (t_prec == 0)? 1.0:
+                    child->weighted_idle_time += (t_prec == 0) ? 1.0 :
                         (double)machine_idle_time / t_prec;
                 }
             } else {
@@ -238,7 +268,7 @@ public:
                     child->idle_time += idle_time;
                     t_prec = parent->machines[1].time;
                 }
-                child->weighted_idle_time += (t_prec == 0)? 1.0:
+                child->weighted_idle_time += (t_prec == 0) ? 1.0 :
                     (double)machine_idle_time_0 / t_prec;
                 for (MachineId machine_id = 1;
                         machine_id < last_machine_id;
@@ -256,7 +286,7 @@ public:
                     }
                     machine_idle_time += idle_time;
                     child->idle_time += idle_time;
-                    child->weighted_idle_time += (t_prec == 0)? 1.0:
+                    child->weighted_idle_time += (t_prec == 0) ? 1.0 :
                         (double)machine_idle_time / t_prec;
                 }
                 if (last_machine_id > 0) {
@@ -266,19 +296,47 @@ public:
                     machine_idle_time_last += idle_time;
                     child->idle_time += idle_time;
                     t_prec += pm;
-                    child->weighted_idle_time += (t_prec == 0)? 1.0:
+                    child->weighted_idle_time += (t_prec == 0) ? 1.0 :
                         (double)machine_idle_time_last / t_prec;
                 }
             }
+
             child->total_completion_time = parent->total_completion_time + t_prec;
-            // Compute bound.
-            MachineId machine_id = instance_.number_of_machines() - 1;
-            child->bound = parent->bound
-                + (instance_.number_of_jobs() - parent->number_of_jobs)
-                * (t_prec - parent->machines[machine_id].time)
-                - job_next.operations[machine_id].alternatives[0].processing_time;
-            // Compute guide.
-            double alpha = (double)child->number_of_jobs / instance_.number_of_jobs();
+            child->weighted_idle_time_tt = parent->weighted_idle_time_tt + ti_job;
+
+            // TT / TE
+            Time due_date = job_next.due_date;
+            if (due_date >= 0) {
+                child->total_tardiness = parent->total_tardiness
+                    + std::max((Time)0, t_prec - due_date);
+                child->total_earliness = parent->total_earliness
+                    + std::max((Time)0, due_date - t_prec);
+            } else {
+                child->total_tardiness = parent->total_tardiness;
+                child->total_earliness = parent->total_earliness;
+            }
+
+            // Bound
+            MachineId last_machine_id = instance_.number_of_machines() - 1;
+            switch (instance_.objective()) {
+            case Objective::TotalFlowTime: {
+                child->bound = parent->bound
+                    + (instance_.number_of_jobs() - parent->number_of_jobs)
+                    * (t_prec - parent->machines[last_machine_id].time)
+                    - job_next.operations[last_machine_id].alternatives[0].processing_time;
+                break;
+            }
+            case Objective::TotalTardiness: {
+                child->bound = child->total_tardiness;
+                break;
+            }
+            default:
+                child->bound = 0;
+            }
+
+            // Guide
+            double alpha = (double)child->number_of_jobs / n;
+            double k = child->number_of_jobs;
             switch (parameters_.guide_id) {
             case 0: {
                 child->guide = child->bound;
@@ -288,11 +346,19 @@ public:
                 break;
             } case 2: {
                 child->guide = alpha * child->total_completion_time
-                    + (1.0 - alpha) * child->idle_time * child->number_of_jobs / instance_.number_of_machines();
+                    + (1.0 - alpha) * child->idle_time * child->number_of_jobs / m;
                 break;
             } case 3: {
                 child->guide = alpha * child->total_completion_time
                     + (1.0 - alpha) * child->weighted_idle_time * child->total_completion_time;
+                break;
+            } case 4: {
+                double w_tt = (k + n - 1.0) / (2.0 * n);
+                double w_te = (2.0 * n - k - 1.0) / (2.0 * n);
+                double w_ti = (n > 2.0) ? (n - k - 1.0) / n : 0.0;
+                child->guide = w_ti * child->weighted_idle_time_tt
+                    + w_te * child->total_earliness
+                    + w_tt * child->total_tardiness;
                 break;
             } default: {
             }
@@ -325,9 +391,14 @@ public:
     {
         if (node_2->number_of_jobs != instance_.number_of_jobs())
             return false;
-        if (node_1->bound >= node_2->total_completion_time)
-            return true;
-        return false;
+        switch (instance_.objective()) {
+        case Objective::TotalFlowTime:
+            return node_1->bound >= node_2->total_completion_time;
+        case Objective::TotalTardiness:
+            return node_1->bound >= node_2->total_tardiness;
+        default:
+            return false;
+        }
     }
 
     /*
@@ -342,7 +413,14 @@ public:
             return false;
         if (node_2->number_of_jobs != instance_.number_of_jobs())
             return true;
-        return node_1->total_completion_time < node_2->total_completion_time;
+        switch (instance_.objective()) {
+        case Objective::TotalFlowTime:
+            return node_1->total_completion_time < node_2->total_completion_time;
+        case Objective::TotalTardiness:
+            return node_1->total_tardiness < node_2->total_tardiness;
+        default:
+            return false;
+        }
     }
 
     bool equals(
@@ -398,22 +476,30 @@ public:
             const std::shared_ptr<Node>& node_1,
             const std::shared_ptr<Node>& node_2) const
     {
-        if (node_1->total_completion_time <= node_2->total_completion_time) {
-            bool dominates = true;
-            for (MachineId machine_id = 0;
-                    machine_id < instance_.number_of_machines();
-                    ++machine_id) {
-                if (node_1->machines[machine_id].time
-                        > node_2->machines[machine_id].time) {
-                    dominates = false;
-                    break;
-                }
-            }
-            if (dominates)
-                return true;
+        Time obj_1, obj_2;
+        switch (instance_.objective()) {
+        case Objective::TotalFlowTime:
+            obj_1 = node_1->total_completion_time;
+            obj_2 = node_2->total_completion_time;
+            break;
+        case Objective::TotalTardiness:
+            obj_1 = node_1->total_tardiness;
+            obj_2 = node_2->total_tardiness;
+            break;
+        default:
+            return false;
         }
-
-        return false;
+        if (obj_1 > obj_2)
+            return false;
+        for (MachineId machine_id = 0;
+                machine_id < instance_.number_of_machines();
+                ++machine_id) {
+            if (node_1->machines[machine_id].time
+                    > node_2->machines[machine_id].time) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /*
@@ -425,7 +511,16 @@ public:
         if (node->number_of_jobs != instance_.number_of_jobs())
             return "";
         std::stringstream ss;
-        ss << node->total_completion_time;
+        switch (instance_.objective()) {
+        case Objective::TotalFlowTime:
+            ss << node->total_completion_time;
+            break;
+        case Objective::TotalTardiness:
+            ss << node->total_tardiness;
+            break;
+        default:
+            break;
+        }
         return ss.str();
     }
 
@@ -443,7 +538,7 @@ private:
 
 }
 
-Output shopschedulingsolver::tree_search_pfss_tft(
+Output shopschedulingsolver::tree_search_pfss(
         const Instance& instance,
         const Parameters& parameters)
 {
@@ -452,8 +547,9 @@ Output shopschedulingsolver::tree_search_pfss_tft(
     algorithm_formatter.start("Tree search");
     algorithm_formatter.print_header();
 
-    // Create LocalScheme.
     BranchingScheme::Parameters branching_scheme_parameters;
+    if (instance.objective() == Objective::TotalTardiness)
+        branching_scheme_parameters.guide_id = 4;
     BranchingScheme branching_scheme(instance, branching_scheme_parameters);
 
     treesearchsolver::IterativeBeamSearch2Parameters<BranchingScheme> ibs_parameters;
@@ -489,8 +585,8 @@ Output shopschedulingsolver::tree_search_pfss_tft(
                         Time start = std::max(t_prec, machines_current_departure_times[machine_id]);
                         solution_builder.append_operation(
                                 job_id,
-                                machine_id,  // operation_id
-                                0,  // operation_machine_id
+                                machine_id,
+                                0,
                                 start);
                         t_prec = start + p;
                         next_departure_times[machine_id] = t_prec;
@@ -537,8 +633,18 @@ Output shopschedulingsolver::tree_search_pfss_tft(
     auto ts_output = treesearchsolver::iterative_beam_search_2(branching_scheme, ibs_parameters);
 
     if (ts_output.optimal) {
-        algorithm_formatter.update_total_flow_time_bound(
-                output.solution.total_flow_time(), "tree search completed");
+        switch (instance.objective()) {
+        case Objective::TotalFlowTime:
+            algorithm_formatter.update_total_flow_time_bound(
+                    output.solution.total_flow_time(), "tree search completed");
+            break;
+        case Objective::TotalTardiness:
+            algorithm_formatter.update_total_tardiness_bound(
+                    output.solution.total_tardiness(), "tree search completed");
+            break;
+        default:
+            break;
+        }
     }
 
     algorithm_formatter.end();

@@ -22,7 +22,7 @@ if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
     target_link_libraries(ShopSchedulingSolver_main PUBLIC
         ShopSchedulingSolver_shopschedulingsolver
         ShopSchedulingSolver_tree_search_pfss_makespan
-        ShopSchedulingSolver_tree_search_pfss_tft
+        ShopSchedulingSolver_tree_search_pfss
         ShopSchedulingSolver_milp_positional
         ShopSchedulingSolver_milp_disjunctive
         ShopSchedulingSolver_local_search_pfss_makespan
