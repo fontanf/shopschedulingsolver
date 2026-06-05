@@ -57,14 +57,14 @@ gtest_discover_tests(ShopSchedulingSolver_tree_search_pfss_makespan_test
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     PROPERTIES TIMEOUT 3600)
 
-add_executable(ShopSchedulingSolver_tree_search_pfss_tft_test)
-target_sources(ShopSchedulingSolver_tree_search_pfss_tft_test PRIVATE
-    tree_search_pfss_tft_test.txt
-    tree_search_pfss_tft_test.cpp)
-target_link_libraries(ShopSchedulingSolver_tree_search_pfss_tft_test
+add_executable(ShopSchedulingSolver_tree_search_pfss_test)
+target_sources(ShopSchedulingSolver_tree_search_pfss_test PRIVATE
+    tree_search_pfss_test.txt
+    tree_search_pfss_test.cpp)
+target_link_libraries(ShopSchedulingSolver_tree_search_pfss_test
     ShopSchedulingSolver_tests
-    ShopSchedulingSolver_tree_search_pfss_tft
+    ShopSchedulingSolver_tree_search_pfss
     GTest::gtest_main)
-gtest_discover_tests(ShopSchedulingSolver_tree_search_pfss_tft_test
+gtest_discover_tests(ShopSchedulingSolver_tree_search_pfss_test
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     PROPERTIES TIMEOUT 3600)

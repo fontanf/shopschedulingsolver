@@ -1,5 +1,5 @@
 #include "tests.hpp"
-#include "shopschedulingsolver/algorithms/tree_search_pfss_tft.hpp"
+#include "shopschedulingsolver/algorithms/tree_search_pfss.hpp"
 
 using namespace shopschedulingsolver;
 
@@ -17,15 +17,15 @@ TEST_P(ExactAlgorithmTest, ExactAlgorithm)
 }
 
 INSTANTIATE_TEST_SUITE_P(
-        TreeSearchPfssTft,
+        TreeSearchPfss,
         ExactAlgorithmTest,
         testing::ValuesIn(get_test_params(
                 {
                     [](const Instance& instance)
                     {
-                        return tree_search_pfss_tft(instance);
+                        return tree_search_pfss(instance);
                     },
                 },
                 {
-                    get_test_instance_paths(get_path({"test", "algorithms", "tree_search_pfss_tft_test.txt"})),
+                    get_test_instance_paths(get_path({"test", "algorithms", "tree_search_pfss_test.txt"})),
                 })));

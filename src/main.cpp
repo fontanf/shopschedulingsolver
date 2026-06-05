@@ -1,7 +1,7 @@
 #include "shopschedulingsolver/algorithm_formatter.hpp"
 #include "shopschedulingsolver/instance_builder.hpp"
 #include "shopschedulingsolver/algorithms/tree_search_pfss_makespan.hpp"
-#include "shopschedulingsolver/algorithms/tree_search_pfss_tft.hpp"
+#include "shopschedulingsolver/algorithms/tree_search_pfss.hpp"
 #include "shopschedulingsolver/algorithms/milp_positional.hpp"
 #include "shopschedulingsolver/algorithms/milp_disjunctive.hpp"
 #ifdef OPTALCP_FOUND
@@ -79,10 +79,10 @@ Output run(
         read_args(parameters, vm);
         return tree_search_pfss_makespan(instance, parameters);
 
-    } else if (algorithm == "tree-search-pfss-tft") {
+    } else if (algorithm == "tree-search-pfss") {
         Parameters parameters;
         read_args(parameters, vm);
-        return tree_search_pfss_tft(instance, parameters);
+        return tree_search_pfss(instance, parameters);
 
     } else if (algorithm == "milp-positional") {
         MilpPositionalParameters parameters;
