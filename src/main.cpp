@@ -80,7 +80,7 @@ Output run(
         return tree_search_pfss_makespan(instance, parameters);
 
     } else if (algorithm == "tree-search-pfss") {
-        Parameters parameters;
+        TreeSearchPfssParameters parameters;
         read_args(parameters, vm);
         return tree_search_pfss(instance, parameters);
 

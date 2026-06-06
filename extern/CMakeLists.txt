@@ -68,6 +68,6 @@ set(LOCALSEARCHSOLVER_BUILD_EXAMPLES OFF)
 FetchContent_Declare(
     localsearchsolver
     GIT_REPOSITORY https://github.com/fontanf/localsearchsolver.git
-    GIT_TAG 6cc833ea92eaf8bcac0e5e0c6119a0c936d58457)
+    GIT_TAG 237395a1fb7b5e1e586a1d3bcb22a38ec958616f)
     #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../localsearchsolver/")
 FetchContent_MakeAvailable(localsearchsolver)

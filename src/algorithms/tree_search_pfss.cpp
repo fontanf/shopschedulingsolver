@@ -60,8 +60,23 @@ public:
         /** Total completion time of the partial solution. */
         Time total_completion_time = 0;
 
-        /** Total tardiness of the partial solution. */
+        /** Total tardiness of the scheduled jobs. */
+        Time total_tardiness_scheduled = 0;
+
+        /** Lower bound on the tardiness of the unscheduled jobs. */
+        Time total_tardiness_unscheduled = 0;
+
+        /** Total tardiness (sum of the above two). */
         Time total_tardiness = 0;
+
+        /** Index in sorted_jobs_ up to which due dates are < machines[last].time. */
+        JobId due_date_pos = 0;
+
+        /** Number of unscheduled jobs with due date < machines[last].time. */
+        JobId number_of_late_unscheduled = 0;
+
+        /** Sum of due dates of those jobs. */
+        Time sum_late_unscheduled_due_dates = 0;
 
         /** Total earliness of the partial solution. */
         Time total_earliness = 0;
@@ -105,6 +120,12 @@ public:
         instance_(instance),
         parameters_(parameters)
     {
+        for (JobId job_id = 0; job_id < instance_.number_of_jobs(); ++job_id) {
+            const Job& job = instance_.job(job_id);
+            if (job.due_date >= 0)
+                sorted_jobs_.push_back({job.due_date, job_id});
+        }
+        std::sort(sorted_jobs_.begin(), sorted_jobs_.end());
     }
 
     inline const std::shared_ptr<Node> root() const
@@ -307,17 +328,42 @@ public:
             // TT / TE
             Time due_date = job_next.due_date;
             if (due_date >= 0) {
-                child->total_tardiness = parent->total_tardiness
+                child->total_tardiness_scheduled = parent->total_tardiness_scheduled
                     + std::max((Time)0, t_prec - due_date);
                 child->total_earliness = parent->total_earliness
                     + std::max((Time)0, due_date - t_prec);
             } else {
-                child->total_tardiness = parent->total_tardiness;
+                child->total_tardiness_scheduled = parent->total_tardiness_scheduled;
                 child->total_earliness = parent->total_earliness;
             }
 
             // Bound
             MachineId last_machine_id = instance_.number_of_machines() - 1;
+
+            // LB on unscheduled tardiness
+            if (instance_.objective() == Objective::TotalTardiness) {
+                Time t_parent = parent->machines[last_machine_id].time;
+                child->due_date_pos = parent->due_date_pos;
+                child->number_of_late_unscheduled = parent->number_of_late_unscheduled;
+                child->sum_late_unscheduled_due_dates = parent->sum_late_unscheduled_due_dates;
+                if (due_date >= 0 && due_date < t_parent) {
+                    child->number_of_late_unscheduled--;
+                    child->sum_late_unscheduled_due_dates -= due_date;
+                }
+                while (child->due_date_pos < (JobId)sorted_jobs_.size()
+                       && sorted_jobs_[child->due_date_pos].first < t_prec) {
+                    JobId other_id = sorted_jobs_[child->due_date_pos].second;
+                    if (other_id != job_next_id && parent->available_jobs[other_id]) {
+                        child->number_of_late_unscheduled++;
+                        child->sum_late_unscheduled_due_dates += sorted_jobs_[child->due_date_pos].first;
+                    }
+                    child->due_date_pos++;
+                }
+                child->total_tardiness_unscheduled = child->number_of_late_unscheduled * t_prec
+                    - child->sum_late_unscheduled_due_dates;
+            }
+            child->total_tardiness = child->total_tardiness_scheduled + child->total_tardiness_unscheduled;
+
             switch (instance_.objective()) {
             case Objective::TotalFlowTime: {
                 child->bound = parent->bound
@@ -483,8 +529,8 @@ public:
             obj_2 = node_2->total_completion_time;
             break;
         case Objective::TotalTardiness:
-            obj_1 = node_1->total_tardiness;
-            obj_2 = node_2->total_tardiness;
+            obj_1 = node_1->total_tardiness_scheduled;
+            obj_2 = node_2->total_tardiness_scheduled;
             break;
         default:
             return false;
@@ -532,6 +578,9 @@ private:
     /** Parameters. */
     Parameters parameters_;
 
+    /** Jobs sorted by due date (only those with due_date >= 0). */
+    std::vector<std::pair<Time, JobId>> sorted_jobs_;
+
     mutable NodeId node_id_ = 0;
 
 };
@@ -540,7 +589,7 @@ private:
 
 Output shopschedulingsolver::tree_search_pfss(
         const Instance& instance,
-        const Parameters& parameters)
+        const TreeSearchPfssParameters& parameters)
 {
     Output output(instance);
     AlgorithmFormatter algorithm_formatter(instance, parameters, output);
@@ -555,6 +604,8 @@ Output shopschedulingsolver::tree_search_pfss(
     treesearchsolver::IterativeBeamSearch2Parameters<BranchingScheme> ibs_parameters;
     ibs_parameters.verbosity_level = 0;
     ibs_parameters.timer = parameters.timer;
+    ibs_parameters.minimum_size_of_the_queue = parameters.minimum_size_of_the_queue;
+    ibs_parameters.maximum_size_of_the_queue = parameters.maximum_size_of_the_queue;
     ibs_parameters.new_solution_callback
         = [&instance, &algorithm_formatter](
                 const treesearchsolver::Output<BranchingScheme>& ts_output)
