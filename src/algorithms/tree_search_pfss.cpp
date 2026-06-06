@@ -322,7 +322,9 @@ public:
                 }
             }
 
-            child->total_completion_time = parent->total_completion_time + t_prec;
+            child->total_completion_time = parent->total_completion_time
+                + (instance_.number_of_jobs() - parent->number_of_jobs)
+                * (t_prec - parent->machines.back().time);
             child->weighted_idle_time_tt = parent->weighted_idle_time_tt + ti_job;
 
             // TT / TE
