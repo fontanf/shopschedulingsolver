@@ -39,9 +39,6 @@ struct LocalSearchData
 {
     LocalSearchSolution solution;
 
-    std::vector<JobId> shuffled_positions_1;
-    std::vector<JobId> shuffled_positions_2;
-
     std::vector<std::vector<Time>> completion_times_0;
     std::vector<std::vector<Time>> reverse_completion_times_0;
 
@@ -396,18 +393,15 @@ enum class Neighborhood
 bool explore_shift_neighborhood(
         const Instance& instance,
         LocalSearchData& data,
+        std::mt19937_64& generator,
         JobId size)
 {
     MachineId last_machine_id = instance.number_of_machines() - 1;
 
-    JobId size_best = -1;
-    JobId pos_old_best = -1;
-    JobId pos_new_best = -1;
+    std::vector<std::pair<JobId, JobId>> best_moves;
     Time makespan_best = data.solution.makespan;
 
-    for (JobId pos_old: data.shuffled_positions_1) {
-        if (pos_old > data.solution.jobs.size() - size)
-            continue;
+    for (JobId pos_old = 0; pos_old + size <= (JobId)data.solution.jobs.size(); ++pos_old) {
 
         if (instance.blocking()) {
             // Compute data.completion_times.
@@ -826,36 +820,32 @@ bool explore_shift_neighborhood(
             }
         }
 
-        // Fidd best move.
-        for (JobId pos_new: data.shuffled_positions_2) {
-            if (pos_new > data.solution.jobs.size() - size)
-                continue;
+        // Accumulate all (pos_old, pos_new) pairs achieving the minimum makespan.
+        for (JobId pos_new = 0; pos_new + size <= (JobId)data.solution.jobs.size(); ++pos_new) {
             if (pos_new == pos_old)
                 continue;
             Time makespan = data.makespans[pos_new];
-            if (makespan_best > makespan) {
-                size_best = size;
-                pos_old_best = pos_old;
-                pos_new_best = pos_new;
-                makespan_best = makespan;
+            if (makespan + 1 < makespan_best) {
+                best_moves.clear();
+                makespan_best = makespan + 1;
             }
+            if (makespan < makespan_best)
+                best_moves.push_back({pos_old, pos_new});
         }
     }
 
-    if (pos_old_best == -1)
+    if (best_moves.empty())
         return false;
 
-    // Apply move.
-    //std::cout << "size_best " << size_best
-    //    << " pos_old_best " << pos_old_best
-    //    << " pos_new_best " << pos_new_best
-    //    << std::endl;
-    shift_jobs(instance, data, size_best, pos_old_best, pos_new_best);
-    if (data.solution.makespan != makespan_best) {
+    // Apply a randomly chosen best move.
+    const auto& best = best_moves[
+        std::uniform_int_distribution<size_t>(0, best_moves.size() - 1)(generator)];
+    shift_jobs(instance, data, size, best.first, best.second);
+    if (data.solution.makespan != makespan_best - 1) {
         throw std::runtime_error(
                 FUNC_SIGNATURE + ": wrong makespan; "
                 "data.solution.makespan: " + std::to_string(data.solution.makespan) + "; "
-                "makespan_best: " + std::to_string(makespan_best) + ".");
+                "makespan_best - 1: " + std::to_string(makespan_best - 1) + ".");
     }
     return true;
 }
@@ -880,23 +870,20 @@ void local_search(
         //    std::cout << " " << job_id;
         //std::cout << std::endl;
 
-        std::shuffle(data.shuffled_positions_1.begin(), data.shuffled_positions_1.end(), generator);
-        std::shuffle(data.shuffled_positions_2.begin(), data.shuffled_positions_2.end(), generator);
-
         bool improved = false;
         for (Neighborhood neighborhood: neighborhoods) {
             switch (neighborhood) {
             case Neighborhood::Shift1: {
-                improved = explore_shift_neighborhood(instance, data, 1);
+                improved = explore_shift_neighborhood(instance, data, generator, 1);
                 break;
             } case Neighborhood::Shift2: {
-                improved = explore_shift_neighborhood(instance, data, 2);
+                improved = explore_shift_neighborhood(instance, data, generator, 2);
                 break;
             } case Neighborhood::Shift3: {
-                improved = explore_shift_neighborhood(instance, data, 3);
+                improved = explore_shift_neighborhood(instance, data, generator, 3);
                 break;
             } case Neighborhood::Shift4: {
-                improved = explore_shift_neighborhood(instance, data, 4);
+                improved = explore_shift_neighborhood(instance, data, generator, 4);
                 break;
             }
             }
@@ -928,14 +915,11 @@ void add_job_at_best_position(
         JobId job_id)
 {
     const Job& job = instance.job(job_id);
-    JobId pos_best = -1;
-    Time makespan_best = 0;
 
-    // Compute data.completion_times.
-    std::shuffle(data.shuffled_positions_1.begin(), data.shuffled_positions_1.end(), generator);
-    for (JobId pos: data.shuffled_positions_1) {
-        if (pos > data.solution.jobs.size())
-            continue;
+    std::vector<JobId> best_positions;
+    Time makespan_best = 0;  // stores best+1 when best_positions is non-empty
+
+    for (JobId pos = 0; pos <= (JobId)data.solution.jobs.size(); ++pos) {
 
         for (MachineId machine_id = 0;
                 machine_id < instance.number_of_machines();
@@ -993,21 +977,20 @@ void add_job_at_best_position(
                     + data.reverse_completion_times_0[p][machine_id]);
         }
 
-        if (pos_best == -1
-                || makespan_best > makespan) {
-            pos_best = pos;
-            makespan_best = makespan;
-        }
+        if (makespan + 1 < makespan_best)
+            best_positions.clear();
+        if (!best_positions.empty() && makespan >= makespan_best)
+            continue;
+        makespan_best = makespan + 1;
+        best_positions.push_back(pos);
     }
 
-    if (pos_best == -1) {
-        throw std::runtime_error(
-                FUNC_SIGNATURE + ": add, pos_best == -1.");
-    }
+    if (best_positions.empty())
+        throw std::runtime_error(FUNC_SIGNATURE + ": best_positions is empty.");
 
-    // Apply move.
+    JobId pos_best = best_positions[
+        std::uniform_int_distribution<size_t>(0, best_positions.size() - 1)(generator)];
     add_job(instance, data, job_id, pos_best);
-    //Solution solution = build_solution(instance, data.solution);
 }
 
 void add_block_at_best_position(
@@ -1017,14 +1000,10 @@ void add_block_at_best_position(
         LocalSearchData& data,
         const std::vector<JobId>& job_ids)
 {
-    JobId pos_best = -1;
+    std::vector<JobId> best_positions;
     Time makespan_best = 0;
 
-    // Compute data.completion_times.
-    std::shuffle(data.shuffled_positions_1.begin(), data.shuffled_positions_1.end(), generator);
-    for (JobId pos: data.shuffled_positions_1) {
-        if (pos > data.solution.jobs.size())
-            continue;
+    for (JobId pos = 0; pos <= (JobId)data.solution.jobs.size(); ++pos) {
 
         for (MachineId machine_id = 0;
                 machine_id < instance.number_of_machines();
@@ -1085,21 +1064,20 @@ void add_block_at_best_position(
                     + data.reverse_completion_times_0[p][machine_id]);
         }
 
-        if (pos_best == -1
-                || makespan_best > makespan) {
-            pos_best = pos;
-            makespan_best = makespan;
-        }
+        if (makespan + 1 < makespan_best)
+            best_positions.clear();
+        if (!best_positions.empty() && makespan >= makespan_best)
+            continue;
+        makespan_best = makespan + 1;
+        best_positions.push_back(pos);
     }
 
-    if (pos_best == -1) {
-        throw std::runtime_error(
-                FUNC_SIGNATURE + ": add, pos_best == -1.");
-    }
+    if (best_positions.empty())
+        throw std::runtime_error(FUNC_SIGNATURE + ": best_positions is empty.");
 
-    // Apply move.
+    JobId pos_best = best_positions[
+        std::uniform_int_distribution<size_t>(0, best_positions.size() - 1)(generator)];
     add_block(instance, data, job_ids, pos_best);
-    //Solution solution = build_solution(instance, data.solution);
 }
 
 // Among unscheduled jobs (jobs_positions == -1), append the one minimizing
@@ -1265,14 +1243,10 @@ JobId remove_worst_job(
         }
     }
 
-    std::shuffle(data.shuffled_positions_1.begin(), data.shuffled_positions_1.end(), generator);
     JobId pos_best = -1;
     double value_best = (double)p_total / data.solution.makespan * instance.number_of_machines();
     Time makespan_best = data.solution.makespan;
-    JobId tabu_size = std::min(instance.number_of_jobs(), parameters.tabu_size);
-    for (JobId pos: data.shuffled_positions_1) {
-        if (pos >= data.solution.jobs.size())
-            continue;
+    for (JobId pos = 0; pos < (JobId)data.solution.jobs.size(); ++pos) {
         JobId job_id = data.solution.jobs[pos];
         const Job& job = instance.job(job_id);
         Time p_cur = p_total;
@@ -1406,10 +1380,6 @@ const LocalSearchOutput shopschedulingsolver::local_search_pfss_makespan(
 
     // Initialize data.
     LocalSearchData data;
-    data.shuffled_positions_1 = std::vector<JobId>(instance.number_of_jobs());
-    data.shuffled_positions_2 = std::vector<JobId>(instance.number_of_jobs());
-    std::iota(data.shuffled_positions_1.begin(), data.shuffled_positions_1.end(), 0);
-    std::iota(data.shuffled_positions_2.begin(), data.shuffled_positions_2.end(), 0);
     data.completion_times_0 = std::vector<std::vector<Time>>(
             instance.number_of_jobs() + 1,
             std::vector<Time>(instance.number_of_machines(), 0));
