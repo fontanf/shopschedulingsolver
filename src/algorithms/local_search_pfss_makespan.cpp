@@ -47,6 +47,7 @@ struct LocalSearchData
 
     std::vector<Time> completion_times_2;
     std::vector<Time> makespans;
+    std::vector<Time> machine_completion_sum;
 };
 
 void update_completion_times(
@@ -400,6 +401,7 @@ bool explore_shift_neighborhood(
 
     std::vector<std::pair<JobId, JobId>> best_moves;
     Time makespan_best = data.solution.makespan;
+    Time machine_completion_sum_best = std::numeric_limits<Time>::max();
 
     for (JobId pos_old = 0; pos_old + size <= (JobId)data.solution.jobs.size(); ++pos_old) {
 
@@ -560,48 +562,18 @@ bool explore_shift_neighborhood(
                 }
 
                 data.makespans[pos_new] = 0;
-                if (pos_new > pos_old) {
-                    // pos_new = solution.jobs.size() - 1, size == 1, => p = 0
-                    // pos_new = solution.jobs.size() - 2, size == 2, => p = 0
-                    // pos_new = solution.jobs.size() - 2, size == 1, => p = 1
-                    JobId p = data.solution.jobs.size() - pos_new - size;
-                    for (MachineId machine_id = 0;
-                            machine_id < instance.number_of_machines();
-                            ++machine_id) {
-                        data.makespans[pos_new] = std::max(
-                                data.makespans[pos_new],
-                                data.completion_times_2[machine_id]
-                                + data.reverse_completion_times_0[p][machine_id]);
-                        //std::cout << "compute m"
-                        //    << " size " << size
-                        //    << " pos_old " << pos_old
-                        //    << " pos_new " << pos_new
-                        //    << " machine_id " << machine_id
-                        //    << " p " << p
-                        //    << " c " << data.completion_times_2[machine_id]
-                        //    << " r " << data.reverse_completion_times[p][machine_id]
-                        //    << " m " << data.makespans[pos_new]
-                        //    << std::endl;
-                    }
-                } else {
-                    JobId p = data.solution.jobs.size() - pos_new - size;
-                    for (MachineId machine_id = 0;
-                            machine_id < instance.number_of_machines();
-                            ++machine_id) {
-                        data.makespans[pos_new] = std::max(
-                                data.makespans[pos_new],
-                                data.completion_times_2[machine_id]
-                                + data.reverse_completion_times[p][machine_id]);
-                        //std::cout << "size " << size
-                        //    << " pos_old " << pos_old
-                        //    << " pos_new " << pos_new
-                        //    << " machine_id " << machine_id
-                        //    << " p " << p
-                        //    << " c " << data.completion_times_2[machine_id]
-                        //    << " r " << data.reverse_completion_times[p][machine_id]
-                        //    << " m " << data.makespans[pos_new]
-                        //    << std::endl;
-                    }
+                data.machine_completion_sum[pos_new] = 0;
+                const auto& reverse_completion_times = (pos_new > pos_old)?
+                    data.reverse_completion_times_0:
+                    data.reverse_completion_times;
+                JobId p = data.solution.jobs.size() - pos_new - size;
+                for (MachineId machine_id = 0;
+                        machine_id < instance.number_of_machines();
+                        ++machine_id) {
+                    Time completion_time = data.completion_times_2[machine_id]
+                        + reverse_completion_times[p][machine_id];
+                    data.makespans[pos_new] = std::max(data.makespans[pos_new], completion_time);
+                    data.machine_completion_sum[pos_new] += completion_time;
                 }
             }
 
@@ -774,63 +746,43 @@ bool explore_shift_neighborhood(
                 }
 
                 data.makespans[pos_new] = 0;
-                if (pos_new > pos_old) {
-                    // pos_new = solution.jobs.size() - 1, size == 1, => p = 0
-                    // pos_new = solution.jobs.size() - 2, size == 2, => p = 0
-                    // pos_new = solution.jobs.size() - 2, size == 1, => p = 1
-                    JobId p = data.solution.jobs.size() - pos_new - size;
-                    for (MachineId machine_id = 0;
-                            machine_id < instance.number_of_machines();
-                            ++machine_id) {
-                        data.makespans[pos_new] = std::max(
-                                data.makespans[pos_new],
-                                data.completion_times_2[machine_id]
-                                + data.reverse_completion_times_0[p][machine_id]);
-                        //std::cout << "compute m"
-                        //    << " size " << size
-                        //    << " pos_old " << pos_old
-                        //    << " pos_new " << pos_new
-                        //    << " machine_id " << machine_id
-                        //    << " p " << p
-                        //    << " c " << data.completion_times_2[machine_id]
-                        //    << " r " << data.reverse_completion_times[p][machine_id]
-                        //    << " m " << data.makespans[pos_new]
-                        //    << std::endl;
-                    }
-                } else {
-                    JobId p = data.solution.jobs.size() - pos_new - size;
-                    for (MachineId machine_id = 0;
-                            machine_id < instance.number_of_machines();
-                            ++machine_id) {
-                        data.makespans[pos_new] = std::max(
-                                data.makespans[pos_new],
-                                data.completion_times_2[machine_id]
-                                + data.reverse_completion_times[p][machine_id]);
-                        //std::cout << "size " << size
-                        //    << " pos_old " << pos_old
-                        //    << " pos_new " << pos_new
-                        //    << " machine_id " << machine_id
-                        //    << " p " << p
-                        //    << " c " << data.completion_times_2[machine_id]
-                        //    << " r " << data.reverse_completion_times[p][machine_id]
-                        //    << " m " << data.makespans[pos_new]
-                        //    << std::endl;
-                    }
+                data.machine_completion_sum[pos_new] = 0;
+                const auto& reverse_completion_times = (pos_new > pos_old)?
+                    data.reverse_completion_times_0:
+                    data.reverse_completion_times;
+                JobId p = data.solution.jobs.size() - pos_new - size;
+                for (MachineId machine_id = 0;
+                        machine_id < instance.number_of_machines();
+                        ++machine_id) {
+                    Time completion_time = data.completion_times_2[machine_id]
+                        + reverse_completion_times[p][machine_id];
+                    data.makespans[pos_new] = std::max(data.makespans[pos_new], completion_time);
+                    data.machine_completion_sum[pos_new] += completion_time;
                 }
             }
         }
 
-        // Accumulate all (pos_old, pos_new) pairs achieving the minimum makespan.
+        // Accumulate all (pos_old, pos_new) pairs achieving the minimum makespan,
+        // with machine_completion_sum as tie-breaker.
         for (JobId pos_new = 0; pos_new + size <= (JobId)data.solution.jobs.size(); ++pos_new) {
             if (pos_new == pos_old)
                 continue;
             Time makespan = data.makespans[pos_new];
+            Time machine_completion_sum = data.machine_completion_sum[pos_new];
             if (makespan + 1 < makespan_best) {
                 best_moves.clear();
                 makespan_best = makespan + 1;
-            }
-            if (makespan < makespan_best)
+                machine_completion_sum_best = machine_completion_sum;
                 best_moves.push_back({pos_old, pos_new});
+            } else if (makespan < makespan_best) {
+                if (machine_completion_sum < machine_completion_sum_best) {
+                    best_moves.clear();
+                    machine_completion_sum_best = machine_completion_sum;
+                    best_moves.push_back({pos_old, pos_new});
+                } else if (machine_completion_sum == machine_completion_sum_best) {
+                    best_moves.push_back({pos_old, pos_new});
+                }
+            }
         }
     }
 
@@ -1394,6 +1346,7 @@ const LocalSearchOutput shopschedulingsolver::local_search_pfss_makespan(
             std::vector<Time>(instance.number_of_machines(), 0));
     data.completion_times_2 = std::vector<Time>(instance.number_of_machines(), 0);
     data.makespans = std::vector<Time>(instance.number_of_jobs(), 0);
+    data.machine_completion_sum = std::vector<Time>(instance.number_of_jobs(), 0);
     data.solution.jobs_positions = std::vector<JobId>(instance.number_of_jobs(), -1);
 
     // Initialize population.
@@ -1463,7 +1416,7 @@ const LocalSearchOutput shopschedulingsolver::local_search_pfss_makespan(
         }
     }
 
-    for (output.number_of_iterations = 0;
+    for (output.number_of_iterations = 1;
             !parameters.timer.needs_to_end();
             ++output.number_of_iterations) {
 
