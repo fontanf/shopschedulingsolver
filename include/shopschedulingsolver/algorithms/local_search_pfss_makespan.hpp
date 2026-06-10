@@ -13,8 +13,6 @@ struct LocalSearchParameters: Parameters
     /** Maximum number of iterations without improvement. */
     Counter maximum_number_of_iterations_without_improvement = -1;
 
-    JobId tabu_size = 16;
-
     virtual int format_width() const override { return 37; }
 
     virtual void format(std::ostream& os) const override
