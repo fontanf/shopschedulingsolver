@@ -95,7 +95,9 @@ private:
 
     void read_json(std::ifstream& file);
 
-    void read_flow_shop(std::ifstream& file);
+    void read_flow_shop_jobcol(std::ifstream& file);
+
+    void read_flow_shop_jobrow(std::ifstream& file);
 
     void read_flow_shop_vallada2008(std::ifstream& file);
 

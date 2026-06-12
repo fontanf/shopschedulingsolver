@@ -182,8 +182,10 @@ void InstanceBuilder::read(
 
     if (format == "" || format == "json") {
         read_json(file);
-    } else if (format == "flow-shop") {
-        read_flow_shop(file);
+    } else if (format == "flow-shop" || format == "flow-shop-jobcol") {
+        read_flow_shop_jobcol(file);
+    } else if (format == "flow-shop-jobrow") {
+        read_flow_shop_jobrow(file);
     } else if (format == "flow-shop-vallada2008" || format == "vallada2008") {
         read_flow_shop_vallada2008(file);
     } else if (format == "job-shop") {
@@ -251,7 +253,7 @@ void InstanceBuilder::read_json(std::ifstream& file)
     }
 }
 
-void InstanceBuilder::read_flow_shop(std::ifstream& file)
+void InstanceBuilder::read_flow_shop_jobcol(std::ifstream& file)
 {
     JobId number_of_jobs = -1;
     MachineId number_of_machines = -1;
@@ -265,6 +267,33 @@ void InstanceBuilder::read_flow_shop(std::ifstream& file)
             machine_id < number_of_machines;
             ++machine_id) {
         for (JobId job_id = 0; job_id < number_of_jobs; ++job_id) {
+            file >> processing_time;
+            OperationId operation_id = this->add_operation(job_id);
+            this->add_alternative(
+                    job_id,
+                    operation_id,
+                    machine_id,
+                    processing_time);
+        }
+    }
+
+    this->set_objective(Objective::Makespan);
+}
+
+void InstanceBuilder::read_flow_shop_jobrow(std::ifstream& file)
+{
+    JobId number_of_jobs = -1;
+    MachineId number_of_machines = -1;
+    file >> number_of_jobs;
+    file >> number_of_machines;
+    this->add_jobs(number_of_jobs);
+    this->set_number_of_machines(number_of_machines);
+
+    Time processing_time = -1;
+    for (JobId job_id = 0; job_id < number_of_jobs; ++job_id) {
+        for (MachineId machine_id = 0;
+                machine_id < number_of_machines;
+                ++machine_id) {
             file >> processing_time;
             OperationId operation_id = this->add_operation(job_id);
             this->add_alternative(
