@@ -1074,7 +1074,7 @@ void run_algorithm(
     if (initial_solution != nullptr) {
         load_solution<Blocking>(data, instance, *initial_solution);
         local_search<Blocking>(instance, parameters, generator, output, algorithm_formatter, data);
-    } else if (instance.objective() == Objective::TotalTardiness) {
+    } else {
         TreeSearchPfssParameters ts_parameters;
         ts_parameters.timer = parameters.timer;
         ts_parameters.verbosity_level = 0;
@@ -1099,18 +1099,18 @@ void run_algorithm(
 
         local_search<Blocking>(instance, parameters, generator, output, algorithm_formatter, data);
         population.add(data.solution, generator);
-    } else {
-        for (JobId i = 0;
-                i < pop_params.maximum_size && !parameters.timer.needs_to_end();
-                ++i) {
-            generate_initial_solution_pf_neh<Blocking>(instance, parameters, generator, data);
-            std::stringstream ss;
-            ss << "neh " << i;
-            algorithm_formatter.update_solution(
-                    build_solution(instance, data.solution), ss.str());
-            local_search<Blocking>(instance, parameters, generator, output, algorithm_formatter, data);
-            population.add(data.solution, generator);
-        }
+
+        //for (JobId i = 0;
+        //        i < pop_params.maximum_size && !parameters.timer.needs_to_end();
+        //        ++i) {
+        //    generate_initial_solution_pf_neh<Blocking>(instance, parameters, generator, data);
+        //    std::stringstream ss;
+        //    ss << "neh " << i;
+        //    algorithm_formatter.update_solution(
+        //            build_solution(instance, data.solution), ss.str());
+        //    local_search<Blocking>(instance, parameters, generator, output, algorithm_formatter, data);
+        //    population.add(data.solution, generator);
+        //}
     }
 
     if (population.size() == 0)
