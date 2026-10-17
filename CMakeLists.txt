@@ -10,12 +10,13 @@ option(SHOPSCHEDULINGSOLVER_USE_CBC "Use Cbc" OFF)
 option(SHOPSCHEDULINGSOLVER_USE_HIGHS "Use HiGHS" OFF)
 option(SHOPSCHEDULINGSOLVER_USE_XPRESS "Use FICO Xpress" OFF)
 option(SHOPSCHEDULINGSOLVER_USE_OPTALCP "Use OptalCP" OFF)
+option(SHOPSCHEDULINGSOLVER_USE_ORTOOLS "Use OR-Tools" OFF)
 
 # Avoid FetchContent warning.
 cmake_policy(SET CMP0135 NEW)
 
-# Require C++14.
-set(CMAKE_CXX_STANDARD 14)
+# Require C++17.
+set(CMAKE_CXX_STANDARD 17)
 
 # Enable output of compile commands during generation.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

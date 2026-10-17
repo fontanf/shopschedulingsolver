@@ -33,6 +33,10 @@ if(SHOPSCHEDULINGSOLVER_BUILD_MAIN)
         target_link_libraries(ShopSchedulingSolver_main PUBLIC
             ShopSchedulingSolver_constraint_programming_optalcp)
     endif()
+    if(SHOPSCHEDULINGSOLVER_USE_ORTOOLS)
+        target_link_libraries(ShopSchedulingSolver_main PUBLIC
+            ShopSchedulingSolver_cp_sat_ortools)
+    endif()
     set_target_properties(ShopSchedulingSolver_main PROPERTIES OUTPUT_NAME "shopschedulingsolver")
     install(TARGETS ShopSchedulingSolver_main)
 

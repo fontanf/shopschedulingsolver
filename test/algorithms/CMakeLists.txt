@@ -68,3 +68,17 @@ target_link_libraries(ShopSchedulingSolver_tree_search_pfss_test
 gtest_discover_tests(ShopSchedulingSolver_tree_search_pfss_test
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     PROPERTIES TIMEOUT 3600)
+
+if(SHOPSCHEDULINGSOLVER_USE_ORTOOLS)
+    add_executable(ShopSchedulingSolver_cp_sat_ortools_test)
+    target_sources(ShopSchedulingSolver_cp_sat_ortools_test PRIVATE
+        cp_sat_ortools_test.txt
+        cp_sat_ortools_test.cpp)
+    target_link_libraries(ShopSchedulingSolver_cp_sat_ortools_test
+        ShopSchedulingSolver_tests
+        ShopSchedulingSolver_cp_sat_ortools
+        GTest::gtest_main)
+    gtest_discover_tests(ShopSchedulingSolver_cp_sat_ortools_test
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        PROPERTIES TIMEOUT 3600)
+endif()

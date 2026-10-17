@@ -7,6 +7,9 @@
 #ifdef OPTALCP_FOUND
 #include "shopschedulingsolver/algorithms/constraint_programming_optalcp.hpp"
 #endif
+#ifdef ORTOOLS_FOUND
+#include "shopschedulingsolver/algorithms/cp_sat_ortools.hpp"
+#endif
 #include "shopschedulingsolver/algorithms/local_search_pfss_makespan.hpp"
 #include "shopschedulingsolver/algorithms/local_search_pfss.hpp"
 
@@ -98,6 +101,13 @@ Output run(
         if (vm.count("solver"))
             parameters.solver = vm["solver"].as<mathoptsolverscmake::SolverName>();
         return milp_disjunctive(instance, nullptr, parameters);
+
+#ifdef ORTOOLS_FOUND
+    } else if (algorithm == "cp-sat-ortools") {
+        Parameters parameters;
+        read_args(parameters, vm);
+        return cp_sat_ortools(instance, parameters);
+#endif
 
 #ifdef OPTALCP_FOUND
     } else if (algorithm == "constraint-programming-optalcp") {

@@ -462,6 +462,17 @@ python scripts/solve_test_data.py  --algorithm constraint-programming-optalcp  -
         data/test_foss_twt.txt \
         data/test_foss_twt_no_wait.txt \
         data/test_foss_twt_blocking.txt
+python scripts/solve_test_data.py  --algorithm cp-sat-ortools  --output test/algorithms/cp_sat_ortools_test.txt  --instances \
+        data/test_jss_makespan.txt \
+        data/test_jss_makespan_no_wait.txt \
+        data/test_jss_tft.txt \
+        data/test_jss_tft_no_wait.txt \
+        data/test_jss_twft.txt \
+        data/test_jss_twft_no_wait.txt \
+        data/test_jss_tt.txt \
+        data/test_jss_tt_no_wait.txt \
+        data/test_jss_twt.txt \
+        data/test_jss_twt_no_wait.txt
 python scripts/solve_test_data.py --algorithm tree-search-pfss-makespan  --output test/algorithms/tree_search_pfss_makespan_test.txt  --instances \
         data/test_pfss_makespan.txt
 python scripts/solve_test_data.py --algorithm tree-search-pfss  --output test/algorithms/tree_search_pfss_test.txt  --instances \

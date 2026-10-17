@@ -76,6 +76,22 @@ target_link_libraries(ShopSchedulingSolver_local_search_pfss_makespan PUBLIC
     LocalSearchSolver_localsearchsolver)
 add_library(ShopSchedulingSolver::local_search_pfss_makespan ALIAS ShopSchedulingSolver_local_search_pfss_makespan)
 
+if(SHOPSCHEDULINGSOLVER_USE_ORTOOLS)
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{ORTOOLSDIR}")
+    find_package(ortools CONFIG REQUIRED)
+
+    add_library(ShopSchedulingSolver_cp_sat_ortools)
+    target_sources(ShopSchedulingSolver_cp_sat_ortools PRIVATE
+        cp_sat_ortools.cpp)
+    target_compile_definitions(ShopSchedulingSolver_cp_sat_ortools PUBLIC
+        ORTOOLS_FOUND=1)
+    target_include_directories(ShopSchedulingSolver_cp_sat_ortools PUBLIC
+        ${PROJECT_SOURCE_DIR}/include)
+    target_link_libraries(ShopSchedulingSolver_cp_sat_ortools PUBLIC
+        ShopSchedulingSolver_shopschedulingsolver
+        ortools::ortools)
+    add_library(ShopSchedulingSolver::cp_sat_ortools ALIAS ShopSchedulingSolver_cp_sat_ortools)
+endif()
 add_library(ShopSchedulingSolver_local_search_pfss)
 target_sources(ShopSchedulingSolver_local_search_pfss PRIVATE
     local_search_pfss.cpp)
