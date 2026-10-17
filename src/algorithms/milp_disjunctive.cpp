@@ -1317,12 +1317,14 @@ CbcEventHandler::CbcAction EventHandler::event(CbcEvent which_event)
                 || (instance_.objective() == Objective::TotalFlowTime && output_.solution.total_flow_time() > milp_objective_value)
                 || (instance_.objective() == Objective::TotalTardiness && output_.solution.total_tardiness() > milp_objective_value))) {
         std::vector<double> milp_solution = mathoptsolverscmake::get_solution(cbc_model);
-        Solution solution = retrieve_solution(instance_, milp_model_, milp_solution);
-        algorithm_formatter_.update_solution(solution, "node " + std::to_string(number_of_nodes));
+        if (!milp_solution.empty()) {
+            Solution solution = retrieve_solution(instance_, milp_model_, milp_solution);
+            algorithm_formatter_.update_solution(solution, "node " + std::to_string(number_of_nodes));
+        }
     }
 
     // Retrieve bound.
-    Time bound = std::ceil(mathoptsolverscmake::get_bound(cbc_model) - 1e5);
+    Time bound = std::ceil(mathoptsolverscmake::get_bound(cbc_model) - 1e-5);
     switch (instance_.objective()) {
     case Objective::Makespan: {
         algorithm_formatter_.update_makespan_bound(bound, "node " + std::to_string(number_of_nodes));
