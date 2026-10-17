@@ -171,6 +171,9 @@ public:
             std::ostream& os,
             int verbosity_level = 1) const;
 
+    /** Export the instance in the JSON format. */
+    nlohmann::json to_json() const;
+
     /** Write the instance to a file. */
     void write(
             const std::string& instance_path,

@@ -39,28 +39,31 @@ target_link_libraries(ShopSchedulingSolver_milp_disjunctive PUBLIC
 add_library(ShopSchedulingSolver::milp_disjunctive ALIAS ShopSchedulingSolver_milp_disjunctive)
 
 if(SHOPSCHEDULINGSOLVER_USE_OPTALCP)
+    # Compile the TypeScript model in the build directory. The library calls
+    # it from there (see optalcp_script_path()).
+    set(OPTALCP_SCRIPT_PATH ${CMAKE_CURRENT_BINARY_DIR}/constraint_programming_optalcp.mjs)
     add_custom_command(
-        OUTPUT constraint_programming_optalcp.mjs
-        COMMAND npx tsc
+        OUTPUT ${OPTALCP_SCRIPT_PATH}
+        COMMAND npx tsc --outDir ${CMAKE_CURRENT_BINARY_DIR}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DEPENDS constraint_programming_optalcp.mts tsconfig.json
         COMMENT "Compiling TypeScript solver")
 
     add_custom_target(ShopSchedulingSolver_constraint_programming_optalcp_ts ALL
-        DEPENDS constraint_programming_optalcp.mjs)
-    set_target_properties(ShopSchedulingSolver_constraint_programming_optalcp_ts PROPERTIES OUTPUT_NAME "shopschedulingsolver_constraint_programming_optalcp.mjs")
-    install(FILES constraint_programming_optalcp.mjs
-        DESTINATION bin)
+        DEPENDS ${OPTALCP_SCRIPT_PATH})
 
     add_library(ShopSchedulingSolver_constraint_programming_optalcp)
     target_sources(ShopSchedulingSolver_constraint_programming_optalcp PRIVATE
         constraint_programming_optalcp.cpp)
     target_compile_definitions(ShopSchedulingSolver_constraint_programming_optalcp PUBLIC
         OPTALCP_FOUND=1)
+    target_compile_definitions(ShopSchedulingSolver_constraint_programming_optalcp PRIVATE
+        OPTALCP_SCRIPT_PATH="${OPTALCP_SCRIPT_PATH}")
     target_include_directories(ShopSchedulingSolver_constraint_programming_optalcp PUBLIC
         ${PROJECT_SOURCE_DIR}/include)
     target_link_libraries(ShopSchedulingSolver_constraint_programming_optalcp PUBLIC
-        ShopSchedulingSolver_shopschedulingsolver)
+        ShopSchedulingSolver_shopschedulingsolver
+        Boost::process)
     add_dependencies(ShopSchedulingSolver_constraint_programming_optalcp
         ShopSchedulingSolver_constraint_programming_optalcp_ts)
     add_library(ShopSchedulingSolver::constraint_programming_optalcp ALIAS ShopSchedulingSolver_constraint_programming_optalcp)

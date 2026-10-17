@@ -1,20 +1,25 @@
-import * as fs from "fs";
+/**
+ * OptalCP model, run by constraint_programming_optalcp.cpp.
+ *
+ * Protocol (one JSON object per line):
+ * - stdin: first line: {"instance": ..., "parameters": ...}; then "stop" to
+ *   stop the search.
+ * - stdout: {"type": "solution", "operations": [...]} for each new solution,
+ *   {"type": "bound", "value": ...} for each new bound, and {"type": "end"}
+ *   once the search is over.
+ * The log of OptalCP is written to stderr.
+ */
+
 import * as CP from '@scheduleopt/optalcp';
-import { writeFile } from "fs/promises";
+import * as readline from "readline";
 
-let params = {
-  usage: "Usage: node jobshop.mjs INSTANCE_PATH PARAMETERS_PATH OUTPUT_PATH CERTIFICATE_PATH"
-};
-
-async function main()
+function send(message: object)
 {
-    const instance_path = process.argv[2];
-    const parameters_path = process.argv[3];
-    const output_path = process.argv[4];
-    const certificate_path = process.argv[5];
+    process.stdout.write(JSON.stringify(message) + "\n");
+}
 
-    const instance_raw = fs.readFileSync(instance_path, "utf-8");
-    const instance = JSON.parse(instance_raw);
+async function solve(instance: any, parameters: any, register: (solver: CP.Solver) => boolean)
+{
 
     let model = new CP.Model("shopscheduling");
     const number_of_jobs = instance.jobs.length;
@@ -347,9 +352,6 @@ async function main()
     // Parameters //
     ////////////////
 
-    const parameters_raw = fs.readFileSync(parameters_path, "utf-8");
-    const parameters = JSON.parse(parameters_raw);
-
     const defaults = {
         "FDS": {
             searchType: "FDS",
@@ -382,24 +384,11 @@ async function main()
     // Solve //
     ///////////
 
-    let solve_result = await CP.solve(model, cp_parameters);
+    const solver = new CP.Solver();
 
-    //////////////////////
-    // Retrieve results //
-    //////////////////////
-
-    // Retrieve solution.
-    if (solve_result.bestSolution) {
-        interface OperationSolution {
-            job_id: number;
-            operation_id: number;
-            alternative_id: number;
-            start: number | null;
-        }
-
-        const solution: { operations: OperationSolution[] } = {
-            operations: [],
-        };
+    // Send each new solution.
+    solver.on("solution", (event: CP.SolutionEvent) => {
+        const operations = [];
         for (let job_id = 0; job_id < number_of_jobs; ++job_id) {
             let job = instance.jobs[job_id];
             for (let operation_id = 0;
@@ -409,27 +398,54 @@ async function main()
                 for (let alternative_id = 0;
                         alternative_id < operation.alternatives.length;
                         ++alternative_id) {
-                    if (solve_result.bestSolution!.getStart(jobs_alternatives[job_id][operation_id][alternative_id]) == null)
+                    const start = event.solution.getStart(jobs_alternatives[job_id][operation_id][alternative_id]);
+                    if (start == null)
                         continue;
-                    let solution_operation: OperationSolution = {
-                        job_id,
-                        operation_id,
-                        alternative_id,
-                        start: solve_result.bestSolution!.getStart(jobs_alternatives[job_id][operation_id][alternative_id])
-                    };
-                    solution.operations.push(solution_operation)
+                    operations.push({job_id, operation_id, alternative_id, start});
                 }
             }
         }
-        const jsonString = JSON.stringify(solution, null, 2);
-        fs.writeFileSync(certificate_path, jsonString, "utf-8");
-    }
+        send({type: "solution", operations});
+    });
 
-    const output = {
-        bound: solve_result.lowerBoundHistory[solve_result.lowerBoundHistory.length - 1].value,
-    };
-    const jsonString = JSON.stringify(output, null, 2);
-    fs.writeFileSync(output_path, jsonString, "utf-8");
+    // Send each new bound.
+    solver.on("lowerBound", (event: CP.LowerBoundEvent) => {
+        if (typeof event.value === "number")
+            send({type: "bound", value: event.value});
+    });
+
+    // Don't start the search if it has already been asked to stop.
+    if (!register(solver)) {
+        const result = await solver.solve(model, cp_parameters, undefined, process.stderr);
+        // Send the final bound; if optimality is proven, it is the value of
+        // the best solution.
+        if (result.proof && typeof result.objective === "number") {
+            send({type: "bound", value: result.objective});
+        } else if (typeof result.lowerBound === "number") {
+            send({type: "bound", value: result.lowerBound});
+        }
+    }
+    send({type: "end"});
 }
 
-main();
+// The first line contains the instance and the parameters; the following
+// lines may ask to stop the search.
+const lines = readline.createInterface({input: process.stdin});
+let solver: CP.Solver | undefined = undefined;
+let stop_requested = false;
+lines.on("line", (line: string) => {
+    if (line.trim() === "stop") {
+        stop_requested = true;
+        if (solver !== undefined)
+            solver.stop("Stopped by shopschedulingsolver");
+        return;
+    }
+    const input = JSON.parse(line);
+    solve(input.instance, input.parameters, (s: CP.Solver) => {
+        solver = s;
+        return stop_requested;
+    }).catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
+});

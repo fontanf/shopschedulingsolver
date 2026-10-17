@@ -59,19 +59,8 @@ std::ostream& shopschedulingsolver::operator<<(
     return os;
 }
 
-void Instance::write(
-        const std::string& instance_path,
-        const std::string& format) const
+nlohmann::json Instance::to_json() const
 {
-    if (instance_path.empty())
-        return;
-    std::ofstream file{instance_path};
-    if (!file.good()) {
-        throw std::runtime_error(
-                FUNC_SIGNATURE + ": "
-                "unable to open file \"" + instance_path + "\".");
-    }
-
     nlohmann::json json;
 
     std::stringstream objective_ss;
@@ -105,8 +94,22 @@ void Instance::write(
             }
         }
     }
+    return json;
+}
 
-    file << std::setw(4) << json << std::endl;
+void Instance::write(
+        const std::string& instance_path,
+        const std::string& format) const
+{
+    if (instance_path.empty())
+        return;
+    std::ofstream file{instance_path};
+    if (!file.good()) {
+        throw std::runtime_error(
+                FUNC_SIGNATURE + ": "
+                "unable to open file \"" + instance_path + "\".");
+    }
+    file << std::setw(4) << to_json() << std::endl;
 }
 
 std::ostream& Instance::format(
