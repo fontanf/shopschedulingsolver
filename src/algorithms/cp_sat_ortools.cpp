@@ -3,9 +3,15 @@
 #include "ortools/sat/cp_model.h"
 #include "ortools/sat/cp_model.pb.h"
 #include "ortools/sat/cp_model_solver.h"
+#include "ortools/sat/model.h"
+#include "ortools/util/time_limit.h"
 
 #include <algorithm>
+#include <atomic>
+#include <cmath>
 #include <cstdint>
+#include <mutex>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -21,6 +27,29 @@ struct OperationType
     IntVar end;
     IntervalVar interval;
 };
+
+void update_bound(
+        const shopschedulingsolver::Instance& instance,
+        shopschedulingsolver::AlgorithmFormatter& algorithm_formatter,
+        double bound)
+{
+    using namespace shopschedulingsolver;
+    if (!std::isfinite(bound))
+        return;
+    switch (instance.objective()) {
+    case Objective::Makespan:
+        algorithm_formatter.update_makespan_bound(std::round(bound), "");
+        break;
+    case Objective::TotalFlowTime:
+        algorithm_formatter.update_total_flow_time_bound(std::round(bound), "");
+        break;
+    case Objective::TotalTardiness:
+        algorithm_formatter.update_total_tardiness_bound(std::round(bound), "");
+        break;
+    default:
+        break;
+    }
+}
 
 }
 
@@ -83,10 +112,10 @@ shopschedulingsolver::Output shopschedulingsolver::cp_sat_ortools(
         const auto& job = instance.job(job_id);
         max_release_date = std::max(max_release_date, job.release_date);
         for (const auto& operation: job.operations) {
-            Time max_p = 0;
+            Time maximum_processing_time = 0;
             for (const auto& alternative: operation.alternatives)
-                max_p = std::max(max_p, alternative.processing_time);
-            total_duration += max_p;
+                maximum_processing_time = std::max(maximum_processing_time, alternative.processing_time);
+            total_duration += maximum_processing_time;
         }
     }
     int64_t horizon = max_release_date + total_duration;
@@ -97,15 +126,11 @@ shopschedulingsolver::Output shopschedulingsolver::cp_sat_ortools(
         instance.number_of_jobs());
     std::vector<std::vector<IntervalVar>> machine_to_intervals(
         instance.number_of_machines());
-    std::vector<IntVar> job_ends(instance.number_of_jobs());
 
     // Model variables (jobs and operations)
     for (JobId job_id = 0; job_id < instance.number_of_jobs(); ++job_id) {
         const auto& job = instance.job(job_id);
         all_operations[job_id].resize(job.operations.size());
-
-        job_ends[job_id] = cp_model.NewIntVar({0, horizon})
-                               .WithName("job_end_" + std::to_string(job_id));
 
         // Per operation variables (start, end, interval)
         for (OperationId operation_id = 0;
@@ -142,17 +167,14 @@ shopschedulingsolver::Output shopschedulingsolver::cp_sat_ortools(
     }
 
     // Job constraints
+    // The operations of a job are processed in order, so the end of a job is
+    // the end of its last operation.
+    std::vector<LinearExpr> job_ends(instance.number_of_jobs());
     for (JobId job_id = 0; job_id < instance.number_of_jobs(); ++job_id) {
         const auto& job = instance.job(job_id);
-        std::vector<IntVar> op_ends;
-
-        for (OperationId operation_id = 0;
-                operation_id < (OperationId)job.operations.size();
-                ++operation_id) {
-            op_ends.push_back(all_operations[job_id][operation_id].end);
-        }
-
-        cp_model.AddMaxEquality(job_ends[job_id], op_ends);
+        job_ends[job_id] = (job.operations.empty())?
+            LinearExpr(job.release_date):
+            LinearExpr(all_operations[job_id].back().end);
 
         // Job's operations precedence constraints
         for (OperationId operation_id = 0;
@@ -174,10 +196,7 @@ shopschedulingsolver::Output shopschedulingsolver::cp_sat_ortools(
     // Objective function
     if (instance.objective() == Objective::Makespan) {
         IntVar makespan = cp_model.NewIntVar({0, horizon}).WithName("Makespan");
-        std::vector<IntVar> active_job_ends;
-        for (JobId job_id = 0; job_id < instance.number_of_jobs(); ++job_id)
-            active_job_ends.push_back(job_ends[job_id]);
-        cp_model.AddMaxEquality(makespan, active_job_ends);
+        cp_model.AddMaxEquality(makespan, job_ends);
         cp_model.Minimize(makespan);
 
     } else if (instance.objective() == Objective::TotalFlowTime) {
@@ -212,46 +231,74 @@ shopschedulingsolver::Output shopschedulingsolver::cp_sat_ortools(
     // Set time limit.
     cp_parameters.set_max_time_in_seconds(parameters.timer.remaining_time());
 
-    // Solve the model
-    operations_research::sat::CpSolverResponse response = operations_research::sat::SolveWithParameters(cp_model.Build(), cp_parameters);
+    Model model;
+    model.Add(NewSatParameters(cp_parameters));
 
-    // Build the Output object
-    if (response.status() == CpSolverStatus::OPTIMAL
-            || response.status() == CpSolverStatus::FEASIBLE) {
-        SolutionBuilder solution_builder;
-        solution_builder.set_instance(instance);
+    // Stop the search when the timer ends. The timer is checked in the
+    // callbacks, as in the MILP algorithms.
+    std::atomic<bool> stop(false);
+    model.GetOrCreate<TimeLimit>()->RegisterExternalBooleanAsLimit(&stop);
 
-        for (JobId job_id = 0; job_id < instance.number_of_jobs(); ++job_id) {
-            const auto& job = instance.job(job_id);
-            for (OperationId operation_id = 0;
-                    operation_id < (OperationId)job.operations.size();
-                    ++operation_id) {
-                Time start = SolutionIntegerValue(
-                    response, all_operations[job_id][operation_id].start);
-                solution_builder.append_operation(job_id, operation_id, 0, start);
-            }
-        }
-        solution_builder.sort_machines();
-        solution_builder.sort_jobs();
-        algorithm_formatter.update_solution(solution_builder.build(), "");
+    // The callbacks may be called from different worker threads.
+    std::mutex callback_mutex;
 
-        switch (instance.objective()) {
-        case Objective::Makespan:
-            algorithm_formatter.update_makespan_bound(
-                std::round(response.best_objective_bound()), "");
-            break;
-        case Objective::TotalFlowTime:
-            algorithm_formatter.update_total_flow_time_bound(
-                std::round(response.best_objective_bound()), "");
-            break;
-        case Objective::TotalTardiness:
-            algorithm_formatter.update_total_tardiness_bound(
-                std::round(response.best_objective_bound()), "");
-            break;
-        default:
-            // shouldn't happens
-            break;
-        }
+    // Report each new solution.
+    model.Add(NewFeasibleSolutionObserver(
+                [&instance, &parameters, &algorithm_formatter, &all_operations, &stop, &callback_mutex](
+                    const CpSolverResponse& response)
+                {
+                    std::lock_guard<std::mutex> lock(callback_mutex);
+                    SolutionBuilder solution_builder;
+                    solution_builder.set_instance(instance);
+                    for (JobId job_id = 0; job_id < instance.number_of_jobs(); ++job_id) {
+                        const auto& job = instance.job(job_id);
+                        for (OperationId operation_id = 0;
+                                operation_id < (OperationId)job.operations.size();
+                                ++operation_id) {
+                            Time start = SolutionIntegerValue(
+                                    response, all_operations[job_id][operation_id].start);
+                            solution_builder.append_operation(job_id, operation_id, 0, start);
+                        }
+                    }
+                    solution_builder.sort_machines();
+                    solution_builder.sort_jobs();
+                    algorithm_formatter.update_solution(solution_builder.build(), "");
+                    if (parameters.timer.needs_to_end())
+                        stop = true;
+                }));
+
+    // Report each new bound.
+    model.Add(NewBestBoundCallback(
+                [&instance, &parameters, &algorithm_formatter, &stop, &callback_mutex](
+                    double bound)
+                {
+                    std::lock_guard<std::mutex> lock(callback_mutex);
+                    update_bound(instance, algorithm_formatter, bound);
+                    if (parameters.timer.needs_to_end())
+                        stop = true;
+                }));
+
+    // Solve the model.
+    CpSolverResponse response = SolveCpModel(cp_model.Build(), &model);
+
+    switch (response.status()) {
+    case CpSolverStatus::OPTIMAL:
+    case CpSolverStatus::FEASIBLE:
+    case CpSolverStatus::UNKNOWN:
+        // Solutions are reported by the observer; only the final bound is
+        // updated here.
+        update_bound(instance, algorithm_formatter, response.best_objective_bound());
+        break;
+    case CpSolverStatus::INFEASIBLE:
+        // The horizon is an upper bound of the end of a feasible schedule.
+        throw std::logic_error(
+                FUNC_SIGNATURE + ": "
+                "the model is infeasible.");
+    default:
+        throw std::logic_error(
+                FUNC_SIGNATURE + ": "
+                "the model is invalid; "
+                "status: " + CpSolverStatus_Name(response.status()) + ".");
     }
 
     algorithm_formatter.end();
