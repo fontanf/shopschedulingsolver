@@ -1,5 +1,3 @@
-gdown
-py7zr
 numpy
 plotly
 matplotlib

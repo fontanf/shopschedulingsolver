@@ -1,9 +1,11 @@
 #include "tests.hpp"
 
 #include "shopschedulingsolver/instance_builder.hpp"
-#include "shopschedulingsolver/solution_builder.hpp"
 
 #include <boost/filesystem.hpp>
+
+#include <fstream>
+#include <sstream>
 
 using namespace shopschedulingsolver;
 
@@ -29,12 +31,21 @@ std::vector<TestInstancePath> shopschedulingsolver::get_test_instance_paths(
                 "Unable to open file \"" + file_path + "\".");
     }
 
+    // Each line contains the path of an instance and its optimal objective
+    // value.
     std::vector<TestInstancePath> output;
-    std::string tmp;
-    while (getline(file, tmp)) {
+    std::string line;
+    while (getline(file, line)) {
+        if (line.empty())
+            continue;
+        std::istringstream line_stream(line);
         TestInstancePath test_instance_path;
-        test_instance_path.instance_path = tmp;
-        test_instance_path.certificate_path = tmp + "_solution.json";
+        if (!(line_stream >> test_instance_path.instance_path >> test_instance_path.objective_value)) {
+            throw std::runtime_error(
+                    "Invalid line in file \"" + file_path + "\": "
+                    "\"" + line + "\"; "
+                    "expected \"<instance path> <objective value>\".");
+        }
         output.push_back(test_instance_path);
     }
     return output;
@@ -68,17 +79,4 @@ const Instance shopschedulingsolver::get_instance(
     std::cout << "Instance path:  " << instance_path << std::endl;
     instance_builder.read(instance_path, files.instance_format);
     return instance_builder.build();
-}
-
-const Solution shopschedulingsolver::get_solution(
-        const Instance& instance,
-        const TestInstancePath& files)
-{
-    std::string certificate_path = get_path({
-            "data",
-            files.certificate_path});
-    SolutionBuilder solution_builder;
-    solution_builder.set_instance(instance);
-    solution_builder.read(certificate_path, files.certificate_format);
-    return solution_builder.build();
 }
