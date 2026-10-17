@@ -830,6 +830,10 @@ std::vector<JobId> remove_random_jobs(
         LocalSearchData& data,
         JobId number_of_jobs_removed)
 {
+    // Keep at least one job in the solution.
+    number_of_jobs_removed = std::min(
+            number_of_jobs_removed,
+            (JobId)data.solution.jobs.size() - 1);
     std::vector<JobId> positions = optimizationtools::bob_floyd(
             number_of_jobs_removed,
             (JobId)data.solution.jobs.size(),
@@ -998,7 +1002,7 @@ void random_shifts(
 {
     std::uniform_int_distribution<JobId> distribution(2, d);
     std::vector<JobId> positions = optimizationtools::bob_floyd(
-            distribution(generator),
+            std::min(distribution(generator), (JobId)data.solution.jobs.size()),
             (JobId)data.solution.jobs.size(),
             generator);
     std::vector<JobId> job_ids;
@@ -1073,7 +1077,12 @@ void run_algorithm(
 {
     if (initial_solution != nullptr) {
         load_solution<Blocking>(data, instance, *initial_solution);
+        std::stringstream ss;
+        ss << "initial solution";
+        algorithm_formatter.update_solution(
+                build_solution(instance, data.solution), ss.str());
         local_search<Blocking>(instance, parameters, generator, output, algorithm_formatter, data);
+        population.add(data.solution, generator);
     } else {
         TreeSearchPfssParameters ts_parameters;
         ts_parameters.timer = parameters.timer;
@@ -1138,6 +1147,9 @@ void run_algorithm(
         if (parameters.maximum_number_of_iterations_without_improvement >= 0
                 && number_of_iterations_without_improvement
                    > parameters.maximum_number_of_iterations_without_improvement)
+            break;
+        // Perturbations require at least two jobs.
+        if (instance.number_of_jobs() < 2)
             break;
 
         data.solution = (output.number_of_iterations < 64)?
