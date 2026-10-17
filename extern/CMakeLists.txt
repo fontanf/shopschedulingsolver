@@ -49,10 +49,12 @@ endif()
 if(SHOPSCHEDULINGSOLVER_USE_XPRESS)
     set(MATHOPTSOLVERSCMAKE_USE_XPRESS ON)
 endif()
+set(MATHOPTSOLVERSCMAKE_BUILD_TESTS OFF)
+set(MATHOPTSOLVERSCMAKE_BUILD_APP OFF)
 FetchContent_Declare(
     mathoptsolverscmake
     GIT_REPOSITORY https://github.com/fontanf/mathoptsolverscmake.git
-    GIT_TAG 94b28a403a9f8b6a4ca130b820b5f21ae313b520)
+    GIT_TAG 199bfe7038bf165810109e85f3f531d377752fc3)
     #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../mathoptsolverscmake/")
 FetchContent_MakeAvailable(mathoptsolverscmake)
 

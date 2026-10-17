@@ -4,12 +4,14 @@
 #include "ortools/sat/cp_model.pb.h"
 #include "ortools/sat/cp_model_solver.h"
 #include "ortools/sat/model.h"
+#include "ortools/util/logging.h"
 #include "ortools/util/time_limit.h"
 
 #include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstdint>
+#include <fstream>
 #include <mutex>
 #include <stdexcept>
 #include <string>
@@ -224,14 +226,31 @@ shopschedulingsolver::Output shopschedulingsolver::cp_sat_ortools(
 
     operations_research::sat::SatParameters cp_parameters;
 
-    // Write solver output to file.
-    // TODO
-    //cp_parameters.set_log_search_progress(true);
-
     // Set time limit.
     cp_parameters.set_max_time_in_seconds(parameters.timer.remaining_time());
 
     Model model;
+
+    // Write the log of the solver to the solver log file.
+    std::ofstream log_file;
+    std::mutex log_mutex;
+    if (!parameters.solver_log_path.empty()) {
+        log_file.open(parameters.solver_log_path);
+        if (!log_file.good()) {
+            throw std::runtime_error(
+                    FUNC_SIGNATURE + ": "
+                    "unable to open file \"" + parameters.solver_log_path + "\".");
+        }
+        cp_parameters.set_log_search_progress(true);
+        cp_parameters.set_log_to_stdout(false);
+        model.GetOrCreate<SolverLogger>()->AddInfoLoggingCallback(
+                [&log_file, &log_mutex](const std::string& message)
+                {
+                    std::lock_guard<std::mutex> lock(log_mutex);
+                    log_file << message << std::endl;
+                });
+    }
+
     model.Add(NewSatParameters(cp_parameters));
 
     // Stop the search when the timer ends. The timer is checked in the

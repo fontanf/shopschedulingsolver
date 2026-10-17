@@ -34,6 +34,8 @@ void read_args(
     if (vm.count("log"))
         parameters.log_path = vm["log"].as<std::string>();
     parameters.log_to_stderr = vm.count("log-to-stderr");
+    if (vm.count("solver-log"))
+        parameters.solver_log_path = vm["solver-log"].as<std::string>();
     bool only_write_at_the_end = vm.count("only-write-at-the-end");
     if (!only_write_at_the_end) {
 
@@ -169,6 +171,7 @@ int main(int argc, char *argv[])
         ("log-to-stderr,w", "write log in stderr")
 
         ("solver,", po::value<mathoptsolverscmake::SolverName>(), "set solver")
+        ("solver-log,", po::value<std::string>(), "set the log path of the MILP or CP solver")
         ;
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

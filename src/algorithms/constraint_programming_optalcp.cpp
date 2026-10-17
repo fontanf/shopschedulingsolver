@@ -91,7 +91,7 @@ Output shopschedulingsolver::constraint_programming_optalcp(
 
     // Run the script. It reads the instance and the parameters on its
     // standard input and writes one JSON message per line on its standard
-    // output. Its standard error, which contains the log of OptalCP, is
+    // output. Its standard error, which contains its error messages, is
     // inherited.
     std::string script_path = optalcp_script_path();
     IgnoreSigpipe ignore_sigpipe;
@@ -106,6 +106,7 @@ Output shopschedulingsolver::constraint_programming_optalcp(
     nlohmann::json input_json;
     input_json["instance"] = instance.to_json();
     input_json["parameters"] = parameters.to_json();
+    input_json["solver_log_path"] = parameters.solver_log_path;
     child_input << input_json.dump() << std::endl;
 
     // Process the messages of the script. The timer is checked each time a

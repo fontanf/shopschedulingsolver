@@ -39,6 +39,8 @@ Run:
 ./install/bin/shopschedulingsolver  --verbosity-level 1  --input ./data/vallada2015/Small/VFR10_10_1_Gap.txt --format flow-shop --objective makespan  --algorithm tree-search-pfss-makespan  --certificate certificate.json
 ```
 
+The external solvers don't print their own log. Add `--solver-log solver.log` to write it to a file (supported for HiGHS, CBC, Xpress, OptalCP and CP-SAT).
+
 Visualize solution:
 ```
 python scripts/visualize.py certificate.json
