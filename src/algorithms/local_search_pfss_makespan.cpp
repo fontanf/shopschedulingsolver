@@ -1779,6 +1779,10 @@ std::vector<JobId> remove_random_jobs(
         LocalSearchData& data,
         JobId number_of_jobs_removed)
 {
+    // Keep at least one job in the solution.
+    number_of_jobs_removed = std::min(
+            number_of_jobs_removed,
+            (JobId)data.solution.jobs.size() - 1);
     std::vector<JobId> positions = optimizationtools::bob_floyd(
             number_of_jobs_removed,
             (JobId)data.solution.jobs.size(),
@@ -1944,8 +1948,10 @@ void generate_initial_solution_pf_neh(
     while ((JobId)data.solution.jobs.size() < instance.number_of_jobs())
         append_best_job(instance, data);
 
-    // Remove the last a = 4 jobs.
-    //static const JobId a = 4;
+    // Remove the last a jobs.
+    // The value of a is taken from the code of Teixeira et al. (2025); with
+    // it, all jobs are removed when n <= 25. The paper states a = 25 if
+    // n >= 25 and a = 20 otherwise, as in Pan and Wang (2012).
     const JobId a = instance.number_of_jobs() > 20? 25: 21;
     std::vector<JobId> removed_jobs;
     for (JobId i = 0; i < a && !data.solution.jobs.empty(); ++i) {
@@ -1982,7 +1988,7 @@ void random_shifts(
 {
     std::uniform_int_distribution<JobId> distribution(2, d);
     std::vector<JobId> positions = optimizationtools::bob_floyd(
-            distribution(generator),
+            std::min(distribution(generator), (JobId)data.solution.jobs.size()),
             (JobId)data.solution.jobs.size(),
             generator);
     std::vector<JobId> job_ids;
@@ -2036,7 +2042,7 @@ void ruin_and_recreate_jobs(
         AlgorithmFormatter& algorithm_formatter,
         JobId d = 4)
 {
-    std::vector<JobId> removed = remove_random_jobs(instance, parameters, generator, output, data, 4);
+    std::vector<JobId> removed = remove_random_jobs(instance, parameters, generator, output, data, d);
     local_search(instance, parameters, generator, output, algorithm_formatter, data);
     for (JobId job_id: removed)
         add_job_at_best_position(instance, parameters, generator, data, job_id);
@@ -2158,6 +2164,7 @@ const LocalSearchOutput shopschedulingsolver::local_search_pfss_makespan(
     if (initial_solution != nullptr) {
         load_solution(data, *initial_solution);
         local_search(instance, parameters, generator, output, algorithm_formatter, data);
+        population.add(data.solution, generator);
     } else {
         // Seed the population with PF-NEH(v=1) solutions (Section 4.1).
         for (JobId i = 0;
@@ -2178,6 +2185,9 @@ const LocalSearchOutput shopschedulingsolver::local_search_pfss_makespan(
     };
     std::vector<Counter> perturbation_successes(perturbations.size(), 0);
 
+    Counter number_of_iterations_without_improvement = 0;
+    Time previous_best_makespan = output.solution.makespan();
+
     for (output.number_of_iterations = 1;
             !parameters.timer.needs_to_end();
             ++output.number_of_iterations) {
@@ -2192,6 +2202,16 @@ const LocalSearchOutput shopschedulingsolver::local_search_pfss_makespan(
                 && output.solution.makespan() == output.makespan_bound) {
             break;
         }
+        if (parameters.maximum_number_of_iterations >= 0
+                && output.number_of_iterations > parameters.maximum_number_of_iterations)
+            break;
+        if (parameters.maximum_number_of_iterations_without_improvement >= 0
+                && number_of_iterations_without_improvement
+                   > parameters.maximum_number_of_iterations_without_improvement)
+            break;
+        // Perturbations require at least two jobs.
+        if (instance.number_of_jobs() < 2 || population.size() == 0)
+            break;
 
         data.solution = population.binary_tournament_single(generator);
         update_data(instance, data);
@@ -2232,6 +2252,13 @@ const LocalSearchOutput shopschedulingsolver::local_search_pfss_makespan(
             perturbation_successes[perturbation_pos]++;
 
         population.add(data.solution, generator);
+
+        if (output.solution.makespan() < previous_best_makespan) {
+            previous_best_makespan = output.solution.makespan();
+            number_of_iterations_without_improvement = 0;
+        } else {
+            ++number_of_iterations_without_improvement;
+        }
 
         //double mean_makespan = 0;
         //for (Counter solution_id = 0;
