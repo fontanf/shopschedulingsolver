@@ -2,7 +2,6 @@ import argparse
 import sys
 import os
 import json
-import shutil
 
 
 def run_command(command):
@@ -45,8 +44,6 @@ with open(args.output, 'w') as output_file:
             for line in instances_file:
                 instance_base_path = line[:-1]
                 instance_full_path = os.path.join("data", instance_base_path)
-                certificate_full_path = f"{instance_full_path}_solution.json"
-                certificate_tmp_path = f"solution.json"
                 json_output_path = "output.json"
                 command = (
                         main
@@ -54,20 +51,17 @@ with open(args.output, 'w') as output_file:
                         + f"  --input \"{instance_full_path}\""
                         " --format json"
                         + f"  --algorithm {args.algorithm}"
-                        + f"  --certificate \"{certificate_tmp_path}\""
                         + f"  --output \"{json_output_path}\""
                         + f"  --time-limit 1")
                 run_command(command)
 
-                # If solved to optimality, add to output file.
-                json_output_file = open(json_output_path, "r")
-                json_data = json.load(json_output_file)
+                # If solved to optimality, add the instance and its optimal
+                # objective value to the output file.
+                with open(json_output_path, "r") as json_output_file:
+                    json_data = json.load(json_output_file)
                 if not bool(json_data["Output"]["Optimal"]):
                     continue
                 bound = int(json_data["Output"]["Bound"])
                 value = int(json_data["Output"]["Value"])
                 if bound == value:
-                    output_file.write(f"{instance_base_path}\n")
-                    shutil.copyfile(
-                            certificate_tmp_path,
-                            certificate_full_path)
+                    output_file.write(f"{instance_base_path} {value}\n")
