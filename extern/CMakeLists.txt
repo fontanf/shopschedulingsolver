@@ -2,8 +2,12 @@
 include(FetchContent)
 
 # Fetch boost.
-if(SHOPSCHEDULINGSOLVER_BUILD_MAIN OR SHOPSCHEDULINGSOLVER_BUILD_TEST)
+if(SHOPSCHEDULINGSOLVER_BUILD_MAIN OR SHOPSCHEDULINGSOLVER_BUILD_TEST OR SHOPSCHEDULINGSOLVER_USE_OPTALCP)
     set(BOOST_INCLUDE_LIBRARIES thread filesystem system program_options dynamic_bitset)
+    if(SHOPSCHEDULINGSOLVER_USE_OPTALCP)
+        # Used to communicate with the OptalCP script.
+        list(APPEND BOOST_INCLUDE_LIBRARIES process)
+    endif()
     set(BOOST_ENABLE_CMAKE ON)
     FetchContent_Declare(
             Boost

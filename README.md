@@ -18,7 +18,7 @@ Some algorithms rely on external solvers and are only built when the correspondi
   ```shell
   npm install typescript @types/node github:scheduleopt/optalcp-js-bin-academic#latest
   ```
-  The packages must be installed at the root of the repository or in one of its parent directories (e.g. the home directory). The solver runs `./install/bin/constraint_programming_optalcp.mjs`, so it must be called from the root of the repository.
+  The packages must be installed at the root of the repository or in one of its parent directories (e.g. the home directory). The OptalCP model is compiled to `constraint_programming_optalcp.mjs` in the build directory and called from there; the environment variable `SHOPSCHEDULINGSOLVER_OPTALCP_SCRIPT` can be set to use another copy of it.
 
 Setup Python environment to use the Python scripts:
 ```shell

@@ -1,66 +1,65 @@
 #include "shopschedulingsolver/algorithms/constraint_programming_optalcp.hpp"
 
+#include "shopschedulingsolver/solution_builder.hpp"
+
+#include <boost/process.hpp>
+
+#include <csignal>
+#include <cstdlib>
+#include <stdexcept>
+#include <string>
+
 using namespace shopschedulingsolver;
 
-Output shopschedulingsolver::constraint_programming_optalcp(
-        const Instance& instance,
-        const Parameters& parameters)
+namespace bp = boost::process;
+
+namespace
 {
-    Output output(instance);
-    AlgorithmFormatter algorithm_formatter(instance, parameters, output);
-    algorithm_formatter.start("Constraint programming (OptalCP)");
 
-    algorithm_formatter.print_header();
+/**
+ * Get the path of the script which builds and solves the OptalCP model.
+ *
+ * It can be set through the environment variable
+ * SHOPSCHEDULINGSOLVER_OPTALCP_SCRIPT; otherwise, the script compiled with
+ * the library is used.
+ */
+std::string optalcp_script_path()
+{
+    const char* path = std::getenv("SHOPSCHEDULINGSOLVER_OPTALCP_SCRIPT");
+    if (path != nullptr)
+        return path;
+    return OPTALCP_SCRIPT_PATH;
+}
 
-    char instance_path[L_tmpnam];
-    tmpnam(instance_path);
-    instance.write(instance_path, "");
+/**
+ * Ignore SIGPIPE while an instance of this class exists.
+ *
+ * If the script exits early (e.g. if it fails to load), writing to its
+ * standard input would otherwise kill the process without any error message.
+ * The write fails instead, and the exit code of the script is reported.
+ */
+class IgnoreSigpipe
+{
 
-    char parameters_path[L_tmpnam];
-    tmpnam(parameters_path);
-    parameters.to_json();
-    nlohmann::json parameters_json = parameters.to_json();
-    std::ofstream parameters_file{parameters_path};
-    parameters_file << std::setw(4) << parameters_json << std::endl;
-    parameters_file.close();
+public:
 
-    // Run.
-    char output_path[L_tmpnam];
-    tmpnam(output_path);
-    char certificate_path[L_tmpnam];
-    tmpnam(certificate_path);
-    std::string command = (
-            "node ./install/bin/constraint_programming_optalcp.mjs "
-            " \"" + std::string(instance_path) + "\" "
-            " \"" + parameters_path + "\" "
-            + " \"" + output_path + "\" "
-            + " \"" + certificate_path + "\" ");
-    std::system(command.c_str());
+#ifdef SIGPIPE
+    IgnoreSigpipe(): previous_handler_(std::signal(SIGPIPE, SIG_IGN)) { }
 
-    // Retrieve solution.
-    if (std::ifstream(certificate_path).good()) {
-        SolutionBuilder solution_builder;
-        solution_builder.set_instance(instance);
-        solution_builder.read(certificate_path);
-        solution_builder.sort_machines();
-        solution_builder.sort_jobs();
-        Solution solution = solution_builder.build();
-        //solution.format(std::cout, 3);
-        algorithm_formatter.update_solution(solution, "");
-        std::remove(certificate_path);
-    }
+    ~IgnoreSigpipe() { std::signal(SIGPIPE, previous_handler_); }
 
-    std::ifstream output_file{output_path};
-    if (!output_file.good()) {
-        throw std::runtime_error(
-                FUNC_SIGNATURE + ": "
-                "unable to open file \"" + std::string(output_path) + "\".");
-    }
-    nlohmann ::json output_json;
-    output_file >> output_json;
+private:
 
-    // Retrieve bound.
-    Time bound = output_json["bound"];
+    void (*previous_handler_)(int);
+#endif
+
+};
+
+void update_bound(
+        const Instance& instance,
+        AlgorithmFormatter& algorithm_formatter,
+        Time bound)
+{
     switch (instance.objective()) {
     case Objective::Makespan: {
         algorithm_formatter.update_makespan_bound(bound, "");
@@ -76,11 +75,89 @@ Output shopschedulingsolver::constraint_programming_optalcp(
         break;
     }
     }
+}
 
-    // Remove temporary files.
-    std::remove(instance_path);
-    std::remove(parameters_path);
-    std::remove(output_path);
+}
+
+Output shopschedulingsolver::constraint_programming_optalcp(
+        const Instance& instance,
+        const Parameters& parameters)
+{
+    Output output(instance);
+    AlgorithmFormatter algorithm_formatter(instance, parameters, output);
+    algorithm_formatter.start("Constraint programming (OptalCP)");
+
+    algorithm_formatter.print_header();
+
+    // Run the script. It reads the instance and the parameters on its
+    // standard input and writes one JSON message per line on its standard
+    // output. Its standard error, which contains the log of OptalCP, is
+    // inherited.
+    std::string script_path = optalcp_script_path();
+    IgnoreSigpipe ignore_sigpipe;
+    bp::opstream child_input;
+    bp::ipstream child_output;
+    bp::child child(
+            bp::search_path("node"),
+            script_path,
+            bp::std_in < child_input,
+            bp::std_out > child_output);
+
+    nlohmann::json input_json;
+    input_json["instance"] = instance.to_json();
+    input_json["parameters"] = parameters.to_json();
+    child_input << input_json.dump() << std::endl;
+
+    // Process the messages of the script. The timer is checked each time a
+    // message is received, as in the MILP algorithms.
+    bool stop_sent = false;
+    bool end_received = false;
+    std::string line;
+    while (std::getline(child_output, line)) {
+        nlohmann::json message;
+        try {
+            message = nlohmann::json::parse(line);
+        } catch (const nlohmann::json::parse_error&) {
+            // Ignore anything which is not a message of the script.
+            continue;
+        }
+
+        const std::string type = message.value("type", "");
+        if (type == "solution") {
+            SolutionBuilder solution_builder;
+            solution_builder.set_instance(instance);
+            for (const auto& json_operation: message["operations"]) {
+                solution_builder.append_operation(
+                        json_operation["job_id"],
+                        json_operation["operation_id"],
+                        json_operation["alternative_id"],
+                        json_operation["start"]);
+            }
+            solution_builder.sort_machines();
+            solution_builder.sort_jobs();
+            algorithm_formatter.update_solution(solution_builder.build(), "");
+        } else if (type == "bound") {
+            update_bound(instance, algorithm_formatter, message["value"]);
+        } else if (type == "end") {
+            end_received = true;
+            // Closing the standard input of the script lets it exit.
+            child_input.pipe().close();
+            break;
+        }
+
+        if (!stop_sent && parameters.timer.needs_to_end()) {
+            child_input << "stop" << std::endl;
+            stop_sent = true;
+        }
+    }
+
+    child.wait();
+    if (!end_received || child.exit_code() != 0) {
+        throw std::runtime_error(
+                FUNC_SIGNATURE + ": "
+                "the OptalCP script \"" + script_path + "\" failed; "
+                "exit code: " + std::to_string(child.exit_code()) + ".");
+    }
 
     algorithm_formatter.end();
     return output;
