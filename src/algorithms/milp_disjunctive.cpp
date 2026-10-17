@@ -1410,13 +1410,14 @@ Output shopschedulingsolver::milp_disjunctive(
 
     if (parameters.solver == mathoptsolverscmake::SolverName::Cbc) {
 #ifdef CBC_FOUND
-        OsiCbcSolverInterface osi_solver;
-        CbcModel cbc_model(osi_solver);
+        mathoptsolverscmake::CbcModel cbc_model;
         mathoptsolverscmake::reduce_printout(cbc_model);
+        if (!parameters.solver_log_path.empty())
+            mathoptsolverscmake::set_log_file(cbc_model, parameters.solver_log_path);
         mathoptsolverscmake::set_time_limit(cbc_model, parameters.timer.remaining_time());
         mathoptsolverscmake::load(cbc_model, milp_model.model);
         EventHandler cbc_event_handler(instance, parameters, milp_model, output, algorithm_formatter);
-        cbc_model.passInEventHandler(&cbc_event_handler);
+        cbc_model.model.passInEventHandler(&cbc_event_handler);
         mathoptsolverscmake::solve(cbc_model);
         milp_solution = mathoptsolverscmake::get_solution(cbc_model);
         milp_bound = mathoptsolverscmake::get_bound(cbc_model);
@@ -1429,7 +1430,8 @@ Output shopschedulingsolver::milp_disjunctive(
         Highs highs;
         mathoptsolverscmake::reduce_printout(highs);
         mathoptsolverscmake::set_time_limit(highs, parameters.timer.remaining_time());
-        mathoptsolverscmake::set_log_file(highs, "highs.log");
+        if (!parameters.solver_log_path.empty())
+            mathoptsolverscmake::set_log_file(highs, parameters.solver_log_path);
         mathoptsolverscmake::load(highs, milp_model.model);
         highs.setCallback([
                 &instance,
@@ -1481,7 +1483,8 @@ Output shopschedulingsolver::milp_disjunctive(
         XPRSprob xpress_model;
         XPRScreateprob(&xpress_model);
         mathoptsolverscmake::set_time_limit(xpress_model, parameters.timer.remaining_time());
-        mathoptsolverscmake::set_log_file(xpress_model, "xpress.log");
+        if (!parameters.solver_log_path.empty())
+            mathoptsolverscmake::set_log_file(xpress_model, parameters.solver_log_path);
         mathoptsolverscmake::load(xpress_model, milp_model);
         //mathoptsolverscmake::write_mps(xpress_model, "kpc.mps");
         XpressCallbackUser xpress_callback_user{instance, parameters, output, algorithm_formatter};
@@ -1526,10 +1529,9 @@ void shopschedulingsolver::write_mps(
 
     if (solver == mathoptsolverscmake::SolverName::Cbc) {
 #ifdef CBC_FOUND
-        OsiCbcSolverInterface osi_solver;
-        CbcModel cbc_model(osi_solver);
+        mathoptsolverscmake::CbcModel cbc_model;
         mathoptsolverscmake::load(cbc_model, milp_model.model);
-        cbc_model.solver()->writeMps(output_path.c_str());
+        cbc_model.model.solver()->writeMps(output_path.c_str());
 #else
         throw std::invalid_argument(FUNC_SIGNATURE);
 #endif

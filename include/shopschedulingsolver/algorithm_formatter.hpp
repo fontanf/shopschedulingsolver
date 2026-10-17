@@ -81,6 +81,14 @@ struct Parameters: optimizationtools::Parameters
 {
     /** New solution callback. */
     NewSolutionCallback new_solution_callback = [](const Output&) { };
+
+    /**
+     * Path of the file where the log of the external solver (MILP or CP
+     * solver) is written.
+     *
+     * If empty, the log is not written.
+     */
+    std::string solver_log_path = "";
 };
 
 class AlgorithmFormatter

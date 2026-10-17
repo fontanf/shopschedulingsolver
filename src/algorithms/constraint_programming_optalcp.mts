@@ -2,15 +2,17 @@
  * OptalCP model, run by constraint_programming_optalcp.cpp.
  *
  * Protocol (one JSON object per line):
- * - stdin: first line: {"instance": ..., "parameters": ...}; then "stop" to
- *   stop the search.
+ * - stdin: first line: {"instance": ..., "parameters": ...,
+ *   "solver_log_path": ...}; then "stop" to stop the search.
  * - stdout: {"type": "solution", "operations": [...]} for each new solution,
  *   {"type": "bound", "value": ...} for each new bound, and {"type": "end"}
  *   once the search is over.
- * The log of OptalCP is written to stderr.
+ * The log of OptalCP is written to the file "solver_log_path" if it is not
+ * empty; otherwise, it is not written.
  */
 
 import * as CP from '@scheduleopt/optalcp';
+import * as fs from "fs";
 import * as readline from "readline";
 
 function send(message: object)
@@ -18,7 +20,7 @@ function send(message: object)
     process.stdout.write(JSON.stringify(message) + "\n");
 }
 
-async function solve(instance: any, parameters: any, register: (solver: CP.Solver) => boolean)
+async function solve(instance: any, parameters: any, solver_log_path: string, register: (solver: CP.Solver) => boolean)
 {
 
     let model = new CP.Model("shopscheduling");
@@ -416,7 +418,14 @@ async function solve(instance: any, parameters: any, register: (solver: CP.Solve
 
     // Don't start the search if it has already been asked to stop.
     if (!register(solver)) {
-        const result = await solver.solve(model, cp_parameters, undefined, process.stderr);
+        // Open the file synchronously so that an error is reported as any
+        // other error of the script.
+        const log = (solver_log_path)?
+            fs.createWriteStream(solver_log_path, {fd: fs.openSync(solver_log_path, "w")}):
+            null;
+        const result = await solver.solve(model, cp_parameters, undefined, log);
+        if (log !== null)
+            await new Promise((resolve) => log.end(resolve));
         // Send the final bound; if optimality is proven, it is the value of
         // the best solution.
         if (result.proof && typeof result.objective === "number") {
@@ -441,7 +450,7 @@ lines.on("line", (line: string) => {
         return;
     }
     const input = JSON.parse(line);
-    solve(input.instance, input.parameters, (s: CP.Solver) => {
+    solve(input.instance, input.parameters, input.solver_log_path ?? "", (s: CP.Solver) => {
         solver = s;
         return stop_requested;
     }).catch((error) => {
