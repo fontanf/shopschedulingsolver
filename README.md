@@ -12,6 +12,10 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release --parallel && cmake --install build --config Release --prefix install
 ```
 
+Some algorithms rely on external solvers and are only built when the corresponding option is enabled:
+* CP-SAT (OR-Tools): add `-DSHOPSCHEDULINGSOLVER_USE_ORTOOLS=ON` and set the environment variable `ORTOOLSDIR` to the directory of an [OR-Tools C++ installation](https://developers.google.com/optimization/install/cpp), e.g. `export ORTOOLSDIR=/path/to/or-tools_cpp`.
+* OptalCP: add `-DSHOPSCHEDULINGSOLVER_USE_OPTALCP=ON`. It requires [Node.js](https://nodejs.org/) and the packages `@scheduleopt/optalcp`, `typescript` and `@types/node`, e.g. installed at the root of the repository with `npm install @scheduleopt/optalcp typescript @types/node`. The solver runs `./install/bin/constraint_programming_optalcp.mjs`, so it must be called from the root of the repository.
+
 Setup Python environment to use the Python scripts:
 ```shell
 python3 -m venv .venv
@@ -101,10 +105,12 @@ $F_m \mid \text{prmu}, \text{blocking} \mid \sum T_j$
 $J_m \mid \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{no-wait} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{mixed no-idle} \mid C_{\max}$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -119,10 +125,12 @@ $J_m \mid \text{blocking} \mid C_{\max}$
 $J_m \mid \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{no-wait} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
@@ -137,10 +145,12 @@ $J_m \mid \text{blocking} \mid \sum w_j C_j$
 $J_m \mid \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{no-wait} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
 * Disjunctive MILP `--algorithm milp-disjunctive`
