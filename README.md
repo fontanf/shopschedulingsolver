@@ -24,6 +24,8 @@ Download data files:
 python scripts/download_data.py
 ```
 
+The data archives are pinned in `data/data.json` (URL and SHA-256 checksum), so each version of the repository downloads the data it has been tested with. Use `--archives tests` to only download the instances used by the unit tests.
+
 Run:
 ```
 ./install/bin/shopschedulingsolver  --verbosity-level 1  --input ./data/vallada2015/Small/VFR10_10_1_Gap.txt --format flow-shop --objective makespan  --algorithm tree-search-pfss-makespan  --certificate certificate.json
@@ -317,7 +319,7 @@ $FO_m \mid \text{blocking} \mid \sum w_j T_j$
 * Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
 
 
-Generate test instances list for each algorithm:
+Generate test instances list for each algorithm. Each line of a list contains the path of an instance solved to optimality and its optimal objective value:
 ```shell
 python scripts/solve_test_data.py  --algorithm milp-positional  --output test/algorithms/milp_positional_test.txt  --instances \
         data/test_pfss_makespan.txt \
@@ -471,3 +473,10 @@ cmake --build build --config Release --target clean
 cmake --build build --config Release --parallel  &&  cmake --install build --config Release --prefix install
 ctest --parallel --output-on-failure  --test-dir build/test
 ```
+
+Publish a new version of a data archive:
+```shell
+python scripts/create_data_archives.py --archives tests
+gh release create data-tests-v2 data/tests.tar.xz --title "Test data v2"
+```
+Then update the URL and the checksum of the archive in `data/data.json`. Never replace the asset of an existing release, since older versions of the repository still download it.

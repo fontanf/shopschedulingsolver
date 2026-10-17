@@ -33,7 +33,7 @@ jobs:
     - name: Download data
       run: |
         python3 -m pip install -r requirements.txt
-        python3 -u scripts/download_data.py
+        python3 -u scripts/download_data.py --archives tests
     - name: Build
       run: |
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSHOPSCHEDULINGSOLVER_USE_HIGHS=ON

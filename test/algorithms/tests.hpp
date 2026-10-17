@@ -13,8 +13,9 @@ struct TestInstancePath
 {
     std::string instance_path;
     std::string instance_format;
-    std::string certificate_path;
-    std::string certificate_format;
+
+    /** Optimal objective value of the instance. */
+    double objective_value = 0;
 };
 
 std::vector<TestInstancePath> get_test_instance_paths(
@@ -33,10 +34,6 @@ std::vector<TestParams> get_test_params(
         const std::vector<std::vector<TestInstancePath>>& instance_paths);
 
 const Instance get_instance(
-        const TestInstancePath& files);
-
-const Solution get_solution(
-        const Instance& instance,
         const TestInstancePath& files);
 
 class ExactAlgorithmTest: public testing::TestWithParam<TestParams> { };

@@ -1,0 +1,47 @@
+{
+    "archives": [
+        {
+            "name": "tests",
+            "url": "https://github.com/fontanf/shopschedulingsolver/releases/download/data-tests-v1/tests.tar.xz",
+            "sha256": "8316d94ceedaad2188919dcebe4f93ca407e5f8dec3cf0a949d1df75dcecc8de",
+            "directories": [
+                "tests"
+            ],
+            "exclude_suffixes": [
+                "_solution.json"
+            ]
+        },
+        {
+            "name": "benchmarks",
+            "url": "https://github.com/fontanf/shopschedulingsolver/releases/download/data-benchmarks-v1/benchmarks.tar.xz",
+            "sha256": "52095deffd5782fcc1f07c012c3f817c48b411485abcbf2483e3e2e8553788dd",
+            "directories": [
+                "abreu2023",
+                "adams1988",
+                "applegate1991",
+                "barnes1995",
+                "behnke2012",
+                "brandimarte1993",
+                "brucker1997",
+                "dauzere1994",
+                "fattahi2007",
+                "gueret1998",
+                "hurink1994",
+                "kacem2002",
+                "lawrence1984",
+                "muth1963",
+                "naderi2010",
+                "ruiz2007",
+                "ruiz2008",
+                "ruiz2009",
+                "storer1992",
+                "taillard1993",
+                "taillard1993_jss",
+                "taillard1993_oss",
+                "vallada2008",
+                "vallada2015",
+                "yamada1992"
+            ]
+        }
+    ]
+}
