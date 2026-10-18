@@ -13,7 +13,7 @@ cmake --build build --config Release --parallel && cmake --install build --confi
 ```
 
 Some algorithms rely on external solvers and are only built when the corresponding option is enabled:
-* CP-SAT (OR-Tools): add `-DSHOPSCHEDULINGSOLVER_USE_ORTOOLS=ON` and set the environment variable `ORTOOLSDIR` to the directory of an [OR-Tools C++ installation](https://developers.google.com/optimization/install/cpp), e.g. `export ORTOOLSDIR=/path/to/or-tools_cpp`.
+* OR-Tools: add `-DSHOPSCHEDULINGSOLVER_USE_ORTOOLS=ON` and set the environment variable `ORTOOLSDIR` to the directory of an [OR-Tools C++ installation](https://developers.google.com/optimization/install/cpp), e.g. `export ORTOOLSDIR=/path/to/or-tools_cpp`.
 * OptalCP: add `-DSHOPSCHEDULINGSOLVER_USE_OPTALCP=ON`. It requires [Node.js](https://nodejs.org/), the packages `typescript` and `@types/node`, and the academic or commercial edition of [OptalCP](https://optalcp.com) (`@scheduleopt/optalcp-bin-academic` or `@scheduleopt/optalcp-bin`, which provide the solver binary and the `@scheduleopt/optalcp` API). The preview edition is not supported since it does not return solutions. For example, with an academic license:
   ```shell
   npm install typescript @types/node github:scheduleopt/optalcp-js-bin-academic#latest
