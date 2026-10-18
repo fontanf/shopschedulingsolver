@@ -344,10 +344,32 @@ void InstanceBuilder::read_flow_shop_vallada2008(std::ifstream& file)
 
 void InstanceBuilder::read_job_shop(std::ifstream& file)
 {
+    // Skip the empty lines and the comment lines starting with '#' (as in
+    // the instances from the OR-Library), then read the header.
     JobId number_of_jobs = -1;
     MachineId number_of_machines = -1;
-    file >> number_of_jobs;
-    file >> number_of_machines;
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.find_first_not_of(" \t\r") == std::string::npos
+                || line[line.find_first_not_of(" \t\r")] == '#') {
+            continue;
+        }
+        std::istringstream line_stream(line);
+        if (!(line_stream >> number_of_jobs >> number_of_machines)) {
+            throw std::invalid_argument(
+                    FUNC_SIGNATURE + ": "
+                    "invalid header; "
+                    "expected \"<number of jobs> <number of machines>\"; "
+                    "line: \"" + line + "\".");
+        }
+        break;
+    }
+    if (number_of_jobs == -1) {
+        throw std::invalid_argument(
+                FUNC_SIGNATURE + ": "
+                "missing header; "
+                "expected \"<number of jobs> <number of machines>\".");
+    }
     this->add_jobs(number_of_jobs);
     this->set_number_of_machines(number_of_machines);
 
