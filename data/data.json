@@ -2,8 +2,8 @@
     "archives": [
         {
             "name": "tests",
-            "url": "https://github.com/fontanf/shopschedulingsolver/releases/download/data-tests-v1/tests.tar.xz",
-            "sha256": "8316d94ceedaad2188919dcebe4f93ca407e5f8dec3cf0a949d1df75dcecc8de",
+            "url": "https://github.com/fontanf/shopschedulingsolver/releases/download/data-tests-v2/tests.tar.xz",
+            "sha256": "31f98ec50cf14be539e8a7ec1e11e314ebb2e43e8d62cfe9f9ff30c0a14a74d6",
             "directories": [
                 "tests"
             ],

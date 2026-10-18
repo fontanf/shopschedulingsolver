@@ -490,7 +490,8 @@ python scripts/solve_test_data.py  --algorithm cp-sat-ortools  --output test/alg
         data/test_jss_twt.txt \
         data/test_jss_twt_no_wait.txt
 python scripts/solve_test_data.py --algorithm tree-search-pfss-makespan  --output test/algorithms/tree_search_pfss_makespan_test.txt  --instances \
-        data/test_pfss_makespan.txt
+        data/test_pfss_makespan.txt \
+        data/test_pfss_makespan_blocking.txt
 python scripts/solve_test_data.py --algorithm tree-search-pfss  --output test/algorithms/tree_search_pfss_test.txt  --instances \
         data/test_pfss_tft.txt \
         data/test_pfss_tft_blocking.txt \
