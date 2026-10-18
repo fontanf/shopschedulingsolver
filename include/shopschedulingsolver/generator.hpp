@@ -22,7 +22,7 @@ struct GenerateInput
     MachineId number_of_operations_per_job = 3;
     Time processing_times_range = 100;
     Time weights_range = 1;
-    double due_date_tightness_factor = 3.0;
+    double due_date_tightness_factor = 1.0;
 };
 
 Instance generate(

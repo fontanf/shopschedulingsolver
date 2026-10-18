@@ -100,7 +100,7 @@ with contextlib.ExitStack() as stack:
                                 command += f"  --number-of-operations-per-job \"{number_of_machine_groups}\""
                                 command += f"  --processing-times-range 100"
                                 command += f"  --weights-range {weight_range}"
-                                command += f"  --due-date-tightness-factor 3"
+                                command += f"  --due-date-tightness-factor 1"
                                 command += f"  --seed {seed}"
                                 command += f"  --output \"{instance_full_path}\""
                                 print(command)

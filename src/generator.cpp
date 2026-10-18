@@ -56,10 +56,24 @@ Instance shopschedulingsolver::generate(
                         operation_id,
                         machine_id,
                         processing_time);
-                psum += processing_time_sum;
+                psum += processing_time;
             }
-            processing_time_sum += psum / input.number_of_machine_groups;
+            processing_time_sum += psum / input.number_of_machines_per_group;
         }
+        // The due date of a job is set according to the rule of Eilon and
+        // Hodgson (1967): d_j = floor(f * sum_i p_ij), where f is the due date
+        // tightness factor. For flexible operations, the mean processing time
+        // of the operation over its alternatives is used.
+        // In "A neighborhood for complex job shop scheduling problems with
+        // regular objectives" (Bürgy, 2017), f is set to 1.3 for the job shop,
+        // 1.6 for the job shop with sequence-dependent setup times and 1.8
+        // for the blocking job shop.
+        // In "The no-wait job shop with regular objective: a method based on
+        // optimal job insertion" (Bürgy and Gröflin, 2017), f grows with the
+        // number of jobs: 3.0 for 20x15 and 20x20 instances, 3.5 for 20x5 and
+        // 20x10, 5.0 for 30x10 and 7.0 for 50x10.
+        // The test instances have at most 8 jobs; a factor of 1 is used so
+        // that most of them have a positive optimal tardiness.
         Time due_date = input.due_date_tightness_factor * processing_time_sum;
         instance_builder.set_job_due_date(job_id, due_date);
     }
