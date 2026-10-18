@@ -47,6 +47,14 @@ void SolutionBuilder::append_operation(
 void SolutionBuilder::sort_machines()
 {
     const Instance& instance = this->solution_.instance();
+    auto end = [&instance](const Solution::Operation& solution_operation)
+    {
+        return solution_operation.start
+            + instance.job(solution_operation.job_id)
+            .operations[solution_operation.operation_id]
+            .alternatives[solution_operation.alternative_id]
+            .processing_time;
+    };
     for (MachineId machine_id = 0;
             machine_id < instance.number_of_machines();
             ++machine_id) {
@@ -54,13 +62,19 @@ void SolutionBuilder::sort_machines()
         sort(
                 solution_machine.solution_operations.begin(),
                 solution_machine.solution_operations.end(),
-                [this](
+                [this, &end](
                     SolutionOperationId solution_operation_1_id,
                     SolutionOperationId solution_operation_2_id) -> bool
                 {
                     const Solution::Operation& solution_operation_1 = this->solution_.operations_[solution_operation_1_id];
                     const Solution::Operation& solution_operation_2 = this->solution_.operations_[solution_operation_2_id];
-                    return solution_operation_1.start < solution_operation_2.start;
+                    if (solution_operation_1.start != solution_operation_2.start)
+                        return solution_operation_1.start < solution_operation_2.start;
+                    // An operation with a processing time of 0 may start when
+                    // another operation starts on the same machine. It must
+                    // be placed first, otherwise an overlap would be
+                    // detected.
+                    return end(solution_operation_1) < end(solution_operation_2);
                 });
         for (JobId machine_position = 0;
                 machine_position < (JobId)solution_machine.solution_operations.size();
