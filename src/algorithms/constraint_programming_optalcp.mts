@@ -438,21 +438,32 @@ async function solve(instance: any, parameters: any, solver_log_path: string, re
 }
 
 // The first line contains the instance and the parameters; the following
-// lines may ask to stop the search.
+// lines may ask to stop the search. The search is also stopped if the
+// standard input is closed (e.g. if shopschedulingsolver has been killed).
 const lines = readline.createInterface({input: process.stdin});
 let solver: CP.Solver | undefined = undefined;
 let stop_requested = false;
+let finished = false;
+function request_stop()
+{
+    if (stop_requested)
+        return;
+    stop_requested = true;
+    if (solver !== undefined && !finished)
+        solver.stop("Stopped by shopschedulingsolver");
+}
+lines.on("close", request_stop);
 lines.on("line", (line: string) => {
     if (line.trim() === "stop") {
-        stop_requested = true;
-        if (solver !== undefined)
-            solver.stop("Stopped by shopschedulingsolver");
+        request_stop();
         return;
     }
     const input = JSON.parse(line);
     solve(input.instance, input.parameters, input.solver_log_path ?? "", (s: CP.Solver) => {
         solver = s;
         return stop_requested;
+    }).then(() => {
+        finished = true;
     }).catch((error) => {
         console.error(error);
         process.exit(1);

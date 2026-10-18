@@ -3,11 +3,20 @@
 #include "shopschedulingsolver/solution_builder.hpp"
 
 #include <boost/process.hpp>
+#include <boost/process/extend.hpp>
 
+#include <chrono>
+#include <condition_variable>
 #include <csignal>
 #include <cstdlib>
+#include <mutex>
 #include <stdexcept>
 #include <string>
+#include <thread>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 using namespace shopschedulingsolver;
 
@@ -55,6 +64,58 @@ private:
 
 };
 
+/**
+ * Thread which sends "stop" to the script once the timer ends.
+ *
+ * The timer is checked periodically, so that the search is stopped even if
+ * the script doesn't send any message (e.g. after a SIGINT).
+ */
+class StopThread
+{
+
+public:
+
+    StopThread(
+            const Parameters& parameters,
+            bp::opstream& child_input):
+        thread_([this, &parameters, &child_input]()
+                {
+                    std::unique_lock<std::mutex> lock(mutex_);
+                    while (!finished_) {
+                        if (parameters.timer.needs_to_end()) {
+                            child_input << "stop" << std::endl;
+                            return;
+                        }
+                        condition_variable_.wait_for(lock, std::chrono::milliseconds(100));
+                    }
+                }) { }
+
+    /** Stop the thread; the standard input of the script can then be closed. */
+    void finish()
+    {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            finished_ = true;
+        }
+        condition_variable_.notify_one();
+        if (thread_.joinable())
+            thread_.join();
+    }
+
+    ~StopThread() { finish(); }
+
+private:
+
+    std::mutex mutex_;
+
+    std::condition_variable condition_variable_;
+
+    bool finished_ = false;
+
+    std::thread thread_;
+
+};
+
 void update_bound(
         const Instance& instance,
         AlgorithmFormatter& algorithm_formatter,
@@ -93,6 +154,9 @@ Output shopschedulingsolver::constraint_programming_optalcp(
     // standard input and writes one JSON message per line on its standard
     // output. Its standard error, which contains its error messages, is
     // inherited.
+    // On POSIX systems, it is run in its own process group, so that a SIGINT
+    // sent from the terminal (Ctrl-C) doesn't kill it; the search is stopped
+    // through the timer instead.
     std::string script_path = optalcp_script_path();
     IgnoreSigpipe ignore_sigpipe;
     bp::opstream child_input;
@@ -101,7 +165,11 @@ Output shopschedulingsolver::constraint_programming_optalcp(
             bp::search_path("node"),
             script_path,
             bp::std_in < child_input,
-            bp::std_out > child_output);
+            bp::std_out > child_output
+#ifndef _WIN32
+            , bp::extend::on_exec_setup([](auto&) { setpgid(0, 0); })
+#endif
+            );
 
     nlohmann::json input_json;
     input_json["instance"] = instance.to_json();
@@ -109,9 +177,11 @@ Output shopschedulingsolver::constraint_programming_optalcp(
     input_json["solver_log_path"] = parameters.solver_log_path;
     child_input << input_json.dump() << std::endl;
 
-    // Process the messages of the script. The timer is checked each time a
-    // message is received, as in the MILP algorithms.
-    bool stop_sent = false;
+    // From now on, only the stop thread writes to the standard input of the
+    // script.
+    StopThread stop_thread(parameters, child_input);
+
+    // Process the messages of the script.
     bool end_received = false;
     std::string line;
     while (std::getline(child_output, line)) {
@@ -141,17 +211,13 @@ Output shopschedulingsolver::constraint_programming_optalcp(
             update_bound(instance, algorithm_formatter, message["value"]);
         } else if (type == "end") {
             end_received = true;
-            // Closing the standard input of the script lets it exit.
-            child_input.pipe().close();
             break;
-        }
-
-        if (!stop_sent && parameters.timer.needs_to_end()) {
-            child_input << "stop" << std::endl;
-            stop_sent = true;
         }
     }
 
+    // Closing the standard input of the script lets it exit.
+    stop_thread.finish();
+    child_input.pipe().close();
     child.wait();
     if (!end_received || child.exit_code() != 0) {
         throw std::runtime_error(
