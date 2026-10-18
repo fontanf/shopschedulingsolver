@@ -93,10 +93,10 @@ void InstanceBuilder::add_alternative(
                 "machine_id: " + std::to_string(machine_id) + "; "
                 "instance_.machines_.size(): " + std::to_string(instance_.machines_.size()) + ".");
     }
-    if (processing_time <= 0) {
+    if (processing_time < 0) {
         throw std::invalid_argument(
                 FUNC_SIGNATURE + ": "
-                "'processing_time' must be > 0; "
+                "'processing_time' must be >= 0; "
                 "processing_time: " + std::to_string(processing_time) + ".");
     }
 
