@@ -41,7 +41,6 @@ if __name__ == "__main__":
                 f"  --input \"{instance_path}\""
                 f" --format job-shop"
                 f" --objective makespan"
-                f"  --solver highs"
                 f"  --output \"{output_path_1}\"")
         run_command(command)
         command = (
@@ -50,6 +49,5 @@ if __name__ == "__main__":
                 f" --format job-shop"
                 f" --objective makespan"
                 " --operations-arbitrary-order 1"
-                f"  --solver highs"
                 f"  --output \"{output_path_2}\"")
         run_command(command)
