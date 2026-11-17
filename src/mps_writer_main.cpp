@@ -19,7 +19,6 @@ int main(int argc, char *argv[])
         ("format,f", po::value<std::string>()->required(), "set input format")
         ("objective,", po::value<Objective>(), "set objective")
         ("operations-arbitrary-order,", po::value<bool>(), "set operations arbitrary order")
-        ("solver,", po::value<mathoptsolverscmake::SolverName>()->required(), "set solver")
         ("output,o", po::value<std::string>()->required(), "set output path")
         ;
     po::variables_map vm;
@@ -48,7 +47,6 @@ int main(int argc, char *argv[])
 
     write_mps(
             instance,
-            vm["solver"].as<mathoptsolverscmake::SolverName>(),
             vm["output"].as<std::string>());
 
     return 0;
