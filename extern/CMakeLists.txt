@@ -54,7 +54,7 @@ set(MATHOPTSOLVERSCMAKE_BUILD_APP OFF)
 FetchContent_Declare(
     mathoptsolverscmake
     GIT_REPOSITORY https://github.com/fontanf/mathoptsolverscmake.git
-    GIT_TAG 199bfe7038bf165810109e85f3f531d377752fc3)
+    GIT_TAG 2654c5ee7e8f136fd5d196ada1917189729e33a1)
     #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../mathoptsolverscmake/")
 FetchContent_MakeAvailable(mathoptsolverscmake)
 
