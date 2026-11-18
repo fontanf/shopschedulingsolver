@@ -321,7 +321,7 @@ async function solve(instance: any, parameters: any, solver_log_path: string, re
         }
     }
 
-    // No-idle constraints for open shop.
+    // No-idle constraints.
     for (let machine_id = 0; machine_id < number_of_machines; ++machine_id) {
         let machine = instance.machines[machine_id];
         if (!machine.no_idle)
@@ -330,7 +330,7 @@ async function solve(instance: any, parameters: any, solver_log_path: string, re
         let ends: CP.IntExpr[] = [];
         let lengths: CP.IntExpr[] = [];
         for (let operation_id = 0;
-                operation_id < machines_alternatives.length;
+                operation_id < machines_alternatives[machine_id].length;
                 ++operation_id) {
             let operation = machines_alternatives[machine_id][operation_id];
             starts.push((operation as CP.IntervalVar).start());
