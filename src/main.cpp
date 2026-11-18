@@ -119,19 +119,14 @@ Output run(
 #endif
 
     } else if (algorithm == "local-search-pfss-makespan") {
-        if (instance.objective() == Objective::Makespan) {
-            LocalSearchParameters parameters;
-            read_args(parameters, vm);
-            return local_search_pfss_makespan(instance, generator, nullptr, parameters);
-        }
+        LocalSearchParameters parameters;
+        read_args(parameters, vm);
+        return local_search_pfss_makespan(instance, generator, nullptr, parameters);
 
     } else if (algorithm == "local-search-pfss") {
-        if (instance.objective() == Objective::TotalFlowTime
-                || instance.objective() == Objective::TotalTardiness) {
-            LocalSearchPfssParameters parameters;
-            read_args(parameters, vm);
-            return local_search_pfss(instance, generator, nullptr, parameters);
-        }
+        LocalSearchPfssParameters parameters;
+        read_args(parameters, vm);
+        return local_search_pfss(instance, generator, nullptr, parameters);
 
     } else {
         throw std::invalid_argument(
@@ -165,7 +160,7 @@ int main(int argc, char *argv[])
         ("certificate,c", po::value<std::string>(), "set certificate path")
         ("log,l", po::value<std::string>(), "set log path")
         ("time-limit,t", po::value<double>(), "set time limit in seconds")
-        ("seed,s", po::value<Seed>(), "set seed (not used)")
+        ("seed,s", po::value<Seed>(), "set seed (used by the local search algorithms)")
         ("only-write-at-the-end,e", "only write output and certificate files at the end")
         ("verbosity-level,v", po::value<int>(), "set verbosity level")
         ("log-to-stderr,w", "write log in stderr")

@@ -2070,6 +2070,12 @@ const LocalSearchOutput shopschedulingsolver::local_search_pfss_makespan(
         Solution* initial_solution,
         const LocalSearchParameters& parameters)
 {
+    if (instance.objective() != Objective::Makespan) {
+        throw std::invalid_argument(
+                FUNC_SIGNATURE + ": unsupported objective; "
+                "only Makespan is supported.");
+    }
+
     LocalSearchOutput output(instance);
     AlgorithmFormatter algorithm_formatter(instance, parameters, output);
     algorithm_formatter.start("Local search");
