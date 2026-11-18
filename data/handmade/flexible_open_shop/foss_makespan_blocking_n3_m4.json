@@ -1,0 +1,152 @@
+{
+    "blocking": true,
+    "jobs": [
+        {
+            "due_date": 113,
+            "operations": [
+                {
+                    "alternatives": [
+                        {
+                            "machine": 2,
+                            "processing_time": 6
+                        },
+                        {
+                            "machine": 3,
+                            "processing_time": 56
+                        }
+                    ]
+                },
+                {
+                    "alternatives": [
+                        {
+                            "machine": 1,
+                            "processing_time": 64
+                        },
+                        {
+                            "machine": 3,
+                            "processing_time": 114
+                        }
+                    ]
+                },
+                {
+                    "alternatives": [
+                        {
+                            "machine": 0,
+                            "processing_time": 43
+                        },
+                        {
+                            "machine": 3,
+                            "processing_time": 93
+                        }
+                    ]
+                }
+            ],
+            "release_date": 0,
+            "weight": 1
+        },
+        {
+            "due_date": 106,
+            "operations": [
+                {
+                    "alternatives": [
+                        {
+                            "machine": 0,
+                            "processing_time": 35
+                        },
+                        {
+                            "machine": 3,
+                            "processing_time": 85
+                        }
+                    ]
+                },
+                {
+                    "alternatives": [
+                        {
+                            "machine": 1,
+                            "processing_time": 26
+                        },
+                        {
+                            "machine": 3,
+                            "processing_time": 76
+                        }
+                    ]
+                },
+                {
+                    "alternatives": [
+                        {
+                            "machine": 2,
+                            "processing_time": 45
+                        },
+                        {
+                            "machine": 3,
+                            "processing_time": 95
+                        }
+                    ]
+                }
+            ],
+            "release_date": 0,
+            "weight": 1
+        },
+        {
+            "due_date": 130,
+            "operations": [
+                {
+                    "alternatives": [
+                        {
+                            "machine": 2,
+                            "processing_time": 58
+                        },
+                        {
+                            "machine": 3,
+                            "processing_time": 108
+                        }
+                    ]
+                },
+                {
+                    "alternatives": [
+                        {
+                            "machine": 0,
+                            "processing_time": 57
+                        },
+                        {
+                            "machine": 3,
+                            "processing_time": 107
+                        }
+                    ]
+                },
+                {
+                    "alternatives": [
+                        {
+                            "machine": 1,
+                            "processing_time": 15
+                        },
+                        {
+                            "machine": 3,
+                            "processing_time": 65
+                        }
+                    ]
+                }
+            ],
+            "release_date": 0,
+            "weight": 1
+        }
+    ],
+    "machines": [
+        {
+            "no_idle": false
+        },
+        {
+            "no_idle": false
+        },
+        {
+            "no_idle": false
+        },
+        {
+            "no_idle": false
+        }
+    ],
+    "no_wait": false,
+    "objective": "Makespan",
+    "operations_arbitrary_order": true,
+    "permutation": false
+}
