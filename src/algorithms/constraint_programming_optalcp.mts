@@ -31,6 +31,20 @@ async function solve(instance: any, parameters: any, solver_log_path: string, re
     // Variables //
     ///////////////
 
+    // Horizon: sum over all operations of their largest processing time.
+    // Processing the operations one after the other gives a schedule which
+    // ends before it, so it bounds the time during which an operation blocks
+    // its machine.
+    let horizon = 0;
+    for (const job of instance.jobs) {
+        for (const operation of job.operations) {
+            let processing_time_max = 0;
+            for (const alternative of operation.alternatives)
+                processing_time_max = Math.max(processing_time_max, alternative.processing_time);
+            horizon += processing_time_max;
+        }
+    }
+
     // Variables: interval variables for each operation.
     // Stored by machine for the machine non-overlap constraint.
     let machines_alternatives: CP.IntervalVar[][] = [];
@@ -81,8 +95,13 @@ async function solve(instance: any, parameters: any, solver_log_path: string, re
                         alternative_id < operation.alternatives.length;
                         ++alternative_id) {
                     let alternative = operation.alternatives[alternative_id];
-                    const duration_max = (!instance.operations_arbitrary_order && instance.blocking && operation_id < job.operations.length - 1)?
-                        CP.IntervalMax: alternative.processing_time;
+                    // With blocking, an operation may stay on its machine
+                    // after its processing, except the last operation of a
+                    // job in a job shop.
+                    const duration_max = (instance.blocking
+                            && (instance.operations_arbitrary_order
+                                || operation_id < job.operations.length - 1))?
+                        horizon: alternative.processing_time;
                     const optalcp_alternative = model.intervalVar({
                         length: [alternative.processing_time, duration_max],
                         name: "J" + (job_id) + "O" + (operation_id) + "M" + (alternative_id),
