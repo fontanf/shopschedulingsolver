@@ -39,4 +39,33 @@ const Instance get_instance(
 class ExactAlgorithmTest: public testing::TestWithParam<TestParams> { };
 class ExactNoSolutionAlgorithmTest: public testing::TestWithParam<TestParams> { };
 
+/**
+ * Hand-made test instances, for cases which the generated instances don't
+ * cover.
+ *
+ * They are stored in data/handmade/, each with a reference optimal solution.
+ */
+struct HandmadeTestParams
+{
+    Algorithm algorithm;
+
+    /** Path of the instance, in the JSON format. */
+    std::string instance_path;
+
+    /** Path of an optimal solution of the instance. */
+    std::string certificate_path;
+};
+
+std::ostream& operator<<(
+        std::ostream& os,
+        const HandmadeTestParams& test_params);
+
+/**
+ * Solve the instance with the algorithm, and check that the solution found
+ * is feasible and has the same objective value as the reference solution.
+ */
+void test_handmade(const HandmadeTestParams& test_params);
+
+class HandmadeAlgorithmTest: public testing::TestWithParam<HandmadeTestParams> { };
+
 }
