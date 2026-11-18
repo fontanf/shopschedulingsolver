@@ -987,13 +987,16 @@ Model create_milp_model(
                 }
             }
         } else {
-            // Sm_i <= Ck_{j, o, k} - p_{j, o, k} + M x_{j, o, k}
+            // Sm_i <= Ck_{j, o, k} - p_{j, o, k} + M (1 - x_{j, o, k})
             // <=>
-            // Ck_{j, o, k} + M x_{j, o, k} - Sm_i >=  p_{j, o, k}
+            // Ck_{j, o, k} - M x_{j, o, k} - Sm_i >= p_{j, o, k} - M
             //
-            // Sm_i >= C_{j, o, k} - \sum_{o'} p_{j, o'}
+            // Sm_i >= Ck_{j, o, k} - pmsum_i
             // <=>
-            // Sm_i - C_{j, o, k} - pmsum_i >= 0
+            // Sm_i - Ck_{j, o, k} + pmsum_i >= 0
+            //
+            // If alternative k is not selected, Ck_{j, o, k} = 0 and both
+            // constraints are satisfied.
             for (MachineId machine_id = 0;
                     machine_id < instance.number_of_machines();
                     ++machine_id) {
@@ -1013,10 +1016,10 @@ Model create_milp_model(
                     model.model.elements_variables.push_back(model.ck[machine_operation.job_id][machine_operation.operation_id][machine_operation.alternative_id]);
                     model.model.elements_coefficients.push_back(1.0);
                     model.model.elements_variables.push_back(model.x[machine_operation.job_id][machine_operation.operation_id][machine_operation.alternative_id]);
-                    model.model.elements_coefficients.push_back(m);
+                    model.model.elements_coefficients.push_back(-m);
                     model.model.elements_variables.push_back(model.sm[machine_id]);
                     model.model.elements_coefficients.push_back(-1.0);
-                    model.model.constraints_lower_bounds.push_back(alternative.processing_time);
+                    model.model.constraints_lower_bounds.push_back(alternative.processing_time - m);
                     model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
 
                     model.model.constraints_starts.push_back(model.model.elements_variables.size());
@@ -1025,7 +1028,7 @@ Model create_milp_model(
                     model.model.elements_variables.push_back(model.ck[machine_operation.job_id][machine_operation.operation_id][machine_operation.alternative_id]);
                     model.model.elements_coefficients.push_back(-1.0);
                     model.model.elements_variables.push_back(model.pmsum[machine_id]);
-                    model.model.elements_coefficients.push_back(-1.0);
+                    model.model.elements_coefficients.push_back(1.0);
                     model.model.constraints_lower_bounds.push_back(0);
                     model.model.constraints_upper_bounds.push_back(std::numeric_limits<double>::infinity());
                 }
