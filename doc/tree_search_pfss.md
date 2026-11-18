@@ -4,6 +4,18 @@
 
 Source: [`src/algorithms/tree_search_pfss.cpp`](../src/algorithms/tree_search_pfss.cpp)
 
+## Supported problems
+
+$F_m \mid \text{prmu} \mid \gamma$ and $F_m \mid \text{prmu}, \text{blocking} \mid \gamma$ with $\gamma \in \{\sum C_j, \sum T_j\}$.
+
+The algorithm doesn't check the type of the instance. It ignores weights and release dates, and is not valid with no-wait or no-idle constraints. With total tardiness, jobs without a due date are never tardy.
+
+## Optimality
+
+Exact. If the search tree is fully explored before the time limit, the solution is optimal: the algorithm sets the bound to its value, and the output reports `"Optimal": true`. No bound is reported otherwise.
+
+On large instances, it is used as a heuristic, for example to build the initial solution of the [local search](local_search_pfss.md).
+
 ## Algorithm
 
 Iterative beam search with forward branching.
@@ -21,20 +33,6 @@ Iterative beam search with forward branching.
 * Total tardiness (guide 4, Fernandez-Viagas, Valente and Framinan, 2018): $w_{TI} \cdot \text{TI} + w_{TE} \cdot \text{TE} + w_{TT} \cdot \text{TT}$, with TI the weighted idle time, TE the total earliness and TT the bound above, and the weights $w_{TT} = \frac{k + n - 1}{2n}$, $w_{TE} = \frac{2n - k - 1}{2n}$, $w_{TI} = \frac{n - k - 1}{n}$.
 
 Other guides are implemented but not exposed on the command line. A dominance rule (same set of scheduled jobs, smaller objective and completion times) is implemented but disabled.
-
-## Supported problems
-
-$F_m \mid \text{prmu} \mid \gamma$ and $F_m \mid \text{prmu}, \text{blocking} \mid \gamma$ with $\gamma \in \{\sum C_j, \sum T_j\}$.
-
-The algorithm doesn't check the type of the instance. It ignores weights and release dates, and is not valid with no-wait or no-idle constraints. With total tardiness, jobs without a due date are never tardy.
-
-## Optimality
-
-Exact: if the algorithm terminates before the time limit, the solution is optimal. On large instances, it is used as a heuristic, for example to build the initial solution of the [local search](local_search_pfss.md).
-
-## Proved optimality
-
-When the search tree has been fully explored, the algorithm sets the bound to the value of its solution, and the output reports `"Optimal": true`. No bound is reported otherwise.
 
 ## Tests
 

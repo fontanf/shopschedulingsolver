@@ -4,6 +4,18 @@
 
 Source: [`src/algorithms/local_search_pfss_makespan.cpp`](../src/algorithms/local_search_pfss_makespan.cpp)
 
+## Supported problems
+
+$F_m \mid \text{prmu} \mid C_{\max}$ and $F_m \mid \text{prmu}, \text{blocking} \mid C_{\max}$.
+
+The algorithm throws `std::invalid_argument` with another objective. It doesn't check the other properties of the instance and is not valid with no-wait or no-idle constraints.
+
+## Optimality
+
+Heuristic: no optimality guarantee, and no bound is computed, so the output never reports `"Optimal": true`.
+
+The algorithm stops at the time limit. It also has maximum numbers of iterations and of iterations without improvement, which are parameters of the C++ function (`LocalSearchParameters`) and not of the command line, so **`--time-limit` must be set**. The random generator is seeded with `--seed` (0 by default).
+
 ## Algorithm
 
 Population-based iterated local search, based on the hybrid population-based ruin-and-recreate algorithm of Teixeira, Subramanian and Kramer (2025) for the blocking flow shop.
@@ -36,22 +48,6 @@ When $n \ge 256$, only the shift neighborhood is used.
 * The critical path of the current solution is stored, and a lower bound of the makespan after a move is computed from it in $O(1)$: the makespan of the current solution, minus the contribution of the moved job (or of the job before it when it is removed from an anti-block), plus its processing time on the machine where the critical path crosses the insertion position (Ding et al., 2016). The makespan of a move is only computed if this bound is lower than the best makespan found.
 * With blocking, inserting a job in the block it belongs to can't improve the makespan (Grabowski and Pempera, 2007), so these positions are skipped.
 * For swaps, the move is skipped unless the contributions of the two jobs to the critical path decrease.
-
-## Supported problems
-
-$F_m \mid \text{prmu} \mid C_{\max}$ and $F_m \mid \text{prmu}, \text{blocking} \mid C_{\max}$.
-
-The algorithm throws `std::invalid_argument` with another objective. It doesn't check the other properties of the instance and is not valid with no-wait or no-idle constraints.
-
-## Optimality
-
-Heuristic: no optimality guarantee, and no bound is computed.
-
-The algorithm stops at the time limit. It also has maximum numbers of iterations and of iterations without improvement, which are parameters of the C++ function (`LocalSearchParameters`) and not of the command line, so **`--time-limit` must be set**. The random generator is seeded with `--seed` (0 by default).
-
-## Proved optimality
-
-None.
 
 ## Tests
 

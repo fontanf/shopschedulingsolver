@@ -4,6 +4,18 @@
 
 Source: [`src/algorithms/tree_search_pfss_makespan.cpp`](../src/algorithms/tree_search_pfss_makespan.cpp)
 
+## Supported problems
+
+$F_m \mid \text{prmu} \mid C_{\max}$ and $F_m \mid \text{prmu}, \text{blocking} \mid C_{\max}$.
+
+The algorithm doesn't check the type of the instance. It is not valid with no-wait or no-idle constraints, release dates, or other objectives.
+
+## Optimality
+
+Exact. If the search tree is fully explored before the time limit, the solution is optimal: the algorithm sets the makespan bound to its value, and the output reports `"Optimal": true`. No bound is reported otherwise.
+
+On large instances, it is used as a heuristic: each beam search gives a solution, and the solutions improve as the width increases.
+
 ## Algorithm
 
 Iterative beam search with bidirectional branching, from Libralesso et al. (2022).
@@ -23,20 +35,6 @@ $$\text{guide} = \alpha \cdot \text{bound} + (1 - \alpha) \cdot \text{WI} \cdot 
 where WI is the weighted idle time: the sum over machines of the idle time added by each job, divided by the current completion time on that machine, so that idle time at the start of the schedule weighs more. Other guides are implemented (bound only, idle time only, ...) but not exposed on the command line.
 
 **Solution.** The prefix followed by the suffix is turned back into a schedule, each operation starting as early as possible (or as early as the blocking constraints allow).
-
-## Supported problems
-
-$F_m \mid \text{prmu} \mid C_{\max}$ and $F_m \mid \text{prmu}, \text{blocking} \mid C_{\max}$.
-
-The algorithm doesn't check the type of the instance. It is not valid with no-wait or no-idle constraints, release dates, or other objectives.
-
-## Optimality
-
-Exact: if the algorithm terminates before the time limit, the solution is optimal. On large instances, it is used as a heuristic: each beam search gives a solution, and the solutions improve as the width increases.
-
-## Proved optimality
-
-When the search tree has been fully explored, the algorithm sets the makespan bound to the value of its solution, and the output reports `"Optimal": true`. No bound is reported otherwise.
 
 ## Tests
 

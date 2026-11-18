@@ -6,6 +6,18 @@ Source: [`src/algorithms/cp_sat_ortools.cpp`](../src/algorithms/cp_sat_ortools.c
 
 Only built with `-DSHOPSCHEDULINGSOLVER_USE_ORTOOLS=ON`. See the README for the requirements.
 
+## Supported problems
+
+Job shop $J_m \mid r_j \mid \gamma$ and $J_m \mid r_j, \text{no-wait} \mid \gamma$ with $\gamma \in \{C_{\max}, \sum w_j C_j, \sum w_j T_j\}$. A flow shop is solved as a job shop.
+
+The algorithm throws `std::invalid_argument` on the throughput objective, and on flexible, open shop, blocking, no-idle, mixed no-idle and permutation instances.
+
+This is the only algorithm of the repository which takes release dates into account.
+
+## Optimality
+
+Exact. The best bound of CP-SAT is reported through the callbacks and at the end. When CP-SAT terminates before the time limit, the solution is optimal, the bound is equal to its value, and the output reports `"Optimal": true`.
+
 ## Algorithm
 
 Constraint programming model solved with the CP-SAT solver of OR-Tools.
@@ -23,22 +35,6 @@ Objectives, with $C_j$ the completion time of the last operation of job $j$:
 * Total tardiness: $\min \sum_j w_j T_j$, with $T_j \ge C_j - d_j$, $T_j \ge 0$. Jobs without a due date are not counted.
 
 CP-SAT runs with its default parameters, apart from the time limit. Each new solution and bound is reported through the callbacks of the solver, and the search is stopped through them when the timer ends. The log of the solver is written with `--solver-log`.
-
-## Supported problems
-
-Job shop $J_m \mid r_j \mid \gamma$ and $J_m \mid r_j, \text{no-wait} \mid \gamma$ with $\gamma \in \{C_{\max}, \sum w_j C_j, \sum w_j T_j\}$. A flow shop is solved as a job shop.
-
-The algorithm throws `std::invalid_argument` on the throughput objective, and on flexible, open shop, blocking, no-idle, mixed no-idle and permutation instances.
-
-This is the only algorithm of the repository which takes release dates into account.
-
-## Optimality
-
-Exact: when CP-SAT terminates before the time limit, the solution is optimal.
-
-## Proved optimality
-
-The best bound of CP-SAT is reported through the callbacks and at the end. The output reports `"Optimal": true` when it is equal to the value of the solution.
 
 ## Tests
 

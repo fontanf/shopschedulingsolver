@@ -4,6 +4,18 @@
 
 Source: [`src/algorithms/local_search_pfss.cpp`](../src/algorithms/local_search_pfss.cpp)
 
+## Supported problems
+
+$F_m \mid \text{prmu} \mid \gamma$ and $F_m \mid \text{prmu}, \text{blocking} \mid \gamma$ with $\gamma \in \{\sum C_j, \sum T_j\}$.
+
+The algorithm throws `std::invalid_argument` with another objective or with no-wait or no-idle constraints. It ignores weights and release dates.
+
+## Optimality
+
+Heuristic: no optimality guarantee, and no bound is computed, so the output never reports `"Optimal": true`.
+
+The algorithm stops at the time limit. It also has maximum numbers of iterations and of iterations without improvement, which are parameters of the C++ function (`LocalSearchPfssParameters`) and not of the command line, so **`--time-limit` must be set**. The random generator is seeded with `--seed` (0 by default).
+
 ## Algorithm
 
 Population-based iterated local search, with the same structure as the [makespan local search](local_search_pfss_makespan.md).
@@ -26,22 +38,6 @@ Insertions at the best position break ties at random.
 * Swap: exchange two jobs.
 
 **Accelerations.** The completion times of each prefix of the current sequence and the objective of each prefix are stored, so a move is evaluated from the first modified position only. The evaluation of a move stops as soon as its partial objective reaches the best objective found. When the partial objective plus the objective of the unchanged suffix in the current solution reaches the best objective, and the completion times on all machines before the suffix are not earlier than in the current solution, the suffix can't complete earlier, so the move is discarded. The blocking case is selected at compile time, so the inner loops have no branch on it.
-
-## Supported problems
-
-$F_m \mid \text{prmu} \mid \gamma$ and $F_m \mid \text{prmu}, \text{blocking} \mid \gamma$ with $\gamma \in \{\sum C_j, \sum T_j\}$.
-
-The algorithm throws `std::invalid_argument` with another objective or with no-wait or no-idle constraints. It ignores weights and release dates.
-
-## Optimality
-
-Heuristic: no optimality guarantee, and no bound is computed.
-
-The algorithm stops at the time limit. It also has maximum numbers of iterations and of iterations without improvement, which are parameters of the C++ function (`LocalSearchPfssParameters`) and not of the command line, so **`--time-limit` must be set**. The random generator is seeded with `--seed` (0 by default).
-
-## Proved optimality
-
-None.
 
 ## Tests
 

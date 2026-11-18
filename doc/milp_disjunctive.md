@@ -4,6 +4,18 @@
 
 Source: [`src/algorithms/milp_disjunctive.cpp`](../src/algorithms/milp_disjunctive.cpp)
 
+## Supported problems
+
+* Job shop $J_m$, flexible job shop $FJ_m$, open shop $O_m$ and flexible open shop $FO_m$.
+* Objectives $C_{\max}$, $\sum w_j C_j$ and $\sum w_j T_j$.
+* Constraints no-wait, blocking and mixed no-idle.
+
+A flow shop is solved as a job shop. The permutation constraint is not modeled: use the [positional MILP](milp_positional.md) for the permutation flow shop. Release dates are ignored. With total tardiness, every job must have a due date.
+
+## Optimality
+
+Exact. The dual bound of the solver is reported through the callbacks and at the end, rounded up to the next integer. When the solver terminates before the time limit, the solution is optimal, the bound is equal to its value, and the output reports `"Optimal": true`.
+
 ## Algorithm
 
 Mixed-integer linear programming model with big-M disjunctive constraints, for the job shop, the open shop and their flexible variants. The no-wait open shop part corresponds to model 3 of Naderi and Zandieh (2014), and the flexible part to model 5 of Roshanaei, Azab and ElMaraghy (2013).
@@ -39,22 +51,6 @@ The solution is rebuilt from the selected alternatives and the completion times.
 Solvers: HiGHS (default), CBC and Xpress, chosen with `--solver highs|cbc|xpress`, as for the [positional MILP](milp_positional.md).
 
 The model can also be written to an MPS file without solving it, with the `write_mps` function or the `shopschedulingsolver_mps_writer` executable.
-
-## Supported problems
-
-* Job shop $J_m$, flexible job shop $FJ_m$, open shop $O_m$ and flexible open shop $FO_m$.
-* Objectives $C_{\max}$, $\sum w_j C_j$ and $\sum w_j T_j$.
-* Constraints no-wait, blocking and mixed no-idle.
-
-A flow shop is solved as a job shop. The permutation constraint is not modeled: use the [positional MILP](milp_positional.md) for the permutation flow shop. Release dates are ignored. With total tardiness, every job must have a due date.
-
-## Optimality
-
-Exact: when the solver terminates before the time limit, the solution is optimal and the bound is equal to its value.
-
-## Proved optimality
-
-The dual bound of the solver is reported through the callbacks and at the end, rounded up to the next integer. The output reports `"Optimal": true` when it is equal to the value of the solution.
 
 ## Tests
 

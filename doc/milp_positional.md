@@ -4,6 +4,16 @@
 
 Source: [`src/algorithms/milp_positional.cpp`](../src/algorithms/milp_positional.cpp)
 
+## Supported problems
+
+Permutation flow shop: $F_m \mid \text{prmu} \mid \gamma$ with $\gamma \in \{C_{\max}, \sum C_j, \sum T_j\}$, with the mixed no-idle, no-wait or blocking constraints.
+
+The algorithm doesn't check the type of the instance: it reads operation $i$ of each job as its operation on machine $i$. Weights and release dates are ignored, so the model minimizes $\sum C_j$ and $\sum T_j$ and not their weighted versions. With total tardiness, every job must have a due date.
+
+## Optimality
+
+Exact. The dual bound of the solver is reported through the callbacks and at the end, rounded up to the next integer. When the solver terminates before the time limit, the solution is optimal, the bound is equal to its value, and the output reports `"Optimal": true`.
+
 ## Algorithm
 
 Mixed-integer linear programming model for the permutation flow shop, based on the positional model of Ta, Billaut and Bouquard (2018). The model of the paper minimizes the total tardiness. It is adapted here to the makespan and the total flow time, and to the no-idle, no-wait and blocking constraints.
@@ -38,20 +48,6 @@ Variants:
 The solution is rebuilt from the values of $x$, $C$ and $P$: the job of position $k$ starts on machine $i$ at $C_{ik} - P_{ik}$.
 
 Solvers: HiGHS (default), CBC and Xpress, chosen with `--solver highs|cbc|xpress`. The solver must be enabled when building (see the README). New solutions and bounds are retrieved through the callbacks of the solver, and the search is stopped through them when the time limit is reached. The log of the solver is written with `--solver-log`.
-
-## Supported problems
-
-Permutation flow shop: $F_m \mid \text{prmu} \mid \gamma$ with $\gamma \in \{C_{\max}, \sum C_j, \sum T_j\}$, with the mixed no-idle, no-wait or blocking constraints.
-
-The algorithm doesn't check the type of the instance: it reads operation $i$ of each job as its operation on machine $i$. Weights and release dates are ignored, so the model minimizes $\sum C_j$ and $\sum T_j$ and not their weighted versions. With total tardiness, every job must have a due date.
-
-## Optimality
-
-Exact: when the solver terminates before the time limit, the solution is optimal and the bound is equal to its value.
-
-## Proved optimality
-
-The dual bound of the solver is reported through the callbacks and at the end, rounded up to the next integer. The output reports `"Optimal": true` when it is equal to the value of the solution.
 
 ## Tests
 
