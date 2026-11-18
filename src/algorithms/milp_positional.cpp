@@ -527,6 +527,7 @@ struct XpressCallbackUser
 {
     const Instance& instance;
     const MilpPositionalParameters& parameters;
+    const Model& milp_model;
     Output& output;
     AlgorithmFormatter& algorithm_formatter;
 };
@@ -545,7 +546,7 @@ void xpress_callback(
                 || (d.instance.objective() == Objective::TotalFlowTime && d.output.solution.total_flow_time() > milp_objective_value)
                 || (d.instance.objective() == Objective::TotalTardiness && d.output.solution.total_tardiness() > milp_objective_value))) {
         std::vector<double> milp_solution = mathoptsolverscmake::get_solution(xpress_model);
-        Solution solution = retrieve_solution(d.instance, milp_solution);
+        Solution solution = retrieve_solution(d.instance, d.milp_model, milp_solution);
         d.algorithm_formatter.update_solution(solution, "");
     }
 
@@ -667,9 +668,9 @@ Output shopschedulingsolver::milp_positional(
         mathoptsolverscmake::set_time_limit(xpress_model, parameters.timer.remaining_time());
         if (!parameters.solver_log_path.empty())
             mathoptsolverscmake::set_log_file(xpress_model, parameters.solver_log_path);
-        mathoptsolverscmake::load(xpress_model, milp_model);
+        mathoptsolverscmake::load(xpress_model, milp_model.model);
         //mathoptsolverscmake::write_mps(xpress_model, "kpc.mps");
-        XpressCallbackUser xpress_callback_user{instance, parameters, output, algorithm_formatter};
+        XpressCallbackUser xpress_callback_user{instance, parameters, milp_model, output, algorithm_formatter};
         XPRSaddcbprenode(xpress_model, xpress_callback, (void*)&xpress_callback_user, 0);
         mathoptsolverscmake::solve(xpress_model);
         milp_solution = mathoptsolverscmake::get_solution(xpress_model);
