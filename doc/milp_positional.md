@@ -55,7 +55,7 @@ The dual bound of the solver is reported through the callbacks and at the end, r
 
 ## Tests
 
-* `test/algorithms/milp_positional_test.cpp` with the instances of `test/algorithms/milp_positional_test.txt`: permutation flow shop instances with makespan, total flow time and total tardiness, each with no constraint, no-idle and blocking. The instances of the no-idle lists have no no-idle machine (`"no_idle": false` on every machine), so the no-idle constraints are not tested. The no-wait constraint is not tested either.
+* `test/algorithms/milp_positional_test.cpp` with the instances of `test/algorithms/milp_positional_test.txt`: permutation flow shop instances with makespan, total flow time and total tardiness, each with no constraint, no-idle and blocking. The instances of the no-idle lists of `data-tests-v2` have no no-idle machine (`"no_idle": false` on every machine, because of a bug of the generator), so the no-idle constraints are not tested. The no-wait constraint is not tested either.
 
 ## References
 

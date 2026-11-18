@@ -49,7 +49,8 @@ The lower bounds found during the search are reported. At the end, if OptalCP ha
 ## Tests
 
 * `test/algorithms/constraint_programming_optalcp_test.cpp` with the instances of `test/algorithms/constraint_programming_optalcp_test.txt`: permutation flow shop (makespan, total flow time and total tardiness, each with no constraint, no-idle and blocking), and job shop, flexible job shop, open shop and flexible open shop (makespan, total (weighted) flow time and total (weighted) tardiness, each with no constraint, no-wait and blocking).
-* The instances of the no-idle lists have no no-idle machine (`"no_idle": false` on every machine), so the no-idle constraints are not tested.
+* The instances of the no-idle lists of `data-tests-v2` have no no-idle machine (`"no_idle": false` on every machine, because of a bug of the generator), so these lists don't test the no-idle constraints.
+* `ConstraintProgrammingOptalcpHandmadeTest`, in the same file: hand-made instances of `data/handmade/`, each with a reference optimal solution, for cases which the generated instances don't cover (a permutation flow shop with no-idle machines and more jobs than machines).
 
 ## References
 
