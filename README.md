@@ -48,291 +48,293 @@ python scripts/visualize.py certificate.json
 
 ## Implemented algorithms
 
+Each algorithm has a page in [`doc/`](doc/) describing it, the problems it supports, its guarantees and how it is tested. The exact algorithms report a bound, and the output reports `"Optimal": true` when they prove that their solution is optimal.
+
 ### Permutation flow shop
 
 #### Objective makespan
 
 $F_m \mid \text{prmu} \mid C_{\max}$
-* Positional MILP `--algorithm milp-positional`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* Tree search `--algorithm tree-search-pfss-makespan`
-* Local search `--algorithm local-search-pfss-makespan`
+* [Positional MILP](doc/milp_positional.md) `--algorithm milp-positional`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [Tree search](doc/tree_search_pfss_makespan.md) `--algorithm tree-search-pfss-makespan`
+* [Local search](doc/local_search_pfss_makespan.md) `--algorithm local-search-pfss-makespan`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid C_{\max}$
-* Positional MILP `--algorithm milp-positional`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Positional MILP](doc/milp_positional.md) `--algorithm milp-positional`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $F_m \mid \text{prmu}, \text{blocking} \mid C_{\max}$
-* Positional MILP `--algorithm milp-positional`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* Tree search `--algorithm tree-search-pfss-makespan`
-* Local search `--algorithm local-search-pfss-makespan`
+* [Positional MILP](doc/milp_positional.md) `--algorithm milp-positional`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [Tree search](doc/tree_search_pfss_makespan.md) `--algorithm tree-search-pfss-makespan`
+* [Local search](doc/local_search_pfss_makespan.md) `--algorithm local-search-pfss-makespan`
 
 #### Objective total flow time
 
 $F_m \mid \text{prmu} \mid \sum C_j$
-* Positional MILP `--algorithm milp-positional`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* Tree search `--algorithm tree-search-pfss`
-* Local search `--algorithm local-search-pfss`
+* [Positional MILP](doc/milp_positional.md) `--algorithm milp-positional`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [Tree search](doc/tree_search_pfss.md) `--algorithm tree-search-pfss`
+* [Local search](doc/local_search_pfss.md) `--algorithm local-search-pfss`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum C_j$
-* Positional MILP `--algorithm milp-positional`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Positional MILP](doc/milp_positional.md) `--algorithm milp-positional`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $F_m \mid \text{prmu}, \text{blocking} \mid \sum C_j$
-* Positional MILP `--algorithm milp-positional`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* Tree search `--algorithm tree-search-pfss`
-* Local search `--algorithm local-search-pfss`
+* [Positional MILP](doc/milp_positional.md) `--algorithm milp-positional`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [Tree search](doc/tree_search_pfss.md) `--algorithm tree-search-pfss`
+* [Local search](doc/local_search_pfss.md) `--algorithm local-search-pfss`
 
 #### Objective total tardiness
 
 $F_m \mid \text{prmu} \mid \sum T_j$
-* Positional MILP `--algorithm milp-positional`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* Tree search `--algorithm tree-search-pfss`
-* Local search `--algorithm local-search-pfss`
+* [Positional MILP](doc/milp_positional.md) `--algorithm milp-positional`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [Tree search](doc/tree_search_pfss.md) `--algorithm tree-search-pfss`
+* [Local search](doc/local_search_pfss.md) `--algorithm local-search-pfss`
 
 $F_m \mid \text{prmu}, \text{mixed no-idle} \mid \sum T_j$
-* Positional MILP `--algorithm milp-positional`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Positional MILP](doc/milp_positional.md) `--algorithm milp-positional`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $F_m \mid \text{prmu}, \text{blocking} \mid \sum T_j$
-* Positional MILP `--algorithm milp-positional`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* Tree search `--algorithm tree-search-pfss`
-* Local search `--algorithm local-search-pfss`
+* [Positional MILP](doc/milp_positional.md) `--algorithm milp-positional`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [Tree search](doc/tree_search_pfss.md) `--algorithm tree-search-pfss`
+* [Local search](doc/local_search_pfss.md) `--algorithm local-search-pfss`
 
 ### Job shop
 
 #### Objective makespan
 
 $J_m \mid \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [CP-SAT (OR-Tools)](doc/cp_sat_ortools.md) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{no-wait} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [CP-SAT (OR-Tools)](doc/cp_sat_ortools.md) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{mixed no-idle} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $J_m \mid \text{blocking} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 #### Objective total flow time
 
 $J_m \mid \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [CP-SAT (OR-Tools)](doc/cp_sat_ortools.md) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{no-wait} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [CP-SAT (OR-Tools)](doc/cp_sat_ortools.md) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $J_m \mid \text{blocking} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 #### Objective total tardiness
 
 $J_m \mid \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [CP-SAT (OR-Tools)](doc/cp_sat_ortools.md) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{no-wait} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
-* CP-SAT (OR-Tools) `--algorithm cp-sat-ortools`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
+* [CP-SAT (OR-Tools)](doc/cp_sat_ortools.md) `--algorithm cp-sat-ortools`
 
 $J_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $J_m \mid \text{blocking} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 ### Flexible job shop
 
 #### Objective makespan
 
 $FJ_m \mid \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{no-wait} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{mixed no-idle} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{blocking} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 #### Objective total flow time
 
 $FJ_m \mid \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{no-wait} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{blocking} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 #### Objective total tardiness
 
 $FJ_m \mid \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{no-wait} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FJ_m \mid \text{blocking} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 ### Open shop
 
 #### Objective makespan
 
 $O_m \mid \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{no-wait} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{mixed no-idle} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{blocking} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 #### Objective total flow time
 
 $O_m \mid \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{no-wait} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{blocking} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 #### Objective total tardiness
 
 $O_m \mid \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{no-wait} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $O_m \mid \text{blocking} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 ### Flexible open shop
 
 #### Objective makespan
 
 $FO_m \mid \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{no-wait} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{mixed no-idle} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{blocking} \mid C_{\max}$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 #### Objective total flow time
 
 $FO_m \mid \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{no-wait} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{mixed no-idle} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{blocking} \mid \sum w_j C_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 #### Objective total tardiness
 
 $FO_m \mid \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{no-wait} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{mixed no-idle} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 $FO_m \mid \text{blocking} \mid \sum w_j T_j$
-* Disjunctive MILP `--algorithm milp-disjunctive`
-* Constraint programming OptalCP `--algorithm constraint-programming-optalcp`
+* [Disjunctive MILP](doc/milp_disjunctive.md) `--algorithm milp-disjunctive`
+* [Constraint programming OptalCP](doc/constraint_programming_optalcp.md) `--algorithm constraint-programming-optalcp`
 
 ## Tests
 
