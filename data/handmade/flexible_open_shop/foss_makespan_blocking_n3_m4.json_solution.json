@@ -1,0 +1,106 @@
+{
+    "number_of_jobs": 3,
+    "number_of_machines": 4,
+    "number_of_operations": 9,
+    "operations": [
+        {
+            "alternative_id": 0,
+            "end": 6,
+            "job_id": 0,
+            "job_position": 0,
+            "machine_id": 2,
+            "machine_position": 0,
+            "operation_id": 0,
+            "processing_time": 6,
+            "start": 0
+        },
+        {
+            "alternative_id": 0,
+            "end": 70,
+            "job_id": 0,
+            "job_position": 1,
+            "machine_id": 1,
+            "machine_position": 0,
+            "operation_id": 1,
+            "processing_time": 64,
+            "start": 6
+        },
+        {
+            "alternative_id": 0,
+            "end": 135,
+            "job_id": 0,
+            "job_position": 2,
+            "machine_id": 0,
+            "machine_position": 2,
+            "operation_id": 2,
+            "processing_time": 43,
+            "start": 92
+        },
+        {
+            "alternative_id": 0,
+            "end": 92,
+            "job_id": 1,
+            "job_position": 1,
+            "machine_id": 0,
+            "machine_position": 1,
+            "operation_id": 0,
+            "processing_time": 35,
+            "start": 57
+        },
+        {
+            "alternative_id": 0,
+            "end": 118,
+            "job_id": 1,
+            "job_position": 2,
+            "machine_id": 1,
+            "machine_position": 1,
+            "operation_id": 1,
+            "processing_time": 26,
+            "start": 92
+        },
+        {
+            "alternative_id": 0,
+            "end": 57,
+            "job_id": 1,
+            "job_position": 0,
+            "machine_id": 2,
+            "machine_position": 1,
+            "operation_id": 2,
+            "processing_time": 45,
+            "start": 12
+        },
+        {
+            "alternative_id": 0,
+            "end": 115,
+            "job_id": 2,
+            "job_position": 1,
+            "machine_id": 2,
+            "machine_position": 2,
+            "operation_id": 0,
+            "processing_time": 58,
+            "start": 57
+        },
+        {
+            "alternative_id": 0,
+            "end": 57,
+            "job_id": 2,
+            "job_position": 0,
+            "machine_id": 0,
+            "machine_position": 0,
+            "operation_id": 1,
+            "processing_time": 57,
+            "start": 0
+        },
+        {
+            "alternative_id": 0,
+            "end": 133,
+            "job_id": 2,
+            "job_position": 2,
+            "machine_id": 1,
+            "machine_position": 2,
+            "operation_id": 2,
+            "processing_time": 15,
+            "start": 118
+        }
+    ]
+}

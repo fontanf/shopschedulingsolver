@@ -45,4 +45,13 @@ INSTANTIATE_TEST_SUITE_P(
                 [](const Instance& instance) { return constraint_programming_optalcp(instance); },
                 get_path({"data", "handmade", "permutation_flow_shop", "pfss_makespan_no_idle_n8_m3.json"}),
                 get_path({"data", "handmade", "permutation_flow_shop", "pfss_makespan_no_idle_n8_m3.json_solution.json"}),
+            }, {
+                // Flexible open shop, makespan, blocking: each operation has
+                // a second alternative, on an extra machine, 50 longer, which
+                // doesn't change the optimum. An alternative must be able to
+                // block its machine; with a fixed length, only no-wait
+                // schedules are possible, and the best one has makespan 155.
+                [](const Instance& instance) { return constraint_programming_optalcp(instance); },
+                get_path({"data", "handmade", "flexible_open_shop", "foss_makespan_blocking_n3_m4.json"}),
+                get_path({"data", "handmade", "flexible_open_shop", "foss_makespan_blocking_n3_m4.json_solution.json"}),
             }}));
