@@ -6,6 +6,18 @@ Source: [`src/algorithms/constraint_programming_optalcp.mts`](../src/algorithms/
 
 Only built with `-DSHOPSCHEDULINGSOLVER_USE_OPTALCP=ON`. See the README for the requirements.
 
+## Supported problems
+
+* Permutation flow shop, job shop, flexible job shop, open shop and flexible open shop.
+* Objectives $C_{\max}$, $\sum w_j C_j$ and $\sum w_j T_j$.
+* Constraints no-wait, blocking and mixed no-idle.
+
+Release dates are ignored. With total tardiness, every job must have a due date. The preview edition of OptalCP is not supported since it doesn't return solutions.
+
+## Optimality
+
+Exact. The lower bounds found by OptalCP during the search are reported. If OptalCP proves optimality before the time limit, the bound is set to the value of the solution, and the output reports `"Optimal": true`.
+
 ## Algorithm
 
 Constraint programming model solved with OptalCP.
@@ -29,22 +41,6 @@ Model:
 Objectives: $\min C_{\max}$, $\min \sum_j w_j C_j$ or $\min \sum_j w_j T_j$, with $C_j$ the maximum end of the operations of job $j$.
 
 Search parameters: four workers (`FDS`, `FDS` with the `Split` lower bound strategy, and two `LNS`), propagation levels 4, 3 and 2 for no-overlap, cumulative and reservoir constraints in the FDS workers, `usePrecedenceEnergy = 1`, `packPropagationLevel = 2`, and a relative gap tolerance of 0 so that the search only stops when optimality is proved.
-
-## Supported problems
-
-* Permutation flow shop, job shop, flexible job shop, open shop and flexible open shop.
-* Objectives $C_{\max}$, $\sum w_j C_j$ and $\sum w_j T_j$.
-* Constraints no-wait, blocking and mixed no-idle.
-
-Release dates are ignored. With total tardiness, every job must have a due date. The preview edition of OptalCP is not supported since it doesn't return solutions.
-
-## Optimality
-
-Exact: when OptalCP proves optimality before the time limit, the solution is optimal.
-
-## Proved optimality
-
-The lower bounds found during the search are reported. At the end, if OptalCP has proved optimality, the bound is set to the value of the solution and the output reports `"Optimal": true`.
 
 ## Tests
 
