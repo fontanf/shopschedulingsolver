@@ -21,10 +21,12 @@ Instance shopschedulingsolver::generate(
     instance_builder.set_operations_arbitrary_order(input.operations_arbitrary_order);
     instance_builder.set_blocking(input.blocking);
     instance_builder.set_no_wait(input.no_wait);
-    instance_builder.set_all_machines_no_idle(input.no_idle);
     instance_builder.set_permutation(input.permutation);
     MachineId number_of_machines = input.number_of_machine_groups * input.number_of_machines_per_group;
     instance_builder.set_number_of_machines(number_of_machines);
+    // Must be called after set_number_of_machines, which creates the
+    // machines.
+    instance_builder.set_all_machines_no_idle(input.no_idle);
     instance_builder.add_jobs(input.number_of_jobs);
 
     // Add jobs.
