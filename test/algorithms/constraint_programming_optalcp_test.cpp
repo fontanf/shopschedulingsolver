@@ -27,3 +27,22 @@ INSTANTIATE_TEST_SUITE_P(
                 {
                     get_test_instance_paths(get_path({"test", "algorithms", "constraint_programming_optalcp_test.txt"})),
                 })));
+
+TEST_P(HandmadeAlgorithmTest, HandmadeAlgorithm)
+{
+    test_handmade(GetParam());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+        ConstraintProgrammingOptalcp,
+        HandmadeAlgorithmTest,
+        testing::ValuesIn(std::vector<HandmadeTestParams>{
+            {
+                // Permutation flow shop, makespan, all machines no-idle,
+                // with more jobs (8) than machines (3). The no-idle
+                // constraint of a machine must cover all its operations, not
+                // only the first ones.
+                [](const Instance& instance) { return constraint_programming_optalcp(instance); },
+                get_path({"data", "handmade", "permutation_flow_shop", "pfss_makespan_no_idle_n8_m3.json"}),
+                get_path({"data", "handmade", "permutation_flow_shop", "pfss_makespan_no_idle_n8_m3.json_solution.json"}),
+            }}));
