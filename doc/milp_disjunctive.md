@@ -58,7 +58,8 @@ The dual bound of the solver is reported through the callbacks and at the end, r
 
 ## Tests
 
-* `test/algorithms/milp_disjunctive_test.cpp` with the instances of `test/algorithms/milp_disjunctive_test.txt`: job shop, flexible job shop, open shop and flexible open shop instances, with makespan, total (weighted) flow time and total (weighted) tardiness, each with no constraint, no-wait and blocking. The no-idle constraints are not tested.
+* `test/algorithms/milp_disjunctive_test.cpp` with the instances of `test/algorithms/milp_disjunctive_test.txt`: job shop, flexible job shop, open shop and flexible open shop instances, with makespan, total (weighted) flow time and total (weighted) tardiness, each with no constraint, no-wait and blocking. The no-idle lists are not part of the test.
+* `HandmadeAlgorithmTest`, in the same file: hand-made instances of `data/handmade/`, each with a reference optimal solution, for cases which the generated instances don't cover: a flexible job shop with no-idle machines.
 
 ## References
 
