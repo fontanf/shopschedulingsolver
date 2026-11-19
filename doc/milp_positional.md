@@ -18,36 +18,71 @@ Exact. The dual bound of the solver is reported through the callbacks and at the
 
 Mixed-integer linear programming model for the permutation flow shop, based on the positional model of Ta, Billaut and Bouquard (2018). The model of the paper minimizes the total tardiness. It is adapted here to the makespan and the total flow time, and to the no-idle, no-wait and blocking constraints.
 
-Let $n$ be the number of jobs, $m$ the number of machines, and $k \in \{1, \dots, n\}$ the positions in the sequence. Variables:
-* $x_{jk} \in \{0, 1\}$: $x_{jk} = 1$ iff job $j$ is in position $k$.
-* $P_{ik} \ge 0$: processing time on machine $i$ of the job in position $k$.
-* $C_{ik} \ge 0$: completion time on machine $i$ of the job in position $k$.
-* $d_k \ge 0$, $T_k \ge 0$: due date and tardiness of the job in position $k$ (total tardiness only).
-* $C_{\max}$ (makespan only).
+The sequence of the jobs is modeled by assigning each job to a position. The completion times are then defined per position and per machine, so that the constraints between consecutive jobs are linear.
 
-Constraints:
+## Model
 
-$$\sum_k x_{jk} = 1 \quad \forall j \qquad \sum_j x_{jk} = 1 \quad \forall k$$
+**Input**:
 
-$$P_{ik} = \sum_j p_{ij} \, x_{jk} \qquad d_k = \sum_j d_j \, x_{jk}$$
+* jobs $j = 1, \ldots, n$; for each job $j$: a processing time $p_{ij}$ on each machine $i$ and, for the total tardiness, a due date $d_j$
+* machines $i = 1, \ldots, m$, visited in this order by all the jobs; each machine is no-idle or not
+* positions $k = 1, \ldots, n$ in the sequence
 
-$$C_{1,1} = P_{1,1} \qquad C_{ik} \ge C_{i-1,k} + P_{ik} \qquad C_{ik} \ge C_{i,k-1} + P_{ik}$$
+**Variables**:
 
-$$C_{\max} \ge C_{ik} \qquad T_k \ge C_{mk} - d_k$$
+* $x_{jk} \in \{0, 1\}$: $x_{jk} = 1$ iff job $j$ is in position $k$
+* $P_{ik} \in \mathbb{N}$: time during which the job in position $k$ occupies machine $i$
+* $C_{ik} \in \mathbb{N}$: completion time on machine $i$ of the job in position $k$; with blocking, the time at which it leaves machine $i$
+* $d_k \in \mathbb{N}$ and $T_k \in \mathbb{N}$ (total tardiness): due date and tardiness of the job in position $k$
+* $C_{\max} \in \mathbb{N}$ (makespan)
 
-Objectives:
-* Makespan: $\min C_{\max}$.
-* Total flow time: $\min \sum_k C_{mk}$.
-* Total tardiness: $\min \sum_k T_k$.
+**Objective**: depending on the objective
 
-Variants:
-* No-idle machine $i$: $C_{ik} = C_{i,k-1} + P_{ik}$. The property can be set per machine (mixed no-idle).
-* No-wait: $C_{ik} = C_{i-1,k} + P_{ik}$.
-* Blocking: $P_{ik} \ge \sum_j p_{ij} x_{jk}$ instead of an equality, so that $P_{ik}$ is the time during which the job occupies machine $i$, including the time it blocks it, and $C_{ik} = C_{i-1,k} + P_{ik}$ is the time at which it leaves machine $i$. The job starts on machine $i$ when it leaves machine $i - 1$.
+$$\min C_{\max} \qquad \text{(makespan)}$$
+
+$$\min \sum_k C_{mk} \qquad \text{(total flow time)}$$
+
+$$\min \sum_k T_k \qquad \text{(total tardiness)}$$
+
+**Constraints**:
+
+* Assignment: each job is in one position, and each position contains one job
+
+$$\forall j \qquad \sum_k x_{jk} = 1$$
+
+$$\forall k \qquad \sum_j x_{jk} = 1$$
+
+* Processing times of the positions. With blocking, the inequality $\ge$ replaces the equality: the difference is the time during which the job blocks the machine.
+
+$$\forall i, k \qquad P_{ik} = \sum_j p_{ij} \, x_{jk}$$
+
+* Due dates of the positions (total tardiness)
+
+$$\forall k \qquad d_k = \sum_j d_j \, x_{jk}$$
+
+* Job: the job of a position starts on a machine after it completes on the previous machine. With no-wait, the equality replaces the inequality: the job starts on a machine when it completes on the previous one. With blocking too: it starts on a machine when it leaves the previous one.
+
+$$C_{1,1} = P_{1,1}$$
+
+$$\forall k, \; \forall i \ge 2 \qquad C_{ik} \ge C_{i-1,k} + P_{ik}$$
+
+* Machine: the job of a position starts on a machine after the job of the previous position. On a no-idle machine, the equality replaces the inequality. The property can be set per machine (mixed no-idle).
+
+$$\forall i, \; \forall k \ge 2 \qquad C_{ik} \ge C_{i,k-1} + P_{ik}$$
+
+* Makespan
+
+$$\forall i \qquad C_{\max} \ge C_{in}$$
+
+* Tardiness
+
+$$\forall k \qquad T_k \ge C_{mk} - d_k$$
 
 The solution is rebuilt from the values of $x$, $C$ and $P$: the job of position $k$ starts on machine $i$ at $C_{ik} - P_{ik}$.
 
-Solvers: HiGHS (default), CBC and Xpress, chosen with `--solver highs|cbc|xpress`. The solver must be enabled when building (see the README). New solutions and bounds are retrieved through the callbacks of the solver, and the search is stopped through them when the time limit is reached. The log of the solver is written with `--solver-log`.
+## Solver
+
+HiGHS (default), CBC and Xpress, chosen with `--solver highs|cbc|xpress`. The solver must be enabled when building (see the README). New solutions and bounds are retrieved through the callbacks of the solver, and the search is stopped through them when the time limit is reached. The log of the solver is written with `--solver-log`.
 
 ## Tests
 
