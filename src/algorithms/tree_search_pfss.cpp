@@ -136,7 +136,7 @@ public:
 
     inline const std::shared_ptr<Node> root() const
     {
-        auto root = std::shared_ptr<Node>(new BranchingScheme::Node());
+        auto root = std::make_shared<BranchingScheme::Node>();
         root->id = node_id_;
         node_id_++;
         root->structures_computed = true;
@@ -248,7 +248,7 @@ public:
                 continue;
 
             const Job& job_next = instance_.job(job_next_id);
-            auto child = std::shared_ptr<Node>(new BranchingScheme::Node());
+            auto child = std::make_shared<BranchingScheme::Node>();
             child->id = node_id_;
             node_id_++;
             child->parent = parent;
