@@ -32,7 +32,7 @@ Download data files:
 python scripts/download_data.py
 ```
 
-The data archives are pinned in `data/data.json` (URL and SHA-256 checksum), so each version of the repository downloads the data it has been tested with. Use `--archives tests` to only download the instances used by the unit tests.
+The data archives are pinned in `data/data.json` (URL and SHA-256 checksum), so each version of the repository downloads the data it has been tested with. Use `--archives tests` to only download the instances used by the unit tests. The instances are described in [`doc/benchmark_instances.md`](doc/benchmark_instances.md).
 
 Run:
 ```
